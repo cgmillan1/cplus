@@ -1,7 +1,7 @@
 /* C Plus v2: language, the 3D hero, the work grid (GSAP Flip), the 3D viewer, and the quote form with photos. */
 {
   const tok = new URLSearchParams(location.search).get('p');
-  if (tok) location.replace('proyecto.html?p=' + encodeURIComponent(tok));
+  if (tok) location.replace('../proyecto.html?p=' + encodeURIComponent(tok));
   const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const G = () => window.gsap;
