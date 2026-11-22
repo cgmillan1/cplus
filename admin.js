@@ -2,7 +2,7 @@
 const S = CPLUS, t = S.t, esc = S.esc, money = S.money, fdate = S.fdate, $ = q => document.querySelector(q), app = $('#app');
 const STATUSES = ['estimate_sent', 'estimate_accepted', 'progress', 'done'];
 const stOf = p => STATUSES.includes(p.status) ? p.status : (p.status === 'paused' ? 'progress' : 'estimate_sent');
-let pfilter = 'all', creating = false, leads = [], lastEmail = '', view = 'boot', B = [], cur = null, ctab = 'dash', settings = {}, busy = false, err = '', me = null, team = [], afilter = 'all', lastCreated = null;
+let pfilter = 'all', creating = false, leads = [], lastEmail = '', view = 'boot', B = [], cur = null, ctab = 'dash', settings = {}, busy = false, err = '', me = null, team = [], afilter = 'all', lastCreated = null, leadUrls = {};
 S.setLang(S.L);
 
 /* ---------- roles ---------- */
@@ -143,6 +143,7 @@ function leadsCard() {
     return `<div class="co"><div class="top2"><b>${esc(l.name)}</b><span class="pill ${l.status === 'new' ? 'pending' : 'paid'}">${t('lead_' + l.status)}</span></div>
     <small class="sub">${fdate(l.created_at)}${l.service ? ' · ' + esc(l.service) : ''}${l.city ? ' · ' + esc(l.city) : ''} · ${l.lang === 'en' ? 'English' : 'Español'}</small>
     ${l.message ? `<p style="margin:6px 0 0;white-space:pre-wrap">${esc(l.message)}</p>` : ''}
+    ${(l.photos || []).length ? `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">${l.photos.map((p, i) => leadUrls[p] ? `<a href="${esc(leadUrls[p])}" target="_blank" rel="noopener"><img src="${esc(leadUrls[p])}" alt="${t('photo')} ${i + 1}" width="88" height="88" style="object-fit:cover;border-radius:10px;display:block"></a>` : '').join('')}</div>` : ''}
     <div class="acts">${l.phone ? `<a class="btn2" href="tel:${esc(tel)}">${esc(l.phone)}</a><a class="btn2" href="https://wa.me/${wa.length === 10 ? '1' + wa : wa}" target="_blank" rel="noopener">WhatsApp</a>` : ''}${l.email ? `<a class="btn2" href="mailto:${esc(l.email)}">${esc(l.email)}</a>` : ''}
     <button class="primary" data-leadp="${l.id}">${t('leadToProject')}</button>${l.status === 'new' ? `<button class="btn2" data-leadst="${l.id}:contacted">${t('lead_contacted')}</button>` : ''}<button class="btn2" data-leadst="${l.id}:archived">${t('archive')}</button></div></div>`; }).join('')}</div>`;
 }
@@ -323,6 +324,7 @@ async function loadAll() {
   if (!me || !me.active) { me = null; B = []; throw Object.assign(new Error('noaccess'), { noaccess: true }); }
   [settings, B, leads, team] = await Promise.all([API.getSettings().catch(() => ({})), API.loadAll(), staff() ? API.listLeads().catch(() => []) : [], API.team().catch(() => [])]);
   if (!staff()) ctab = 'progress';
+  leadUrls = staff() ? await API.leadPhotoUrls(leads.flatMap(l => l.photos || [])).catch(() => ({})) : {};
 }
 function openProject(id) {
   cur = B.find(b => b.project.id === id); if (!cur) { view = 'home'; return render(); }

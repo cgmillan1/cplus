@@ -85,3 +85,16 @@ Si alguien tiene activado "reducir movimiento" en su teléfono, el sitio muestra
 - Ciudades donde trabajan (el sitio viejo no lo dice) y número de licencia de Utah, para el pie de página y los contratos.
 - Confirmar el teléfono: el sitio viejo muestra (385) 358-6145, pero el enlace marca 404-542-0606. Aquí se usa (385) 358-6145 en todo.
 - Reseñas: el sitio solo dice "5 estrellas en Google". Si nos pasan el enlace de su perfil de Google, se puede poner.
+
+## Google, reseñas y español (versión 4)
+- **Dos páginas:** `index.html` (inglés) y `es.html` (español), cada una con su título y descripción, enlazadas entre sí para que Google muestre la correcta. Los botones ES/EN cambian de página. `es.html` se genera desde `index.html` con `tools/build-es.py`: si cambias textos, pídeme regenerarla.
+- **Datos para Google:** nombre, teléfono, dirección de South Jordan, servicios y ciudades del Condado de Utah y Salt Lake (dentro de `index.html`), más `sitemap.xml` y `robots.txt`. Si el sitio se pasa a cplusllc.com, hay que cambiar la dirección `https://cgmillan1.github.io/cplus/` en esos archivos.
+- **Reseñas:** 5.0 con 7 reseñas en Google, y los botones abren su ficha de Google. Recomendado: que C Plus **reclame su perfil de Google** ("Own this business?").
+- **Fotos en la cotización:** el cliente puede subir hasta 5 fotos. Se guardan privadas y se ven en las solicitudes del panel.
+
+## Aviso por correo de cada solicitud
+La base de datos llama a la función `lead-alert` con cada solicitud nueva. Para que mande correos:
+1. Crea una cuenta gratis en resend.com y una **API key**.
+2. En Supabase: **Edge Functions > Secrets** agrega `RESEND_API_KEY` con esa llave.
+3. Mientras no verifiques el dominio cplusllc.com en Resend, solo puede enviar al correo con el que abriste Resend. Para mandarlo al project manager, verifica el dominio y agrega `RESEND_FROM` = `C Plus <avisos@cplusllc.com>`.
+Por defecto avisa al admin y a los project managers del Equipo (no a las cuentas demo). Para otra lista, agrega el secreto `ALERT_TO` con correos separados por comas.

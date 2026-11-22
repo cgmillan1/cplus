@@ -460,3 +460,6 @@ revoke execute on function public.expenses_budget_same_project() from anon, auth
 -- código de configuración para crear el primer admin (se borra al usarlo)
 insert into setup_code (code) select upper(encode(extensions.gen_random_bytes(4), 'hex'))
   where not exists (select 1 from team) and not exists (select 1 from setup_code);
+
+-- ---------- versión 4: fotos en la cotización y aviso por correo ----------
+-- (ya aplicado en Supabase: ver la migración "lead_photos_and_alerts")

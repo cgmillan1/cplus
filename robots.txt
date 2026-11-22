@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /proyecto.html
+Sitemap: https://cgmillan1.github.io/cplus/sitemap.xml

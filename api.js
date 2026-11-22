@@ -57,7 +57,9 @@
     },
     async changePassword(password) { ok(await sb.auth.updateUser({ password })); },
     async listLeads() { return ok(await sb.from('leads').select('*').order('created_at', { ascending: false }).limit(200)); },
-    async submitLead(f) { ok(await sb.rpc('submit_lead', { who: f.name, tel: f.phone, mail: f.email, town: f.city, svc: f.service, msg: f.message, lng: f.lang })); },
+    async submitLead(f) { ok(await sb.rpc('submit_lead', { who: f.name, tel: f.phone, mail: f.email, town: f.city, svc: f.service, msg: f.message, lng: f.lang, pics: f.pics || [] })); },
+    async uploadLeadPhoto(blob, folder, n) { const path = `new/${folder}/${n}.jpg`; ok(await sb.storage.from('lead_photos').upload(path, blob, { contentType: 'image/jpeg', upsert: false })); return path; },
+    async leadPhotoUrls(paths) { if (!paths.length) return {}; const r = ok(await sb.storage.from('lead_photos').createSignedUrls(paths, 3600)); return Object.fromEntries(r.filter(x => x.signedUrl).map(x => [x.path, x.signedUrl])); },
     /* client side: no login, only the private token */
     async clientProject(tok) { return ok(await sb.rpc('client_project', { tok })); },
     async clientComment(tok, who, msg) { ok(await sb.rpc('client_comment', { tok, who, msg })); },

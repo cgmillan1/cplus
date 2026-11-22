@@ -1,256 +1,342 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="en" data-page="en" data-type="service" data-radius="soft" data-buttons="block" data-motion>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://*.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'">
-<title>C Plus LLC · Pergolas, decks, tile and flooring</title>
-<meta name="description" content="C Plus LLC designs and builds pergolas, decks, tile, flooring, kitchens and basements. Ask for a free estimate and follow your project from your phone.">
-<meta property="og:title" content="C Plus LLC · We add a plus to your home">
-<meta property="og:description" content="Pergolas, decks, tile, flooring, kitchens and basements, designed and built for homeowners.">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob:; connect-src 'self' https://*.supabase.co; object-src 'none'; base-uri 'self'">
+<title>Pergolas, Decks, Tile &amp; Flooring in Utah | C Plus LLC</title>
+<meta name="description" content="C Plus LLC builds pergolas, decks, tile showers, flooring, backsplash and basements in Utah County and Salt Lake County. Rated 5.0 on Google. Free quote, English and Spanish.">
+<meta name="site-kind" content="other">
+<meta name="page-type" content="service">
+<meta property="og:type" content="website">
+<meta property="og:title" content="C Plus LLC: pergolas, decks, tile and floors in Utah">
+<meta property="og:description" content="Built for homeowners in Utah County and Salt Lake County. Free quote.">
 <meta property="og:image" content="img/pergola-blanca.jpg">
-<meta name="theme-color" content="#110f0d">
-<link rel="icon" href="cplus-logo.svg">
-<link rel="apple-touch-icon" href="icon-180.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="site.css?v=1">
-<link rel="preload" as="image" href="img/pergola-blanca.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="cplus-logo.svg" type="image/svg+xml">
+<meta name="theme-color" content="#f4efe7">
+<!-- <link rel="canonical" href="https://www.cplusllc.com/"> once the domain points here -->
+<link rel="preload" href="vendor/fonts/schibsted-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<style>@font-face{font-family:"Schibsted Grotesk";font-style:normal;font-display:swap;font-weight:400 900;src:url(vendor/fonts/schibsted-grotesk-latin-wght-normal.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}@font-face{font-family:"Schibsted Grotesk";font-style:normal;font-display:swap;font-weight:400 900;src:url(vendor/fonts/schibsted-grotesk-latin-ext-wght-normal.woff2) format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}</style>
+<link rel="stylesheet" href="assets/system.css">
+<link rel="stylesheet" href="assets/ui/cards.css">
+<link rel="stylesheet" href="assets/motion/motion.css">
+<link rel="stylesheet" href="assets/backgrounds/backgrounds.css">
+<link rel="stylesheet" href="assets/layout/layout.css">
+<link rel="stylesheet" href="assets/icons/icon.css">
+<style>
+:root {
+  --p-bg: #f4efe7; --p-surface: #ebe3d6; --p-ink: #1c1712; --p-muted: #62584c;
+  --p-accent: #c4701a; --p-accent-ink: #111111; --p-action: #c4701a; --p-action-ink: #111111;
+  --p-inv-bg: #1c1712; --p-inv-surface: #28231e; --p-inv-ink: #f4efe7; --p-inv-muted: #9a958d;
+  --p-inv-accent: #c4701a; --p-inv-accent-ink: #111111; --p-inv-action: #c4701a; --p-inv-action-ink: #111111;
+  --font-display: "Schibsted Grotesk", system-ui, sans-serif;
+  --font-text: "Schibsted Grotesk", system-ui, sans-serif;
+  --display-weight: 400;
+  --display-tracking: -0.035em;
+  --display-tracking-xl: -0.042em;
+  --ly-scale: 0.98;
+}
+</style>
+<link rel="stylesheet" href="v2.css">
+<script>document.documentElement.classList.add('m-enter');setTimeout(()=>document.documentElement.classList.add('m-enter-done'),700)</script>
+<script>document.documentElement.classList.add('mo-js');setTimeout(()=>document.documentElement.classList.add('mo-safe'),2500)</script>
+<link rel="modulepreload" href="assets/moments/moments.js"><link rel="modulepreload" href="assets/moments/lib.js">
+<link rel="modulepreload" href="assets/moments/pinned-chapters/moment.js"><link rel="modulepreload" href="assets/moments/picture-develops/moment.js">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"HomeAndConstructionBusiness","name":"C Plus LLC","telephone":"+1-385-358-6145","email":"info@cplusllc.com",
+ "address":{"@type":"PostalAddress","addressLocality":"South Jordan","addressRegion":"UT","addressCountry":"US"},
+ "areaServed":[{"@type":"AdministrativeArea","name":"Utah County, UT"},{"@type":"AdministrativeArea","name":"Salt Lake County, UT"}],
+ "knowsLanguage":["en","es"],"sameAs":["https://www.instagram.com/cplus_llc/","https://www.tiktok.com/@cplusllc"]}
+</script>
 </head>
 <body>
-<a class="skip" href="#main" data-i18n="skip">Skip to content</a>
+<!-- plan
+  kind: service (a remodeling trade: people are hired)
+  deal: palette from the client's own logo (orange roofs, brown towers) on warm stone, because the logo is the brand and stone reads as building material;
+        type schibsted (Schibsted Grotesk); hero split (re-dealt from film: no film exists); nav-mega; footer-visit; close-photo; rhythm space; buttons block; mark: the client's logo
+  moments: pinned-chapters on #steps (how a job goes, one picture per step); picture-develops on #reviews (one finished deck comes up like a print)
+  GSAP: Flip for the work filter and for opening a photo into the 3D viewer (interaction only, never scroll)
+  #top hero        the offer and the 3D pergola              picture: object (pergola, live depth)   1 screen
+  #services        six trades, a photo for each (peek-list)  picture: work                           1
+  #work            the portfolio, filter, open in 3D         picture: work                           2
+  #steps           visit, plan, build, walk-through          picture: use (pinned-chapters)          2
+  #app             the client's project page                 picture: the firm's own app (UI)        1
+  #reviews         5.0 on Google, the reviews                picture: work (picture-develops)        1
+  #quote           the quote form with photos, the area      form                                    1-2
+-->
+<div class="langBar" id="langBar" hidden><span data-i18n="langAsk">¿Prefieres español?</span> <button type="button" class="link" data-lang="es" data-i18n="langGo">Ver en español</button> <button type="button" id="langNo" class="langX" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
 
-<div id="intro" aria-hidden="true">
-  <svg viewBox="-80 -80 160 160"><use href="#mark" x="-80" y="-80" width="160" height="160"/></svg>
-</div>
-
-<svg width="0" height="0" style="position:absolute" aria-hidden="true">
-  <symbol id="mark" viewBox="-80 -80 160 160">
-    <g class="towers">
-      <path d="M-40,-23 L-28,-30 V8 H-40 Z" fill="#7c4604"/><path d="M-28,-30 L-12,-22 V8 H-28 Z" fill="#ec9c3b"/>
-      <path d="M-14,-54 L0,-62 V8 H-14 Z" fill="#7c4604"/><path d="M0,-62 L26,-50 V8 H0 Z" fill="#ec9c3b"/>
-      <path d="M5,-52 V2 M11,-49 V2 M17,-46 V2 M-23,-23 V2 M-18,-21 V2" stroke="#f7e9d4" stroke-width="2.2"/>
-    </g>
-    <path class="roof" d="M-78,38 L-46,13 L-16,22" fill="none" stroke="#ec9c3b" stroke-width="7" stroke-linejoin="round"/>
-    <path class="roof" d="M16,22 L46,13 L78,38" fill="none" stroke="#ec9c3b" stroke-width="7" stroke-linejoin="round"/>
-    <path class="roof" d="M-36,44 L0,16 L36,44" fill="none" stroke="#9a5a0e" stroke-width="9" stroke-linejoin="round"/>
-    <path d="M-6,30 h12 v12 h-12 Z M0,30 v12 M-6,36 h12" fill="#ec9c3b" stroke="#110f0d" stroke-width="1.5"/>
-  </symbol>
-</svg>
-
-<header class="nav" id="top">
-  <div class="wrap">
-    <a class="brand" href="#top" aria-label="C Plus LLC">
-      <svg class="mk" viewBox="-80 -80 160 160" aria-hidden="true"><use href="#mark" x="-80" y="-80" width="160" height="160"/></svg>
-      <span><b>C<i>+</i>PLUS</b><small>LLC</small></span>
-    </a>
-    <nav aria-label="Main">
-      <a href="#work" data-i18n="navWork">Projects</a>
-      <a href="#services" data-i18n="navServices">Services</a>
-      <a href="#app" data-i18n="navApp">Your project</a>
+<header class="nav">
+  <div class="wrap nav__bar">
+    <a class="skip-link" href="#top" data-i18n="skip">Skip to content</a>
+    <a class="nav__logo" href="#top"><img src="cplus-logo.svg" alt="" width="34" height="34"><span>C Plus</span></a>
+    <nav class="nav__links" aria-label="Main">
+      <div class="nav__item">
+        <a class="nav__link" href="#services"><span data-i18n="navServices">Services</span> <svg class="chev" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        <div class="nav__menu">
+          <div class="wrap grid">
+            <div class="menu-col span-3">
+              <p class="t-label" data-i18n="mOut">Outside</p>
+              <a href="#services" data-peek-go="pergola"><span data-i18n="s1h">Pergolas</span><span data-i18n="m1">Shade and style for the patio</span></a>
+              <a href="#services" data-peek-go="deck"><span data-i18n="s2h">Decks</span><span data-i18n="m2">Wood, composite, stairs, railings</span></a>
+            </div>
+            <div class="menu-col span-3">
+              <p class="t-label" data-i18n="mIn">Inside</p>
+              <a href="#services" data-peek-go="tile"><span data-i18n="s3h">Tile and showers</span><span data-i18n="m3">Niches, benches, patterned floors</span></a>
+              <a href="#services" data-peek-go="kitchen"><span data-i18n="s4h">Kitchens and backsplash</span><span data-i18n="m4">Backsplash, counters, cabinets</span></a>
+              <a href="#services" data-peek-go="floor"><span data-i18n="s5h">Flooring</span><span data-i18n="m5">Plank, laminate and tile</span></a>
+              <a href="#services" data-peek-go="basement"><span data-i18n="s6h">Basements and remodels</span><span data-i18n="m6">Finished rooms for the family</span></a>
+            </div>
+            <a class="menu-card span-3 start-10" href="#work">
+              <div class="panel"><img class="frame__img" src="img/deck-vidrio.jpg" alt="A wood deck with a glass railing above a canyon" loading="lazy"></div>
+              <span class="t-card" data-i18n="mCard">See 24 projects in 3D</span>
+              <span class="t-small muted" data-i18n="mCardS">Every photo opens as a scene</span>
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="nav__item"><a class="nav__link" href="#work" data-i18n="navWork">Our work</a></div>
+      <div class="nav__item"><a class="nav__link" href="#steps" data-i18n="navSteps">How it works</a></div>
+      <div class="nav__item"><a class="nav__link" href="#reviews" data-i18n="navReviews">Reviews</a></div>
     </nav>
-    <div class="seg" role="group" aria-label="Language"><button data-lang="es" aria-pressed="false">ES</button><button data-lang="en" aria-pressed="true">EN</button></div>
-    <a class="btn primary sm" href="#estimate" data-i18n="navEstimate">Free quote</a>
+    <div class="nav__actions">
+      <div class="seg" role="group" aria-label="Language"><button type="button" data-lang="es" aria-pressed="false">ES</button><button type="button" data-lang="en" aria-pressed="true">EN</button></div>
+      <a class="btn btn--primary" href="#quote" data-i18n="cta">Get a free quote</a>
+    </div>
+    <button class="nav__toggle" type="button" aria-expanded="false" aria-label="Menu">
+      <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M2 5h14M2 13h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+    </button>
   </div>
 </header>
 
-<main id="main">
+<main id="top">
+  <section class="hero hero--split" data-enter aria-labelledby="hero-h">
+    <div class="wrap"><div class="hero-text grid hero__grid">
+      <div class="hero__text span-5">
+        <p class="hero__kicker" data-i18n="heroNote">Utah County and Salt Lake County</p>
+        <h1 id="hero-h" data-i18n="h1">Pergolas, decks, tile and floors for Utah homes</h1>
+        <p class="hero__lead" data-i18n="lead">One crew designs and builds it, in English or Spanish. You follow every step, payment and photo on your own project page.</p>
+        <div class="btn-row"><a class="btn btn--primary" href="#quote"><span data-i18n="cta">Get a free quote</span><svg class="m-arrow" viewBox="0 0 12 12" aria-hidden="true"><path class="m-arrow__stem" d="M1 6h8"/><path class="m-arrow__head" d="M4.5 2.5 8 6l-3.5 3.5"/></svg></a><a class="btn btn--secondary" href="#work" data-i18n="ctaWork">See our work</a></div>
+      </div>
+      <div class="hero__media span-6 start-7 hero3d">
+        <img src="img/pergola-blanca.jpg" alt="A white pergola C Plus built over a new composite deck" style="--ly-pos: 50% 55%" fetchpriority="high" data-source="client" data-subject="pergola">
+        <canvas id="heroCanvas" aria-hidden="true"></canvas>
+        <a class="ly-float" href="#reviews">
+          <div class="ly-float__row"><span>Google</span><span><svg class="stars" viewBox="0 0 100 20" aria-hidden="true"><use href="#stars"/></svg></span></div>
+          <div class="ly-float__title" data-i18n="float">5.0 from 7 reviews</div>
+        </a>
+      </div>
+    </div></div>
+  </section>
 
-<section class="hero" aria-labelledby="heroH">
-  <div class="hero3d">
-    <img src="img/pergola-blanca.jpg" alt="" class="fallback">
-    <canvas id="heroCanvas" aria-hidden="true"></canvas>
-  </div>
-  <div class="heroShade"></div>
-  <div class="wrap heroTxt">
-    <p class="kicker"><span class="dot"></span><span data-i18n="kicker">Pergolas · Decks · Tile · Flooring</span></p>
-    <h1 id="heroH"><span class="ln"><span data-i18n="h1a">We add a</span></span> <span class="ln"><span><em class="plus">plus</em> <span data-i18n="h1b">to your home.</span></span></span></h1>
-    <p class="lead" data-i18n="heroP">Custom outdoor projects, tile and floors, designed and built for homeowners. You see every step, every payment and every photo from your phone.</p>
-    <div class="ctas">
-      <a class="btn primary" href="#estimate" data-i18n="ctaEstimate">Get a free quote</a>
-      <a class="btn ghost" href="#work" data-i18n="ctaWork">See our work in 3D</a>
+  <section class="section" id="services" aria-labelledby="services-h">
+    <div class="wrap">
+      <div class="section-head">
+        <h2 id="services-h" data-i18n="servH">Our services, from pergolas to basements</h2>
+        <p data-i18n="servP">From the first sketch to the last swept floor, for big remodels and small repairs.</p>
+      </div>
+      <div class="grid grid--top" data-peek>
+        <ul class="rows span-5">
+          <li data-peek-to="pergola" tabindex="0"><span class="rows__name"><span data-i18n="s1h">Pergolas</span></span><span class="rows__value" data-i18n="vOut">Outside</span></li>
+          <li data-peek-to="deck" tabindex="0"><span class="rows__name"><span data-i18n="s2h">Decks</span></span><span class="rows__value" data-i18n="vOut">Outside</span></li>
+          <li data-peek-to="tile" tabindex="0"><span class="rows__name"><span data-i18n="s3h">Tile and showers</span></span><span class="rows__value" data-i18n="vIn">Inside</span></li>
+          <li data-peek-to="kitchen" tabindex="0"><span class="rows__name"><span data-i18n="s4h">Kitchens and backsplash</span></span><span class="rows__value" data-i18n="vIn">Inside</span></li>
+          <li data-peek-to="floor" tabindex="0"><span class="rows__name"><span data-i18n="s5h">Flooring</span></span><span class="rows__value" data-i18n="vIn">Inside</span></li>
+          <li data-peek-to="basement" tabindex="0"><span class="rows__name"><span data-i18n="s6h">Basements and remodels</span></span><span class="rows__value" data-i18n="vIn">Inside</span></li>
+        </ul>
+        <div class="frame span-6 start-7 peekframe">
+          <img class="frame__img" data-peek-for="pergola" src="img/pergola-patio.jpg" alt="A wood pergola over a backyard patio">
+          <img class="frame__img" data-peek-for="deck" src="img/deck-montana.jpg" alt="A wood deck looking out over the valley and the mountains" hidden>
+          <img class="frame__img" data-peek-for="tile" src="img/ducha-marmol.jpg" alt="A marble-look tile shower with a niche and a bench" hidden>
+          <img class="frame__img" data-peek-for="kitchen" src="img/cocina-azul.jpg" alt="A navy kitchen with a handmade-look tile backsplash" hidden>
+          <img class="frame__img" data-peek-for="floor" src="img/piso-vinil.jpg" alt="A wood-look plank floor in a bright upstairs room" hidden>
+          <img class="frame__img" data-peek-for="basement" src="img/sotano-sala.jpg" alt="A finished basement room with fresh paint and carpet" hidden>
+        </div>
+      </div>
     </div>
-    <p class="hint3d"><span class="mouse" aria-hidden="true"></span><span data-i18n="hint3d">Move your mouse over the photo: it is a 3D scene made from a real C Plus project.</span></p>
-  </div>
-</section>
+  </section>
 
-<div class="marquee" aria-hidden="true"><div class="track">
-  <span>Pergolas</span><b>+</b><span>Decks</span><b>+</b><span>Tile</span><b>+</b><span>Flooring</span><b>+</b><span>Kitchens</span><b>+</b><span>Showers</span><b>+</b><span>Basements</span><b>+</b>
-  <span>Pergolas</span><b>+</b><span>Decks</span><b>+</b><span>Tile</span><b>+</b><span>Flooring</span><b>+</b><span>Kitchens</span><b>+</b><span>Showers</span><b>+</b><span>Basements</span><b>+</b>
-</div></div>
-
-<section class="fly" id="work" aria-labelledby="flyH">
-  <div class="flySticky">
-    <div class="wrap flyHead">
-      <h2 id="flyH" data-i18n="flyH">Walk through our work</h2>
-      <p data-i18n="flyP">Scroll to move through real C Plus projects.</p>
+  <section class="section" id="work" aria-labelledby="work-h">
+    <div class="wrap">
+      <div class="section-head--row">
+        <div><h2 id="work-h" data-i18n="workH">Recent projects, each one in 3D</h2><p data-i18n="workP">Open a photo and the room moves with your mouse or finger. The depth comes from the real photo.</p></div>
+        <button class="btn btn--secondary" type="button" id="allWork" data-i18n="allWork">Walk through all 24</button>
+      </div>
+      <div class="filters" role="group" aria-label="Filter projects">
+        <button type="button" data-f="all" aria-pressed="true" data-i18n="fAll">All</button>
+        <button type="button" data-f="pergola" aria-pressed="false" data-i18n="fPergola">Pergolas</button>
+        <button type="button" data-f="deck" aria-pressed="false" data-i18n="fDeck">Decks</button>
+        <button type="button" data-f="kitchen" aria-pressed="false" data-i18n="fKitchen">Kitchens</button>
+        <button type="button" data-f="bath" aria-pressed="false" data-i18n="fBath">Tile and showers</button>
+        <button type="button" data-f="floor" aria-pressed="false" data-i18n="fFloor">Floors</button>
+        <button type="button" data-f="basement" aria-pressed="false" data-i18n="fBasement">Basements</button>
+      </div>
+      <ul class="work" id="grid"></ul>
     </div>
-    <div class="stage" id="stage"></div>
-    <div class="flyBar"><i id="flyProg"></i></div>
-  </div>
-</section>
+  </section>
 
-<section class="services band" id="services" aria-labelledby="servH">
+  <section class="section" id="steps" style="--h: 2" data-moment="pinned-chapters" aria-labelledby="steps-h">
+    <div class="wrap mo-pc__grid">
+      <div class="mo-pc__text">
+        <h2 id="steps-h" data-i18n="procH">The four steps of a C Plus project</h2>
+        <ol class="mo-pc__steps">
+          <li class="mo-pc__step"><h3 data-i18n="p1h">1. Visit and quote</h3><p data-i18n="p1p">We come to your home, measure, and send a clear quote split into materials and labor.</p>
+            <figure class="mo-pc__visual"><img src="img/sotano-escalera.jpg" alt="A basement stair and room measured for a remodel" width="1053" height="789"></figure></li>
+          <li class="mo-pc__step"><h3 data-i18n="p2h">2. Plan and approve</h3><p data-i18n="p2p">You approve the design, the quote and the payment schedule before any work starts.</p>
+            <figure class="mo-pc__visual"><img src="img/cocina-azul-estufa.jpg" alt="A navy kitchen wall with the range and hood" width="1053" height="789"></figure></li>
+          <li class="mo-pc__step"><h3 data-i18n="p3h">3. We build</h3><p data-i18n="p3p">The crew posts progress and photos to your project page, so you always know where things stand.</p>
+            <figure class="mo-pc__visual"><img src="img/deck-trasero.jpg" alt="A backyard composite deck with new stairs" width="593" height="789"></figure></li>
+          <li class="mo-pc__step"><h3 data-i18n="p4h">4. Final walk-through</h3><p data-i18n="p4p">We walk the finished work with you and close every detail before the last payment.</p>
+            <figure class="mo-pc__visual"><img src="img/pergola-lado.jpg" alt="The finished pergola seen from the side" width="1053" height="789"></figure></li>
+        </ol>
+      </div>
+      <div class="mo-pc__visuals frame"></div>
+    </div>
+  </section>
+
+  <section class="section" id="app" aria-labelledby="app-h">
+    <div class="wrap grid grid--middle">
+      <div class="span-5">
+        <div class="section-head">
+          <h2 id="app-h" data-i18n="appH">The client app: your project on your phone</h2>
+          <p data-i18n="appP">Every client gets a private link. No calls to ask how it is going.</p>
+        </div>
+        <ul class="rows">
+          <li><span class="rows__name" data-i18n="a1">Steps done and what comes next</span></li>
+          <li><span class="rows__name" data-i18n="a2">The quote in materials and labor</span></li>
+          <li><span class="rows__name" data-i18n="a3">What you have paid and what is left</span></li>
+          <li><span class="rows__name" data-i18n="a4">Changes you approve before they happen</span></li>
+          <li><span class="rows__name" data-i18n="a5">Photos of each stage and messages with the crew</span></li>
+        </ul>
+      </div>
+      <div class="span-6 start-7 phoneWrap">
+        <div class="phone" role="img" aria-label="A client's project page: a backyard pergola at 65 percent, materials 6,400 dollars, labor 5,200 dollars, the rafters step in progress" data-i18n-aria="phoneAria">
+          <div class="pTop"><img src="cplus-logo.svg" alt="" width="26" height="26"><b>C Plus</b></div>
+          <div class="pHero"><b data-i18n="demoTitle">Backyard pergola</b><div class="ring" style="--p:0"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="50"/><circle class="arc" cx="60" cy="60" r="50"/></svg><span id="ringNum">0%</span></div></div>
+          <div class="pRow"><span data-i18n="demoMat">Materials</span><b>$6,400</b></div>
+          <div class="pRow"><span data-i18n="demoLab">Labor</span><b>$5,200</b></div>
+          <div class="pBar"><i></i></div>
+          <div class="pRow small"><span data-i18n="demoPaid">Paid $7,540</span><span data-i18n="demoLeft">Left $4,060</span></div>
+          <div class="pSteps"><span class="done" data-i18n="ds1">Posts and footings</span><span class="done" data-i18n="ds2">Beams</span><span class="now" data-i18n="ds3">Rafters and slats</span><span data-i18n="ds4">Stain and clean-up</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="reviews" aria-labelledby="reviews-h">
+    <div class="wrap grid grid--top">
+      <div class="span-6">
+        <div class="section-head">
+          <h2 id="reviews-h" data-i18n="revH">Rated 5.0 on Google</h2>
+          <p data-i18n="revP">Seven reviews so far, every one of them five stars.</p>
+        </div>
+        <blockquote class="quote" lang="en"><p>“Our tenant hired CPlus LLC to finish the basement and they were the besttt!!!”</p><footer>Valeria V · Google</footer></blockquote>
+        <ul class="rows revrows">
+          <li><span class="rows__name">Lizeth Tatiana Ramirez Lopez</span><span class="rows__value"><svg class="stars" viewBox="0 0 100 20" role="img" aria-label="5 stars"><use href="#stars"/></svg></span></li>
+          <li><span class="rows__name">Jhors Giraldo</span><span class="rows__value"><svg class="stars" viewBox="0 0 100 20" role="img" aria-label="5 stars"><use href="#stars"/></svg></span></li>
+        </ul>
+        <p><a class="link" href="https://www.google.com/maps/search/?api=1&amp;query=Cplus%20llc%20South%20Jordan%20Utah" target="_blank" rel="noopener" data-i18n="revAll">Read the reviews on Google</a></p>
+      </div>
+      <figure class="develop span-6 start-7" data-moment="picture-develops"><img src="img/deck-vidrio.jpg" alt="A hardwood deck with a glass railing above a rocky canyon" width="593" height="789" loading="lazy"></figure>
+    </div>
+  </section>
+
+  <section class="section" id="quote" aria-labelledby="quote-h">
+    <div class="wrap grid grid--top">
+      <div class="span-5 stack-5">
+        <div class="section-head">
+          <h2 id="quote-h" data-i18n="estH">Quote form: tell us about your project</h2>
+          <p data-i18n="estP">Tell us about the project and we call you back. Photos of the space help us price it.</p>
+        </div>
+        <ul class="rows contactRows">
+          <li><span class="rows__name" data-i18n="cPhone">Phone</span><a class="rows__value link" href="tel:+13853586145">(385) 358-6145</a></li>
+          <li><span class="rows__name" data-i18n="cEmail">Email</span><a class="rows__value link" href="mailto:info@cplusllc.com">info@cplusllc.com</a></li>
+          <li><span class="rows__name" data-i18n="cArea">Area</span><span class="rows__value" data-i18n="cAreaV">Utah and Salt Lake County</span></li>
+        </ul>
+      </div>
+      <form class="form span-6 start-7" id="estf" novalidate data-fix="Check the fields marked.">
+        <div class="hp" aria-hidden="true"><label>Website <input name="website" tabindex="-1" autocomplete="off"></label></div>
+        <div class="field field--full"><label for="f-name" data-i18n="fName">Name</label>
+          <input id="f-name" name="name" type="text" autocomplete="name" required maxlength="120" aria-describedby="f-name-err">
+          <p class="field__error" id="f-name-err" hidden data-i18n="errName">Write your name.</p></div>
+        <div class="field"><label for="f-phone" data-i18n="fPhone">Phone</label>
+          <input id="f-phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" maxlength="40" aria-describedby="f-phone-err">
+          <p class="field__error" id="f-phone-err" hidden data-i18n="errContact">Add a phone or an email so we can call you back.</p></div>
+        <div class="field"><label for="f-email" data-i18n="fEmail">Email</label>
+          <input id="f-email" name="email" type="email" autocomplete="email" inputmode="email" maxlength="160"></div>
+        <div class="field"><label for="f-city" data-i18n="fCity">City</label>
+          <input id="f-city" name="city" type="text" autocomplete="address-level2" maxlength="120"></div>
+        <div class="field"><label for="f-service" data-i18n="fService">Service</label>
+          <select id="f-service" name="service">
+            <option value="Pergola" data-i18n="s1h">Pergolas</option><option value="Deck" data-i18n="s2h">Decks</option>
+            <option value="Tile and showers" data-i18n="s3h">Tile and showers</option><option value="Kitchen and backsplash" data-i18n="s4h">Kitchens and backsplash</option>
+            <option value="Flooring" data-i18n="s5h">Flooring</option><option value="Basement or remodel" data-i18n="s6h">Basements and remodels</option>
+            <option value="Repair" data-i18n="oRepair">A small repair</option><option value="Other" data-i18n="oOther">Something else</option>
+          </select></div>
+        <div class="field field--full"><label for="f-msg" data-i18n="fMsg">About the project</label>
+          <textarea id="f-msg" name="message" rows="2" maxlength="2000"></textarea></div>
+        <div class="field field--full pics">
+          <input type="file" id="fpics" accept="image/*" multiple class="fileHidden"><label class="link picBtn" for="fpics" data-i18n="fPics">Add photos of the space, up to 5</label>
+          <ul class="picList" id="picList" aria-live="polite"></ul>
+        </div>
+        <div class="btn-row"><button class="btn btn--primary" type="submit" data-i18n="fSend">Send my quote request</button></div>
+        <p class="form__status" role="status" data-form-status id="fstatus"></p>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer class="footer closing" id="contact" aria-labelledby="close-h">
   <div class="wrap">
-    <p class="eyebrow rv" data-i18n="servE">What we build</p>
-    <h2 id="servH" class="rv" data-i18n="servH">A plus for every project</h2>
-    <p class="sub rv" data-i18n="servP">One crew from design to clean-up, for big remodels and small fixes.</p>
-    <div class="cards rvkids">
-      <article class="svc tilt" data-cat="pergola"><div class="ph"><img src="img/pergola-patio.jpg" alt="" loading="lazy"></div><div class="tx"><span class="num">01</span><h3 data-i18n="s1h">Pergolas</h3><p data-i18n="s1p">Prefabricated or fully custom, from modern to classic, built to give your patio shade and style.</p></div></article>
-      <article class="svc tilt" data-cat="deck"><div class="ph"><img src="img/deck-montana.jpg" alt="" loading="lazy"></div><div class="tx"><span class="num">02</span><h3 data-i18n="s2h">Decks</h3><p data-i18n="s2p">Wood and composite decks, stairs and railings, designed for relaxing or for having people over.</p></div></article>
-      <article class="svc tilt" data-cat="bath"><div class="ph"><img src="img/ducha-marmol.jpg" alt="" loading="lazy"></div><div class="tx"><span class="num">03</span><h3 data-i18n="s3h">Tile and showers</h3><p data-i18n="s3p">Floors, walls, showers with niches and benches, and custom tile surfaces.</p></div></article>
-      <article class="svc tilt" data-cat="kitchen"><div class="ph"><img src="img/cocina-azul.jpg" alt="" loading="lazy"></div><div class="tx"><span class="num">04</span><h3 data-i18n="s4h">Kitchens and backsplash</h3><p data-i18n="s4p">Backsplash, counters and cabinet updates that change the whole room.</p></div></article>
-      <article class="svc tilt" data-cat="floor"><div class="ph"><img src="img/piso-vinil.jpg" alt="" loading="lazy"></div><div class="tx"><span class="num">05</span><h3 data-i18n="s5h">Flooring</h3><p data-i18n="s5p">Plank, laminate and tile floors, with clean transitions and new baseboards.</p></div></article>
-      <article class="svc tilt" data-cat="basement"><div class="ph"><img src="img/sotano-sala.jpg" alt="" loading="lazy"></div><div class="tx"><span class="num">06</span><h3 data-i18n="s6h">Basements and remodels</h3><p data-i18n="s6p">Full remodels and finished basements: comfortable spaces for work, fun and family.</p></div></article>
+    <div class="closing__cta close--photo">
+      <div class="section-head--split">
+        <div><h2 id="close-h" data-i18n="closeH">Get a free quote this week</h2><p class="t-lead" data-i18n="closeP">We visit, measure and send the quote, in English or Spanish.</p></div>
+        <a class="btn btn--primary" href="#quote"><span data-i18n="cta">Get a free quote</span><svg class="m-arrow" viewBox="0 0 12 12" aria-hidden="true"><path class="m-arrow__stem" d="M1 6h8"/><path class="m-arrow__head" d="M4.5 2.5 8 6l-3.5 3.5"/></svg></a>
+      </div>
+      <div class="close__media"><img src="img/cocina-azul-isla.jpg" alt="Navy cabinets and a quartz island in a finished kitchen" loading="lazy" data-source="client" data-subject="kitchen"></div>
     </div>
-    <div class="extras rvkids">
-      <div><b data-i18n="x1h">Small repairs</b><span data-i18n="x1p">Fast help for the small jobs that keep piling up.</span></div>
-      <div><b data-i18n="x2h">Planning and permits</b><span data-i18n="x2p">We help you plan the project and handle the permits it needs.</span></div>
+    <div class="closing__links">
+      <div class="grid">
+        <div class="span-6 stack-4">
+          <a class="nav__logo" href="#top"><img src="cplus-logo.svg" alt="" width="34" height="34"><span>C Plus</span></a>
+          <address class="footer__address">South Jordan, Utah</address>
+          <p class="t-small muted" data-i18n="footArea">Serving Utah County and Salt Lake County.</p>
+        </div>
+        <div class="span-3 start-7 footer__col"><h4 data-i18n="fCol1">Contact</h4><ul><li><a href="tel:+13853586145">(385) 358-6145</a></li><li><a href="mailto:info@cplusllc.com">info@cplusllc.com</a></li></ul></div>
+        <div class="span-3 footer__col"><h4 data-i18n="fCol2">Follow</h4><ul><li><a href="https://www.instagram.com/cplus_llc/" target="_blank" rel="noopener">Instagram</a></li><li><a href="https://www.tiktok.com/@cplusllc" target="_blank" rel="noopener">TikTok</a></li><li><a href="admin.html" data-i18n="contractorLogin">Team sign in</a></li></ul></div>
+      </div>
+      <div class="footer__legal"><span>&copy; 2026 C Plus LLC</span></div>
     </div>
   </div>
-</section>
-
-<section class="gallery" aria-labelledby="galH">
-  <div class="wrap">
-    <p class="eyebrow rv" data-i18n="galE">Portfolio</p>
-    <h2 id="galH" class="rv" data-i18n="galH">Every photo opens in 3D</h2>
-    <p class="sub rv" data-i18n="galP">Tap a project to step inside it. Turn 3D off any time to see the original photo.</p>
-    <div class="filters" role="group" aria-label="Filter projects">
-      <button data-f="all" aria-pressed="true" data-i18n="fAll">All</button>
-      <button data-f="pergola" aria-pressed="false" data-i18n="fPergola">Pergolas</button>
-      <button data-f="deck" aria-pressed="false" data-i18n="fDeck">Decks</button>
-      <button data-f="kitchen" aria-pressed="false" data-i18n="fKitchen">Kitchens</button>
-      <button data-f="bath" aria-pressed="false" data-i18n="fBath">Tile and showers</button>
-      <button data-f="floor" aria-pressed="false" data-i18n="fFloor">Floors</button>
-      <button data-f="basement" aria-pressed="false" data-i18n="fBasement">Basements</button>
-    </div>
-    <ul class="grid" id="grid"></ul>
-  </div>
-</section>
+</footer>
 
 <dialog id="viewer" aria-labelledby="vCap">
   <div class="vBox">
-    <canvas id="vCanvas"></canvas>
-    <img id="vImg" alt="">
+    <div class="vStage"><canvas id="vCanvas"></canvas><img id="vImg" alt=""></div>
     <div class="vBar">
       <p id="vCap"></p>
-      <button class="vBtn" id="v3d" aria-pressed="true"><span data-i18n="v3d">3D view</span></button>
-      <button class="vBtn icon" id="vPrev" data-i18n-aria="prev" aria-label="Previous">&#8592;</button>
-      <button class="vBtn icon" id="vNext" data-i18n-aria="next" aria-label="Next">&#8594;</button>
-      <button class="vBtn icon" id="vClose" data-i18n-aria="close" aria-label="Close">&#10005;</button>
+      <button class="vBtn" type="button" id="v3d" aria-pressed="true" data-i18n="v3d">3D view</button>
+      <button class="vBtn icon" type="button" id="vPrev" aria-label="Previous" data-i18n-aria="prev"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <button class="vBtn icon" type="button" id="vNext" aria-label="Next" data-i18n-aria="next"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+      <button class="vBtn icon" type="button" id="vClose" aria-label="Close" data-i18n-aria="close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </div>
   </div>
 </dialog>
 
-<section class="process band dark" aria-labelledby="procH">
-  <div class="wrap">
-    <p class="eyebrow rv" data-i18n="procE">How we work</p>
-    <h2 id="procH" class="rv" data-i18n="procH">Easy from start to finish</h2>
-    <ol class="steps" id="steps">
-      <li class="rv"><span>1</span><h3 data-i18n="p1h">Visit and quote</h3><p data-i18n="p1p">We come to your home, measure, and send you a clear quote.</p></li>
-      <li class="rv"><span>2</span><h3 data-i18n="p2h">Plan and approve</h3><p data-i18n="p2p">You approve the quote, the design and the payment schedule before we start.</p></li>
-      <li class="rv"><span>3</span><h3 data-i18n="p3h">We build</h3><p data-i18n="p3p">The crew works and posts progress and photos to your project page.</p></li>
-      <li class="rv"><span>4</span><h3 data-i18n="p4h">Final walk-through</h3><p data-i18n="p4p">We review the finished work with you and close out every detail.</p></li>
-    </ol>
-  </div>
-</section>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="stars" viewBox="0 0 100 20"><g fill="currentColor"><path id="s1" d="M10 1.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L10 14.8l-5.2 2.8 1-5.8L1.5 7.7l5.9-.8z"/><use href="#s1" x="20"/><use href="#s1" x="40"/><use href="#s1" x="60"/><use href="#s1" x="80"/></g></symbol>
+</svg>
 
-<section class="app band" id="app" aria-labelledby="appH">
-  <div class="wrap appGrid">
-    <div>
-      <p class="eyebrow rv" data-i18n="appE">Your project, live</p>
-      <h2 id="appH" class="rv" data-i18n="appH">Follow your project from your phone</h2>
-      <p class="sub rv" data-i18n="appP">Every client gets a private page for their project. No more wondering what is happening at your house.</p>
-      <ul class="ticks rvkids">
-        <li data-i18n="a1">Progress, steps done and what comes next</li>
-        <li data-i18n="a2">Your quote, split into materials and labor</li>
-        <li data-i18n="a3">How much you have paid and what is left</li>
-        <li data-i18n="a4">You approve any change before it happens</li>
-        <li data-i18n="a5">Photos of each stage and messages with the crew</li>
-      </ul>
-    </div>
-    <div class="phoneWrap rv">
-      <div class="phone tilt" aria-label="Example of a client project page" data-i18n-aria="phoneAria">
-        <div class="pTop"><svg viewBox="-80 -80 160 160" aria-hidden="true"><use href="#mark" x="-80" y="-80" width="160" height="160"/></svg><b>C<i>+</i>PLUS</b></div>
-        <div class="pHero">
-          <small data-i18n="demoTag">Example</small>
-          <b data-i18n="demoTitle">Backyard pergola</b>
-          <div class="ring" style="--p:0"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="50"/><circle class="arc" cx="60" cy="60" r="50"/></svg><span id="ringNum">0%</span></div>
-        </div>
-        <div class="pRow"><span data-i18n="demoMat">Materials</span><b>$6,400</b></div>
-        <div class="pRow"><span data-i18n="demoLab">Labor</span><b>$5,200</b></div>
-        <div class="pBar"><i></i></div>
-        <div class="pRow small"><span data-i18n="demoPaid">Paid $7,540</span><span data-i18n="demoLeft">Left $4,060</span></div>
-        <div class="pSteps">
-          <span class="done" data-i18n="ds1">Posts and footings</span>
-          <span class="done" data-i18n="ds2">Beams</span>
-          <span class="now" data-i18n="ds3">Rafters and slats</span>
-          <span data-i18n="ds4">Stain and clean-up</span>
-        </div>
-      </div>
-      <p class="demoNote" data-i18n="demoNote">Sample numbers, for illustration only.</p>
-    </div>
-  </div>
-</section>
-
-<section class="estimate band dark" id="estimate" aria-labelledby="estH">
-  <div class="wrap estGrid">
-    <div>
-      <p class="eyebrow rv" data-i18n="estE">Free quote</p>
-      <h2 id="estH" class="rv" data-i18n="estH">What are you waiting for?</h2>
-      <p class="sub rv" data-i18n="estP">Tell us about your project and we will call you. You can also call or write to us.</p>
-      <ul class="contact rvkids">
-        <li><a href="tel:+13853586145">(385) 358-6145</a></li>
-        <li><a href="mailto:info@cplusllc.com">info@cplusllc.com</a></li>
-        <li><a href="https://www.instagram.com/cplus_llc/" target="_blank" rel="noopener">Instagram @cplus_llc</a></li>
-        <li><a href="https://www.tiktok.com/@cplusllc" target="_blank" rel="noopener">TikTok @cplusllc</a></li>
-      </ul>
-      <p class="stars rv"><span aria-hidden="true">★★★★★</span> <span data-i18n="stars">Rated 5 stars on Google</span></p>
-    </div>
-    <form id="estf" class="card rv" novalidate>
-      <div class="hp" aria-hidden="true"><label>Website <input name="website" tabindex="-1" autocomplete="off"></label></div>
-      <label><span data-i18n="fName">Name</span> <i aria-hidden="true">*</i><input name="name" required autocomplete="name" maxlength="120"></label>
-      <div class="two">
-        <label><span data-i18n="fPhone">Phone</span><input name="phone" type="tel" autocomplete="tel" maxlength="40"></label>
-        <label><span data-i18n="fEmail">Email</span><input name="email" type="email" autocomplete="email" maxlength="160"></label>
-      </div>
-      <p class="hint" data-i18n="fContact">Phone or email, so we can reach you.</p>
-      <div class="two">
-        <label><span data-i18n="fCity">City</span><input name="city" autocomplete="address-level2" maxlength="120"></label>
-        <label><span data-i18n="fService">Service</span>
-          <select name="service">
-            <option value="Pergola" data-i18n="s1h">Pergolas</option>
-            <option value="Deck" data-i18n="s2h">Decks</option>
-            <option value="Tile and showers" data-i18n="s3h">Tile and showers</option>
-            <option value="Kitchen and backsplash" data-i18n="s4h">Kitchens and backsplash</option>
-            <option value="Flooring" data-i18n="s5h">Flooring</option>
-            <option value="Basement or remodel" data-i18n="s6h">Basements and remodels</option>
-            <option value="Repair" data-i18n="x1h">Small repairs</option>
-            <option value="Other" data-i18n="other">Something else</option>
-          </select></label>
-      </div>
-      <label><span data-i18n="fMsg">Tell us about the project</span><textarea name="message" rows="4" maxlength="2000"></textarea></label>
-      <div class="err" id="ferr" role="alert"></div>
-      <button class="btn primary wide" type="submit" data-i18n="fSend">Send request</button>
-      <div class="ok" id="fok" role="status" hidden><b data-i18n="okH">Thank you!</b> <span data-i18n="okP">We received your request and will contact you soon.</span></div>
-    </form>
-  </div>
-</section>
-</main>
-
-<footer class="foot">
-  <div class="wrap">
-    <div class="fBrand"><svg viewBox="-80 -80 160 160" aria-hidden="true"><use href="#mark" x="-80" y="-80" width="160" height="160"/></svg><div><b>C Plus LLC</b><br><span data-i18n="tag">We add a plus to your home.</span></div></div>
-    <div><a href="tel:+13853586145">(385) 358-6145</a><br><a href="mailto:info@cplusllc.com">info@cplusllc.com</a></div>
-    <div><a href="https://www.instagram.com/cplus_llc/" target="_blank" rel="noopener">Instagram</a> · <a href="https://www.tiktok.com/@cplusllc" target="_blank" rel="noopener">TikTok</a><br><a href="admin.html" data-i18n="contractorLogin">Contractor sign in</a></div>
-  </div>
-</footer>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/dist/umd/supabase.js" integrity="sha384-uteMfOloLDGt042uDz+xHGF3ym63/WQ6rFq7murQRG8Ih7QrXGEGNtWd8688sb4O" crossorigin="anonymous" defer></script>
-<script src="config.js?v=1" defer></script>
-<script src="api.js?v=1" defer></script>
+<script src="vendor/supabase.js" defer></script>
+<script src="vendor/gsap.min.js" defer></script>
+<script src="vendor/Flip.min.js" defer></script>
+<script src="config.js?v=2" defer></script>
+<script src="api.js?v=2" defer></script>
 <script src="depth3d.js?v=1" defer></script>
-<script src="site.js?v=1" defer></script>
+<script src="v2.js?v=1" defer></script>
+<script type="module" src="assets/system.js"></script>
+<script type="module" src="assets/motion/motion.js"></script>
+<script type="module" src="assets/layout/layout.js"></script>
 </body>
 </html>

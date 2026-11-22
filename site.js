@@ -43,7 +43,7 @@
     heroP: 'Proyectos exteriores, azulejo y pisos a la medida, diseñados y construidos para tu casa. Ves cada paso, cada pago y cada foto desde tu teléfono.',
     ctaEstimate: 'Pide tu cotización gratis', ctaWork: 'Mira nuestro trabajo en 3D',
     hint3d: 'Mueve el mouse sobre la foto: es una escena 3D hecha de un proyecto real de C Plus.', hint3dTouch: 'Desliza el dedo sobre la foto: es una escena 3D hecha de un proyecto real de C Plus.',
-    flyH: 'Recorre nuestro trabajo', flyP: 'Baja para avanzar entre proyectos reales de C Plus.',
+    flyH: 'Recorre nuestro trabajo', flyP: 'Baja para avanzar entre proyectos reales de C Plus.', flyIntro: 'Un recorrido corto en 3D por proyectos reales de C Plus. Es opcional: tómalo o ve directo a tu cotización.', flyGo: 'Hacer el recorrido en 3D', flySkip: 'Ir a la cotización gratis', flyExit: 'Salir del recorrido',
     servE: 'Lo que construimos', servH: 'Un plus en cada proyecto', servP: 'Un mismo equipo desde el diseño hasta la limpieza final, para remodelaciones grandes y arreglos pequeños.',
     s1h: 'Pérgolas', s1p: 'Prefabricadas o totalmente a la medida, de modernas a clásicas, para darle sombra y estilo a tu patio.',
     s2h: 'Decks', s2p: 'Decks de madera y composite, escaleras y barandales, para descansar o recibir visitas.',
@@ -71,15 +71,23 @@
     okH: '¡Gracias!', okP: 'Recibimos tu solicitud y te contactaremos pronto.',
     tag: 'Le sumamos un plus a tu casa.', contractorLogin: 'Entrada del contratista',
     errName: 'Escribe tu nombre.', errContact: 'Escribe un teléfono o un correo.', errEmail: 'Revisa el correo.', errSend: 'No se pudo enviar. Llámanos al (385) 358-6145.', errMany: 'Hay muchas solicitudes en este momento. Llámanos al (385) 358-6145.', sending: 'Enviando…',
-    title: 'C Plus LLC · Pérgolas, decks, azulejo y pisos'
+    title: 'Pérgolas, decks, azulejo y pisos en Utah | C Plus LLC',
+    revE: 'Reseñas', revH: 'Lo que dicen nuestros clientes', revCount: '7 reseñas en Google', onGoogle: 'Reseña en Google', fiveStar: 'Reseña de 5 estrellas',
+    revAll: 'Ver todas las reseñas en Google', revWrite: '¿Trabajaste con nosotros? Deja tu reseña',
+    stars: '5.0 con 7 reseñas en Google', areaH: 'Dónde trabajamos', areaUC: 'Condado de Utah:', areaSL: 'Condado de Salt Lake:', areaMore: '¿Estás cerca? Pregúntanos, viajamos por el proyecto correcto.',
+    fPics: 'Agrega fotos del espacio (opcional, hasta 5)', removePic: 'Quitar foto', uploading: 'Subiendo fotos…', errPics: 'No se pudieron subir las fotos. Envía sin fotos o llámanos.',
+    footArea: 'South Jordan, UT · Atendemos el Condado de Utah y el Condado de Salt Lake',
+    langAsk: 'Prefer English?', langGo: 'View in English'
   };
-  const EN_EXTRA = { hint3dTouch: 'Drag your finger over the photo: it is a 3D scene made from a real C Plus project.', errName: 'Please type your name.', errContact: 'Please add a phone or an email.', errEmail: 'Please check the email.', errSend: 'We could not send it. Call us at (385) 358-6145.', errMany: 'We are getting many requests right now. Call us at (385) 358-6145.', sending: 'Sending…' };
+  const EN_EXTRA = { removePic: 'Remove photo', uploading: 'Uploading photos…', errPics: 'The photos could not be uploaded. Send without photos or call us.', hint3dTouch: 'Drag your finger over the photo: it is a 3D scene made from a real C Plus project.', errName: 'Please type your name.', errContact: 'Please add a phone or an email.', errEmail: 'Please check the email.', errSend: 'We could not send it. Call us at (385) 358-6145.', errMany: 'We are getting many requests right now. Call us at (385) 358-6145.', sending: 'Sending…' };
   const nodes = $$('[data-i18n]'), EN = {};
   nodes.forEach(n => { EN[n.dataset.i18n] ??= n.textContent; });
   $$('[data-i18n-aria]').forEach(n => { EN[n.dataset.i18nAria] = n.getAttribute('aria-label'); });
   EN.title = document.title; Object.assign(EN, EN_EXTRA);
-  let L = 'en';
-  try { L = localStorage.getItem('cplus-lang') || ((navigator.language || 'en').toLowerCase().startsWith('es') ? 'es' : 'en'); } catch (_) {}
+  /* each language has its own page (index.html and es.html) so Google can show the right one */
+  const PAGE = document.documentElement.dataset.page === 'es' ? 'es' : 'en';
+  let L = PAGE, pref = null;
+  try { pref = localStorage.getItem('cplus-lang'); } catch (_) {}
   const t = k => (L === 'es' ? ES[k] : EN[k]) ?? EN[k] ?? k;
   const cap = p => p[L === 'es' ? 3 : 2], catName = c => CAT[c][L === 'es' ? 1 : 0];
   function apply() {
@@ -93,7 +101,18 @@
     if (viewerIdx >= 0) $('#vCap').textContent = cap(P[viewerIdx]);
     document.title = t('title');
   }
-  $$('[data-lang]').forEach(b => b.addEventListener('click', () => { L = b.dataset.lang; try { localStorage.setItem('cplus-lang', L); } catch (_) {} apply(); }));
+  const otherPage = lang => (lang === 'es' ? 'es.html' : './') + location.hash;
+  $$('[data-lang]').forEach(b => b.addEventListener('click', () => {
+    try { localStorage.setItem('cplus-lang', b.dataset.lang); } catch (_) {}
+    if (b.dataset.lang !== PAGE) location.href = otherPage(b.dataset.lang);
+  }));
+  /* suggest the other language once, never redirect on our own */
+  const bar = $('#langBar'), wants = pref || ((navigator.language || 'en').toLowerCase().startsWith('es') ? 'es' : 'en');
+  if (bar && wants !== PAGE) {
+    $('#langGo').href = otherPage(wants); bar.hidden = false;
+    $('#langGo').addEventListener('click', () => { try { localStorage.setItem('cplus-lang', wants); } catch (_) {} });
+    $('#langNo').addEventListener('click', () => { bar.hidden = true; try { localStorage.setItem('cplus-lang', PAGE); } catch (_) {} });
+  }
 
   if (matchMedia('(hover: none)').matches) { const h = document.querySelector('[data-i18n=hint3d]'); if (h) h.dataset.i18n = 'hint3dTouch'; }
   /* ---------- intro + nav ---------- */
@@ -118,17 +137,17 @@
   stage.innerHTML = FLY.map((k, i) => { const p = P[k], tall = p[4] === 'tall';
     return `<figure class="card3d${tall ? ' tall' : ''}" data-i="${i}"><img src="img/${p[0]}.jpg" data-alt="${k}" alt="" loading="${i < 3 ? 'eager' : 'lazy'}"><figcaption><small data-catname="${p[1]}"></small><span data-cap="${k}"></span></figcaption></figure>`; }).join('');
   const cards = $$('.card3d'), fly = $('.fly'), flyProg = $('#flyProg');
-  if (reduce) root.classList.add('noFly');
+  if (reduce) { root.classList.add('noFly'); fly.classList.remove('closed'); $('.flyBtns').hidden = true; }
   else {
     const GAP = 1150;
     let ticking = false;
     const draw = () => {
       ticking = false;
-      const r = fly.getBoundingClientRect(), span = r.height - innerHeight;
-      const p = Math.min(1, Math.max(0, -r.top / span));
+      const r = fly.getBoundingClientRect(), span = r.height - innerHeight, closed = fly.classList.contains('closed');
+      const p = closed ? 0 : Math.min(1, Math.max(0, -r.top / span));
       flyProg.style.transform = `scaleX(${p})`;
       if (r.bottom < 0 || r.top > innerHeight) return;
-      const cam = p * (cards.length - 0.4) * GAP, narrow = innerWidth < 640, side = narrow ? innerWidth * 0.1 : innerWidth * 0.2;
+      const cam = closed ? -450 : p * (cards.length - 0.4) * GAP, narrow = innerWidth < 640, side = narrow ? innerWidth * 0.1 : innerWidth * 0.2;
       cards.forEach((c, i) => {
         const z = cam - i * GAP - 300, s = i % 2 ? 1 : -1;
         const op = z < -4200 ? 0 : z < -2600 ? (z + 4200) / 1600 : z > 420 ? 0 : z > 80 ? 1 - (z - 80) / 340 : 1;
@@ -139,6 +158,20 @@
     };
     addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(draw); } }, { passive: true });
     addEventListener('resize', draw); draw();
+    /* the walk-through is optional: it only takes over the scroll after the visitor asks for it */
+    const go = $('#flyGo'), exit = $('#flyExit');
+    go.setAttribute('aria-expanded', 'false');
+    const close = () => { fly.classList.add('closed'); go.setAttribute('aria-expanded', 'false'); };
+    go.addEventListener('click', () => {
+      fly.classList.remove('closed'); go.setAttribute('aria-expanded', 'true'); draw();
+      scrollTo({ top: fly.offsetTop + 2, behavior: 'smooth' }); setTimeout(() => exit.focus({ preventScroll: true }), 700);
+    });
+    exit.addEventListener('click', () => { close(); scrollTo({ top: $('#services').offsetTop - 60 }); draw(); });
+    /* scrolling past the end closes it again, so the page stays short afterwards */
+    addEventListener('scroll', () => {
+      if (fly.classList.contains('closed') || fly.getBoundingClientRect().bottom > 0) return;
+      const before = fly.offsetHeight; close(); scrollTo(0, Math.max(0, scrollY - (before - fly.offsetHeight))); draw();
+    }, { passive: true });
   }
 
   /* ---------- tilt cards toward the pointer ---------- */
@@ -196,12 +229,31 @@
     const t0 = performance.now(); const tick = n => { const k = Math.min(1, (n - t0) / 1800), v = Math.round(goal * (1 - Math.pow(1 - k, 3))); num.textContent = v + '%'; if (k < 1) requestAnimationFrame(tick); }; requestAnimationFrame(tick);
   });
 
+  /* ---------- photos for the quote ---------- */
+  let pics = [];
+  const picList = $('#picList'), fpics = $('#fpics');
+  const shrink = file => new Promise(res => {
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = () => { const k = Math.min(1, 1600 / Math.max(img.width, img.height)), c = document.createElement('canvas');
+      c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url); c.toBlob(b => res(b), 'image/jpeg', 0.82); };
+    img.onerror = () => { URL.revokeObjectURL(url); res(null); };
+    img.src = url;
+  });
+  const drawPics = () => { picList.innerHTML = pics.map((p, i) => `<li><img src="${p.url}" alt=""><button type="button" data-rmpic="${i}" aria-label="${t('removePic')}"><svg class="ix" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></li>`).join(''); };
+  fpics.addEventListener('change', () => {
+    [...fpics.files].filter(f => /^image\//.test(f.type) || /\.(heic|heif)$/i.test(f.name)).forEach(f => { if (pics.length < 5) pics.push({ file: f, url: URL.createObjectURL(f) }); });
+    fpics.value = ''; drawPics();
+  });
+  picList.addEventListener('click', e => { const b = e.target.closest('[data-rmpic]'); if (!b) return; const [p] = pics.splice(+b.dataset.rmpic, 1); URL.revokeObjectURL(p.url); drawPics(); fpics.focus(); });
+
   /* ---------- estimate form (goes to the contractor panel) ---------- */
   const f = $('#estf'), err = $('#ferr'), ok = $('#fok'), btn = f.querySelector('[type=submit]');
   f.addEventListener('submit', async e => {
     e.preventDefault(); err.textContent = '';
     const v = Object.fromEntries(new FormData(f)); Object.keys(v).forEach(k => v[k] = String(v[k] || '').trim());
     if (v.website) return; /* bots fill the hidden field */
+    delete v.website;
     const bad = (name, msg) => { err.textContent = t(msg); f.elements[name].setAttribute('aria-invalid', 'true'); f.elements[name].focus(); };
     [...f.elements].forEach(x => x.removeAttribute && x.removeAttribute('aria-invalid'));
     if (!v.name) return bad('name', 'errName');
@@ -211,7 +263,15 @@
     btn.disabled = true; btn.textContent = t('sending');
     try {
       if (!window.API || !API.ready) throw new Error('not configured');
-      await API.submitLead({ ...v, lang: L });
+      const paths = [];
+      if (pics.length) {
+        btn.textContent = t('uploading');
+        const folder = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2));
+        try { for (let i = 0; i < pics.length; i++) { const blob = await shrink(pics[i].file); if (blob) paths.push(await API.uploadLeadPhoto(blob, folder, i + 1)); } }
+        catch (x) { console.error(x); err.textContent = t('errPics'); btn.disabled = false; btn.textContent = t('fSend'); return; }
+      }
+      await API.submitLead({ ...v, lang: L, pics: paths });
+      $('.pics').hidden = true;
       [...f.querySelectorAll('label, .two, .hint, .err, button')].forEach(x => x.hidden = true);
       ok.hidden = false; ok.setAttribute('tabindex', '-1'); ok.focus();
     } catch (x) {
