@@ -2,8 +2,16 @@
 const S = CPLUS, t = S.t, esc = S.esc, money = S.money, fdate = S.fdate, $ = q => document.querySelector(q), app = $('#app');
 const STATUSES = ['estimate_sent', 'estimate_accepted', 'progress', 'done'];
 const stOf = p => STATUSES.includes(p.status) ? p.status : (p.status === 'paused' ? 'progress' : 'estimate_sent');
-let pfilter = 'all', creating = false, leads = [], lastEmail = '', view = 'boot', B = [], cur = null, ctab = 'dash', settings = {}, busy = false, err = '';
+let pfilter = 'all', creating = false, leads = [], lastEmail = '', view = 'boot', B = [], cur = null, ctab = 'dash', settings = {}, busy = false, err = '', me = null, team = [], afilter = 'all', lastCreated = null;
 S.setLang(S.L);
+
+/* ---------- roles ---------- */
+const role = () => me && me.role, staff = () => role() === 'admin' || role() === 'manager', isAdmin = () => role() === 'admin';
+const contractors = () => team.filter(m => m.role === 'contractor' && m.active);
+const nameOf = id => (team.find(m => m.user_id === id) || {}).name || '';
+const assignOpts = () => [['', t('unassigned')], ...contractors().map(m => [m.user_id, m.name])];
+const genPw = () => { const a = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789', r = crypto.getRandomValues(new Uint32Array(10)); return [...r].map(x => a[x % a.length]).join(''); };
+const loginUrl = () => new URL('admin.html', location.href).href;
 
 /* ---------- small builders ---------- */
 const fld = (tb, r, f, type = 'text', cls = '') => `<input class="${cls}" type="${type}" data-t="${tb}" data-id="${r.id ?? ''}" data-f="${f}" value="${esc(r[f] ?? '')}"${type === 'number' ? ' step="any" inputmode="decimal" min="0"' : ''} aria-label="${esc(t('f_' + f))}">`;
@@ -12,6 +20,7 @@ const chk = (tb, r, f, label) => `<input type="checkbox" class="chk" data-t="${t
 const del = (tb, id) => `<button class="ico x" data-del="${tb}:${id}" aria-label="${t('delete')}" title="${t('delete')}">✕</button>`;
 const budOpts = () => [['', t('noCat')], ...cur.budget.map(b => [b.id, b.category || '·'])];
 const catName = id => cur.budget.find(b => b.id === id)?.category || t('noCat');
+const showShare = () => isAdmin() && pct() > 0;
 const pct = () => { const v = +settings.share_pct; return isFinite(v) && settings.share_pct !== null && settings.share_pct !== undefined && settings.share_pct !== '' ? v : 10; };
 const shareOf = c => { const s = c.sub * pct() / 100, r = c.tot > 0 ? Math.min(1, Math.max(0, c.paid / c.tot)) : 0; return { s, earned: s * r, pending: s - s * r, after: (c.profit || 0) - s }; };
 const kinds = () => [['mat', t('materials')], ['lab', t('labor')]];
@@ -28,12 +37,56 @@ function login() {
   <input id="em" type="email" value="${esc(lastEmail)}" autocomplete="username" placeholder="${t('email')}" aria-label="${t('email')}" style="letter-spacing:0;font-size:17px;text-align:start">
   <input id="pw" type="password" autocomplete="current-password" placeholder="${t('password')}" aria-label="${t('password')}" style="letter-spacing:0;font-size:17px;text-align:start">
   <div class="err" role="alert">${esc(err)}</div><button class="primary" type="submit"${busy ? ' disabled' : ''}>${busy ? t('loading') : t('login')}</button>
+  <p style="margin-top:14px"><button type="button" class="btn2" data-first>${t('firstLink')}</button></p>
   <div style="margin-top:16px">${S.langSeg()}</div></form></div>`;
 }
-const topbar = () => S.header(`<span id="savedot" class="savedot" aria-live="polite"></span><button class="ghost" data-logout style="min-height:40px;padding:6px 12px">${t('logout')}</button>`, `<span class="role">${t('contractor')}</span>`);
+function first() {
+  return `<div class="lock"><form class="box" id="firstf">${S.MARK('l')}<h1>${t('firstT')}</h1><p>${t('firstS')}</p>
+  <input id="fc" autocomplete="off" autocapitalize="characters" placeholder="${t('setupCode')}" aria-label="${t('setupCode')}" style="letter-spacing:.2em;font-size:17px;text-align:center">
+  <input id="fn" autocomplete="name" placeholder="${t('memberName')}" aria-label="${t('memberName')}" style="letter-spacing:0;font-size:17px;text-align:start">
+  <input id="fe" type="email" autocomplete="username" placeholder="${t('email')}" aria-label="${t('email')}" style="letter-spacing:0;font-size:17px;text-align:start">
+  <input id="fp" type="password" autocomplete="new-password" placeholder="${t('newPw')}" aria-label="${t('newPw')}" style="letter-spacing:0;font-size:17px;text-align:start">
+  <div class="err" role="alert">${esc(err)}</div><button class="primary" type="submit"${busy ? ' disabled' : ''}>${busy ? t('loading') : t('createAdmin')}</button>
+  <p style="margin-top:14px"><button type="button" class="btn2" data-tologin>${t('login')}</button></p></form></div>`;
+}
+function noAccess() { return `<div class="lock"><div class="box">${S.MARK('l')}<h1>${t('noAccessT')}</h1><p>${t('noAccessS')}</p><button class="btn2" data-logout>${t('logout')}</button></div></div>`; }
+const topbar = () => S.header(`<span id="savedot" class="savedot" aria-live="polite"></span><button class="ghost" data-logout style="min-height:40px;padding:6px 12px">${t('logout')}</button>`, `<span class="role">${esc(me ? (me.name || '') + ' · ' + t('role_' + me.role) : t('contractor'))}</span>`);
+
+function homeContractor() {
+  const today = S.today(), lim = new Date(Date.now() + 14 * 864e5).toISOString().slice(0, 10);
+  const up = B.flatMap(b => b.steps.filter(s => !s.done && s.due_date && s.due_date <= lim).map(s => ({ ...s, pt: b.project.title, late: s.due_date < today }))).sort((a, b) => a.due_date.localeCompare(b.due_date));
+  return topbar() + `<main><div class="wrap"><div class="secthead"><h1>${t('myProjects')}</h1></div>
+  <div class="plist">${B.length ? B.map(b => { const c = S.calc(b), u = unseen(b), nx = b.steps.slice().sort((x, y) => (x.sort || 0) - (y.sort || 0)).find(s => !s.done); return `<button class="pcard" data-open="${b.project.id}">${u ? `<span class="badge">${u}</span>` : ''}
+    <span class="who2">${esc(b.project.client_name || '·')}</span><h3>${esc(b.project.title || t('project'))}</h3><span class="pill st-${stOf(b.project)}">${t('st_' + stOf(b.project))}</span>
+    <div class="bar"><i style="width:${c.pct}%"></i></div><small class="sub">${c.pct}% ${t('done')}</small>
+    <dl>${b.project.address ? `<dt>${t('projAddress')}</dt><dd>${esc(b.project.address)}</dd>` : ''}${nx ? `<dt>${t('nextStep')}</dt><dd>${esc(nx.title)}</dd>` : ''}</dl></button>`; }).join('') : `<div class="card"><p class="sub">${t('noAssigned')}</p></div>`}</div>
+  <div class="cols" style="margin-top:18px"><div class="card week"><h2>${t('thisWeek')}</h2>${up.length ? `<ul>${up.map(s => `<li><time style="${s.late ? 'color:#d0503a' : ''}">${fdate(s.due_date)}</time><div><b>${esc(s.title)}</b><small>${esc(s.pt)}</small></div></li>`).join('')}</ul>` : `<p class="sub">${t('noUpcoming')}</p>`}</div>${accountCard()}</div>
+  </div></main>`;
+}
+function accountCard() {
+  return `<form class="card" id="pwf"><h2>${t('myAccount')}</h2><p class="sub">${esc(me.email || '')} · ${t('role_' + me.role)}</p>
+  <label>${t('newPw')}<input id="npw" type="password" autocomplete="new-password" minlength="8" style="display:block;width:100%;margin-top:6px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);min-height:44px;font-size:16px"></label>
+  <button class="btn2" type="submit" style="margin-top:10px">${t('changePw')}</button></form>`;
+}
+function teamCard() {
+  const inp = 'style="display:block;width:100%;margin-top:6px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);min-height:44px;font-size:16px"';
+  const roles = ['contractor', 'manager', 'admin'];
+  const lc = lastCreated, msg = lc ? t('credsMsg').replace('{n}', lc.name.split(' ')[0]).replace('{u}', loginUrl()).replace('{e}', lc.email).replace('{p}', lc.password) : '';
+  return `<div class="card"><h2>${t('team')}</h2><p class="sub">${t('teamSub')}</p>
+  ${team.map(m => `<div class="row" style="grid-template-columns:minmax(0,1fr) 170px auto auto;align-items:center;gap:8px"><div><b>${esc(m.name)}</b>${m.user_id === me.user_id ? ` <small class="sub">(${t('you')})</small>` : ''}<br><small class="sub">${esc(m.email)}</small></div>
+    ${m.user_id === me.user_id ? `<span class="pill">${t('role_' + m.role)}</span>` : `<select data-setrole="${m.user_id}" aria-label="${t('roleL')}">${roles.map(r => `<option value="${r}"${m.role === r ? ' selected' : ''}>${t('role_' + r)}</option>`).join('')}</select>`}
+    <button class="btn2" data-resetpw="${m.user_id}">${t('resetPw')}</button>${m.user_id === me.user_id ? '<span></span>' : `<button class="btn2 danger" data-rmm="${m.user_id}">${t('removeM')}</button>`}</div>`).join('')}
+  ${lc ? `<div class="card" style="border-color:var(--cu);margin-top:14px"><b>${t('sendCreds')}</b><pre style="white-space:pre-wrap;font:inherit;margin:8px 0">${esc(msg)}</pre><div class="acts"><button class="primary" data-copylink="${esc(msg)}">${t('copy')}</button><a class="btn2" href="https://wa.me/?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">WhatsApp</a><button class="btn2" data-hidecreds>${t('done2')}</button></div></div>` : ''}
+  <form id="teamf" style="margin-top:16px"><h3 style="margin:0 0 8px">${t('addMember')}</h3><div class="grid2">
+  <label>${t('memberName')}<input id="tm-name" maxlength="80" ${inp}></label><label>${t('email')}<input id="tm-email" type="email" autocapitalize="off" maxlength="160" ${inp}></label>
+  <label>${t('roleL')}<select id="tm-role" ${inp}>${roles.map(r => `<option value="${r}">${t('role_' + r)}</option>`).join('')}</select></label>
+  <label>${t('tempPass')}<input id="tm-pw" value="${genPw()}" minlength="8" ${inp}></label></div>
+  <button class="primary" type="submit" style="margin-top:12px">${t('addMember')}</button></form></div>`;
+}
 
 function home() {
-  const shown = B.filter(b => pfilter === 'all' || stOf(b.project) === pfilter);
+  if (!staff()) return homeContractor();
+  const shown = B.filter(b => (pfilter === 'all' || stOf(b.project) === pfilter) && (afilter === 'all' || (afilter === 'none' ? !b.project.assigned_to : b.project.assigned_to === afilter)));
   const cs = shown.map(b => S.calc(b)), sum = k => cs.reduce((a, c) => a + (c[k] || 0), 0);
   const count = s => B.filter(b => stOf(b.project) === s).length;
   const today = S.today(), lim = new Date(Date.now() + 14 * 864e5).toISOString().slice(0, 10);
@@ -42,17 +95,19 @@ function home() {
   <div class="secthead"><h1>${t('projects')}</h1>${creating ? '' : `<button class="primary" data-newp>${t('newProject')}</button>`}</div>
   ${creating ? newForm() : ''}
   ${B.length ? `<div class="filters" role="group" aria-label="${t('status')}">${['all', ...STATUSES].map(s => `<button data-pf="${s}" class="${pfilter === s ? 'on' : ''}" aria-pressed="${pfilter === s}">${s === 'all' ? t('all') : t('st_' + s)} <span class="cnt">${s === 'all' ? B.length : count(s)}</span></button>`).join('')}</div>` : ''}
+  ${B.length && contractors().length ? `<div class="filters" role="group" aria-label="${t('assignedTo')}">${[['all', t('everyone')], ...contractors().map(m => [m.user_id, m.name]), ['none', t('unassigned')]].map(([v, l]) => `<button data-af="${v}" class="${afilter === v ? 'on' : ''}" aria-pressed="${afilter === v}">${esc(l)} <span class="cnt">${B.filter(b => v === 'all' || (v === 'none' ? !b.project.assigned_to : b.project.assigned_to === v)).length}</span></button>`).join('')}</div>` : ''}
   ${showInstall() ? `<div class="card" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><img src="icon-180.png" alt="" width="48" height="48" style="border-radius:11px"><div style="flex:1 1 220px"><b>${t('installT')}</b><p class="sub" style="margin:2px 0 0">${t('installS')}</p></div><button class="btn2" data-hideinstall>${t('hide')}</button></div>` : ''}
   ${B.length ? `<div class="kpis">${kpi(t('contracts'), sum('tot'))}${kpi(t('collected'), sum('paid'))}${kpi(t('receivable'), sum('bal'))}${kpi(t('spent'), sum('spent'))}${kpi(t('profit'), sum('profit'), sum('profit') < 0 ? 'neg' : 'pos', t('profitSub'))}</div>
-  <div class="kpis">${(() => { const sh = cs.map(shareOf), tot = k => sh.reduce((x, y) => x + y[k], 0); return kpi(`${t('share')} ${pct()}%`, tot('s'), '', t('shareOf')) + kpi(t('shareEarned'), tot('earned'), 'pos', t('shareEarnedSub')) + kpi(t('sharePending'), tot('pending')) + kpi(t('profitAfter'), tot('after'), tot('after') < 0 ? 'neg' : ''); })()}</div>` : ''}
+  ${showShare() ? `<div class="kpis">${(() => { const sh = cs.map(shareOf), tot = k => sh.reduce((x, y) => x + y[k], 0); return kpi(`${t('share')} ${pct()}%`, tot('s'), '', t('shareOf')) + kpi(t('shareEarned'), tot('earned'), 'pos', t('shareEarnedSub')) + kpi(t('sharePending'), tot('pending')) + kpi(t('profitAfter'), tot('after'), tot('after') < 0 ? 'neg' : ''); })()}</div>` : ''}` : ''}
   ${leadsCard()}
   <div class="plist">${shown.length ? '' : (B.length ? `<p class="sub">${t('noneInStatus')}</p>` : '')}${shown.map((b, i) => { const c = cs[i], u = unseen(b); return `<button class="pcard" data-open="${b.project.id}">${u ? `<span class="badge" title="${t('unread')}">${u}</span>` : ''}
-    <span class="who2">${esc(b.project.client_name || '·')}</span><h3>${esc(b.project.title || t('project'))}</h3><span class="pill st-${stOf(b.project)}">${t('st_' + stOf(b.project))}</span>
+    <span class="who2">${esc(b.project.client_name || '·')}</span><h3>${esc(b.project.title || t('project'))}</h3><span class="pill st-${stOf(b.project)}">${t('st_' + stOf(b.project))}</span> <span class="pill">${esc(nameOf(b.project.assigned_to) || t('unassigned'))}</span>
     <div class="bar"><i style="width:${c.pct}%"></i></div><small class="sub">${c.pct}% ${t('done')}</small>
-    <dl><dt>${t('contract')}</dt><dd>${money(c.tot)}</dd><dt>${t('collected')}</dt><dd>${money(c.paid)}</dd><dt>${t('spent')}</dt><dd>${money(c.spent)} ${t('of')} ${money(c.bud)}</dd><dt>${t('profit')}</dt><dd style="color:${c.profit < 0 ? '#b23a26' : 'var(--ok)'}">${money(c.profit)}</dd><dt>${t('share')} ${pct()}%</dt><dd><b>${money(shareOf(c).s)}</b></dd><dt>${t('shareEarned')}</dt><dd>${money(shareOf(c).earned)}</dd></dl></button>`; }).join('')}</div>
+    <dl><dt>${t('contract')}</dt><dd>${money(c.tot)}</dd><dt>${t('collected')}</dt><dd>${money(c.paid)}</dd><dt>${t('spent')}</dt><dd>${money(c.spent)} ${t('of')} ${money(c.bud)}</dd><dt>${t('profit')}</dt><dd style="color:${c.profit < 0 ? '#b23a26' : 'var(--ok)'}">${money(c.profit)}</dd>${showShare() ? `<dt>${t('share')} ${pct()}%</dt><dd><b>${money(shareOf(c).s)}</b></dd><dt>${t('shareEarned')}</dt><dd>${money(shareOf(c).earned)}</dd>` : ''}</dl></button>`; }).join('')}</div>
   ${B.length ? '' : `<div class="card" style="text-align:center"><p class="sub">${t('none')}</p><button class="btn2" data-sample>${t('sampleProject')}</button></div>`}
   <div class="cols" style="margin-top:18px"><div class="card week"><h2>${t('thisWeek')}</h2>${up.length ? `<ul>${up.map(s => `<li><time style="${s.late ? 'color:#d0503a' : ''}">${fdate(s.due_date)}</time><div><b>${esc(s.title)}</b><small>${esc(s.pt)}</small></div></li>`).join('')}</ul>` : `<p class="sub">${t('noUpcoming')}</p>`}</div>
-  <div class="card ed"><h2>${t('settings')}</h2><div class="grid2" style="margin-top:12px"><label>${t('company')}${fld('settings', settings, 'company')}</label><label>${t('cname')}${fld('settings', settings, 'contact_name')}</label><label>${t('phone')}${fld('settings', settings, 'phone', 'tel')}</label><label>${t('email')}${fld('settings', settings, 'email', 'email')}</label><label>${t('sharePct')}${fld('settings', { ...settings, share_pct: pct() }, 'share_pct', 'number')}</label></div><p class="hint">${t('shareHint')}</p></div></div>
+  ${isAdmin() ? `<div class="card ed"><h2>${t('settings')}</h2><div class="grid2" style="margin-top:12px"><label>${t('company')}${fld('settings', settings, 'company')}</label><label>${t('cname')}${fld('settings', settings, 'contact_name')}</label><label>${t('phone')}${fld('settings', settings, 'phone', 'tel')}</label><label>${t('email')}${fld('settings', settings, 'email', 'email')}</label><label>${t('sharePct')}${fld('settings', { ...settings, share_pct: pct() }, 'share_pct', 'number')}</label></div><p class="hint">${t('shareHint')}</p></div>` : accountCard()}</div>
+  ${isAdmin() ? teamCard() + `<div class="cols">${accountCard()}</div>` : ''}
   ${B.length ? `<p style="text-align:center"><button class="btn2" data-sample>${t('sampleProject')}</button></p>` : ''}
   </div></main>`;
 }
@@ -93,11 +148,18 @@ function leadsCard() {
 }
 function project() {
   const u = unseen(cur), p = cur.project;
-  const tabs = { dash: cDash, project: cProj, estimate: cEst, money: cMoney, pays: cPays, changes: cChanges, progress: cProgress, materials: cMats, docs: cDocs, messages: cMsgs };
+  const tabs = staff() ? { dash: cDash, project: cProj, estimate: cEst, money: cMoney, pays: cPays, changes: cChanges, progress: cProgress, materials: cMats, docs: cDocs, messages: cMsgs }
+    : { progress: cProgress, materials: cMats, messages: cMsgs, info: cInfo };
+  if (!tabs[ctab]) ctab = Object.keys(tabs)[0];
+  if (!staff()) return topbar() + `<nav class="cbar"><div class="wrap"><button data-home>${t('back')}</button>${Object.keys(tabs).map(k => `<button data-ctab="${k}" class="${ctab === k ? 'on' : ''}"${ctab === k ? ' aria-current="page"' : ''}>${t(k)}${k === 'messages' && u ? `<span class="badge">${u}</span>` : ''}</button>`).join('')}</div></nav>
+  <main class="ed"><div class="wrap"><div class="phead"><h1 class="titleinp" style="border:0">${esc(p.title || t('project'))}</h1><span class="pill st-${stOf(p)}">${t('st_' + stOf(p))}</span></div>
+  <div class="pclient"><b>${esc(p.client_name || '·')}</b>${p.client_phone ? `<a href="tel:+${S.intl(p.client_phone)}">${esc(p.client_phone)}</a>` : ''}${p.address ? `<span>${esc(p.address)}</span>` : ''}</div>
+  ${tabs[ctab]()}</div></main>`;
   return topbar() + `<nav class="cbar"><div class="wrap"><button data-home>${t('back')}</button>${Object.keys(tabs).map(k => `<button data-ctab="${k}" class="${ctab === k ? 'on' : ''}"${ctab === k ? ' aria-current="page"' : ''}>${k === 'project' ? t('clientTab') : t(k)}${k === 'messages' && u ? `<span class="badge">${u}</span>` : ''}</button>`).join('')}</div></nav>
   <main class="ed"><div class="wrap"><div class="phead"><label class="sr" for="ptitle-top">${t('ptitle')}</label><input id="ptitle-top" class="titleinp" data-t="projects" data-id="${p.id}" data-f="title" value="${esc(p.title)}" placeholder="${t('ptitleEx')}" maxlength="200">
   <label class="stlab"><span class="sr">${t('status')}</span><select class="stsel2 st-${stOf(p)}" data-t="projects" data-id="${p.id}" data-f="status">${STATUSES.map(s => `<option value="${s}"${stOf(p) === s ? ' selected' : ''}>${t('st_' + s)}</option>`).join('')}</select></label></div>
   <div class="pclient"><b>${esc(p.client_name || '·')}</b>${p.client_phone ? `<a href="tel:+${S.intl(p.client_phone)}">${esc(p.client_phone)}</a>` : ''}${p.client_email ? `<a href="mailto:${esc(p.client_email)}">${esc(p.client_email)}</a>` : ''}${p.address ? `<span>${esc(p.address)}</span>` : ''}<button class="btn2 editbtn" data-ctab="project" data-focus="client_name"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16zM14 6l4 4"/></svg>${t('editClient')}</button></div>
+  <div class="card" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:12px 16px"><b>${t('assignedTo')}</b><span style="flex:1 1 220px;max-width:320px">${sel('projects', { ...p, assigned_to: p.assigned_to || '' }, 'assigned_to', assignOpts())}</span></div>
   ${shareBar(p)}${tabs[ctab]()}</div></main>`;
 }
 function buyForm() {
@@ -115,11 +177,21 @@ function catBars(c) {
   return cur.budget.map(b => { const s = c.byCat(b.id), ov = s > b.amount, pc = b.amount ? Math.min(100, s / b.amount * 100) : 0;
     return `<div class="cat"><div class="top2"><b>${esc(b.category)}</b><span>${money(s)} ${t('of')} ${money(b.amount)}</span></div><div class="bar"><i class="${ov ? 'over' : ''}" style="width:${ov ? 100 : pc}%"></i></div>${ov ? `<small style="color:#d0503a;font-weight:600">${t('over')}: ${money(s - b.amount)}</small>` : ''}</div>`; }).join('') || `<p class="sub">${t('none')}</p>`;
 }
+function cInfo() {
+  const p = cur.project, maps = p.address ? 'https://maps.google.com/?q=' + encodeURIComponent(p.address) : '';
+  return `<div class="card"><h2>${t('info')}</h2><dl class="info" style="display:grid;grid-template-columns:auto 1fr;gap:8px 16px;margin:12px 0 0">
+  <dt>${t('fullName')}</dt><dd style="margin:0">${esc(p.client_name || '·')}</dd>
+  ${p.client_phone ? `<dt>${t('phone1')}</dt><dd style="margin:0"><a href="tel:+${S.intl(p.client_phone)}">${esc(p.client_phone)}</a></dd>` : ''}
+  ${p.address ? `<dt>${t('projAddress')}</dt><dd style="margin:0">${esc(p.address)} · <a href="${maps}" target="_blank" rel="noopener">${t('openMaps')}</a></dd>` : ''}
+  ${p.service ? `<dt>${t('service')}</dt><dd style="margin:0">${t('svc_' + p.service)}</dd>` : ''}
+  ${p.start_date ? `<dt>${t('start')}</dt><dd style="margin:0">${fdate(p.start_date)}</dd>` : ''}${p.end_date ? `<dt>${t('end')}</dt><dd style="margin:0">${fdate(p.end_date)}</dd>` : ''}</dl>
+  ${p.details ? `<h3 style="margin-top:16px">${t('details')}</h3><p style="white-space:pre-wrap">${esc(p.details)}</p>` : ''}</div>`;
+}
 function cDash() {
   const c = S.calc(cur);
   const banner = stOf(cur.project) === 'estimate_accepted' && !cur.documents.some(x => x.kind === 'contract' && x.status !== 'void') ? `<div class="card" style="border-color:var(--cu);display:flex;gap:12px;align-items:center;flex-wrap:wrap"><b style="flex:1 1 260px">${t('contractBanner')}</b><button class="primary" data-ctab="docs">${t('goDocs')}</button></div>` : '';
   return banner + `<div class="kpis">${kpi(t('contract'), c.tot)}${kpi(t('collected'), c.paid)}${kpi(t('receivable'), c.bal)}${kpi(t('budget'), c.bud)}${kpi(t('spent'), c.spent, '', (c.bud ? Math.round(c.spent / c.bud * 100) : 0) + '% ' + t('of') + ' ' + t('budget').toLowerCase())}${kpi(t('left'), c.left, c.left < 0 ? 'neg' : '')}${kpi(t('profit'), c.profit, c.profit < 0 ? 'neg' : 'pos', t('profitSub'))}</div>
-  <div class="kpis">${(() => { const sh = shareOf(c); return kpi(`${t('share')} ${pct()}%`, sh.s, '', t('shareOf')) + kpi(t('shareEarned'), sh.earned, 'pos', t('shareEarnedSub')) + kpi(t('sharePending'), sh.pending) + kpi(t('profitAfter'), sh.after, sh.after < 0 ? 'neg' : ''); })()}</div>
+  ${showShare() ? `<div class="kpis">${(() => { const sh = shareOf(c); return kpi(`${t('share')} ${pct()}%`, sh.s, '', t('shareOf')) + kpi(t('shareEarned'), sh.earned, 'pos', t('shareEarnedSub')) + kpi(t('sharePending'), sh.pending) + kpi(t('profitAfter'), sh.after, sh.after < 0 ? 'neg' : ''); })()}</div>` : ''}
   <div class="cols">${buyForm()}${payForm()}</div>
   <div class="cols"><div class="card"><h2>${t('byCat')}</h2>${catBars(c)}</div><div class="card"><h2>${t('recent')}</h2>${expSorted().slice(0, 6).map(e => `<div class="mat"><div><b>${esc(e.description)}</b><small>${fdate(e.spent_on)} · ${esc(e.vendor)} · ${esc(catName(e.budget_id))}</small></div><span class="n">${money(e.amount)}</span></div>`).join('') || `<p class="sub">${t('none')}</p>`}</div></div>`;
 }
@@ -194,8 +266,8 @@ function cDocs() {
   <p class="hint" style="margin-top:12px">${t('legalNote')}</p></div>`;
 }
 function cMsgs() {
-  const me = settings.contact_name || t('contractor');
-  return `<div class="card"><h2>${t('messages')}</h2><div class="chat" id="chat">${cur.comments.slice().sort((a, b) => String(a.created_at).localeCompare(String(b.created_at))).map(m => `<div class="bub ${m.author === 'contractor' ? 'me' : ''}"><small>${esc(m.name || (m.author === 'client' ? t('client') : me))} · ${fdate(m.created_at)}</small><p>${esc(m.body)}</p></div>`).join('') || `<p class="sub">${t('none')}</p>`}</div>
+  const myName = (me && me.name) || settings.contact_name || t('contractor');
+  return `<div class="card"><h2>${t('messages')}</h2><div class="chat" id="chat">${cur.comments.slice().sort((a, b) => String(a.created_at).localeCompare(String(b.created_at))).map(m => `<div class="bub ${m.author === 'contractor' ? 'me' : ''}"><small>${esc(m.name || (m.author === 'client' ? t('client') : myName))} · ${fdate(m.created_at)}</small><p>${esc(m.body)}</p></div>`).join('') || `<p class="sub">${t('none')}</p>`}</div>
   <form class="sendrow" id="msgf"><textarea id="rp" rows="2" placeholder="${t('writeMsg')}" aria-label="${t('writeMsg')}"></textarea><button class="primary" type="submit">${t('send')}</button></form></div>`;
 }
 const clientLink = p => new URL('proyecto.html?p=' + p.client_token, location.href).href;
@@ -237,7 +309,7 @@ function render() {
   const a = document.activeElement, ds = (a && a.dataset) || {};
   const key = ds.f ? `[data-t="${ds.t}"][data-id="${ds.id}"][data-f="${ds.f}"]` : ds.del ? `[data-del="${ds.del}"]` : (a && a.id ? '#' + a.id : null);
   const y = scrollY;
-  app.innerHTML = view === 'setup' ? setup() : view === 'login' ? login() : view === 'home' ? home() : view === 'project' ? project() : `<div class="center"><p>${t('loading')}</p></div>`;
+  app.innerHTML = view === 'setup' ? setup() : view === 'login' ? login() : view === 'first' ? first() : view === 'noaccess' ? noAccess() : view === 'home' ? home() : view === 'project' ? project() : `<div class="center"><p>${t('loading')}</p></div>`;
   document.title = 'C Plus · ' + t('contractor');
   scrollTo(0, y);
   if (key) { const n = document.querySelector(key); if (n) n.focus({ preventScroll: true }); }
@@ -246,7 +318,12 @@ function render() {
 }
 
 /* ---------- data ---------- */
-async function loadAll() { [settings, B, leads] = await Promise.all([API.getSettings(), API.loadAll(), API.listLeads().catch(() => [])]); }
+async function loadAll() {
+  me = await API.me();
+  if (!me || !me.active) { me = null; B = []; throw Object.assign(new Error('noaccess'), { noaccess: true }); }
+  [settings, B, leads, team] = await Promise.all([API.getSettings().catch(() => ({})), API.loadAll(), staff() ? API.listLeads().catch(() => []) : [], API.team().catch(() => [])]);
+  if (!staff()) ctab = 'progress';
+}
 function openProject(id) {
   cur = B.find(b => b.project.id === id); if (!cur) { view = 'home'; return render(); }
   view = 'project'; ctab = ctab || 'dash'; try { history.replaceState(null, '', '#' + id); } catch (_) {}
@@ -274,11 +351,12 @@ app.addEventListener('change', async e => {
   const n = e.target, d = n.dataset;
   if (n.id === 'doclang') { docLang = n.value; return; }
   if (n.id === 'nuf') { pending = [...n.files]; const c = $('#nuc'); if (c) c.textContent = pending.length ? pending.length + ' ' + t('photosSel') : ''; return; }
+  if (d.setrole) { try { const r = await API.setRole(d.setrole, n.value); Object.assign(team.find(m => m.user_id === d.setrole), r); S.toast(t('saved') + ' ✓'); } catch (x) { fail(x); } return render(); }
   if (!d.f) return;
   let v = n.type === 'checkbox' ? n.checked : n.value;
   if (n.type === 'number') v = v === '' ? 0 : +v;
   if (n.type === 'date' && !v) v = null;
-  if (d.f === 'budget_id' && !v) v = null;
+  if ((d.f === 'budget_id' || d.f === 'assigned_to') && !v) v = null;
   if (d.t === 'projects' && (d.f === 'client_phone' || d.f === 'client_phone2') && v) { if (!S.phoneOk(v)) { S.toast(t('errPhone')); n.setAttribute('aria-invalid', 'true'); return n.focus(); } v = S.fmtPhone(v); n.value = v; n.removeAttribute('aria-invalid'); }
   if (d.t === 'projects' && d.f === 'client_email' && v) { if (!S.emailOk(v)) { S.toast(t('errEmail')); n.setAttribute('aria-invalid', 'true'); return n.focus(); } v = v.trim().toLowerCase(); n.value = v; n.removeAttribute('aria-invalid'); }
   if (d.t === 'projects' && d.f === 'client_name' && !String(v).trim()) { n.value = rowOf('projects', d.id).client_name || ''; return S.toast(t('errName')); }
@@ -298,8 +376,28 @@ app.addEventListener('submit', async e => {
     if (id === 'loginf') {
       lastEmail = $('#em').value.trim(); const pw = $('#pw').value; busy = true; err = ''; render();
       try { await API.signIn(lastEmail, pw); await loadAll(); view = 'home'; const h = location.hash.slice(1); busy = false; if (h && B.some(b => b.project.id === h)) return openProject(h); }
-      catch (x) { err = x.message; view = 'login'; }
+      catch (x) { if (x.noaccess) view = 'noaccess'; else { err = x.message; view = 'login'; } }
       busy = false; return render();
+    }
+    if (id === 'firstf') {
+      const code = $('#fc').value.trim(), name = $('#fn').value.trim(), email = $('#fe').value.trim().toLowerCase(), pw = $('#fp').value;
+      if (pw.length < 8) { err = t('pwShort'); return render(); }
+      busy = true; err = ''; render();
+      try { await API.teamFn('bootstrap', { code, name, email, password: pw }); await API.signIn(email, pw); await loadAll(); view = 'home'; }
+      catch (x) { err = x.message === 'code' ? t('errCode') : x.message === 'done' ? t('errDone') : x.message === 'exists' ? t('errExists') : x.message; }
+      busy = false; return render();
+    }
+    if (id === 'teamf') {
+      const v = k => $('#tm-' + k).value.trim(), body = { name: v('name'), email: v('email').toLowerCase(), role: v('role'), password: v('pw') };
+      if (!body.name) return S.toast(t('errName'));
+      if (!S.emailOk(body.email)) return S.toast(t('errEmail'));
+      if (body.password.length < 8) return S.toast(t('pwShort'));
+      try { await API.teamFn('create', body); } catch (x) { return S.toast(x.message === 'exists' ? t('errExists') : t('error') + ': ' + x.message); }
+      lastCreated = body; team = await API.team(); return render();
+    }
+    if (id === 'pwf') {
+      const pw = $('#npw').value; if (pw.length < 8) return S.toast(t('pwShort'));
+      await API.changePassword(pw); $('#npw').value = ''; return S.toast(t('pwSaved'));
     }
     if (id === 'newpf') {
       const v = k => $('#np-' + k).value.trim(), errs = [];
@@ -338,7 +436,7 @@ app.addEventListener('submit', async e => {
     }
     if (id === 'msgf') {
       const body = $('#rp').value.trim(); if (!body) return;
-      cur.comments.push(await API.insert('comments', { project_id: cur.project.id, author: 'contractor', name: settings.contact_name || '', body, seen: true })); render(); $('#rp')?.focus();
+      cur.comments.push(await API.insert('comments', { project_id: cur.project.id, author: 'contractor', name: (me && me.name) || settings.contact_name || '', body, seen: true })); render(); $('#rp')?.focus();
     }
   } catch (x) { fail(x); render(); }
   finally { if (sb && id !== 'loginf') sb.disabled = false; }
@@ -346,11 +444,25 @@ app.addEventListener('submit', async e => {
 
 app.addEventListener('click', async e => {
   const b = e.target.closest('button'); if (!b || (b.type === 'submit' && b.form) || b.dataset.busy) return; const d = b.dataset;
-  const guard = !(d.lang || d.ctab || d.photo || d.rc || 'home' in d || 'print' in d);
+  const guard = !(d.lang || d.ctab || d.photo || d.rc || d.af || 'home' in d || 'print' in d || 'first' in d || 'tologin' in d || 'hidecreds' in d);
   if (guard) { b.dataset.busy = '1'; b.disabled = true; }
   try {
     if (d.lang) { S.setLang(d.lang); render(); }
-    else if ('logout' in d) { await API.signOut(); B = []; cur = null; view = 'login'; render(); }
+    else if ('first' in d) { err = ''; view = 'first'; render(); }
+    else if ('tologin' in d) { err = ''; view = 'login'; render(); }
+    else if (d.af) { afilter = d.af; render(); }
+    else if ('hidecreds' in d) { lastCreated = null; render(); }
+    else if (d.resetpw) {
+      const m = team.find(x => x.user_id === d.resetpw), pw = prompt(t('resetPw') + ': ' + (m ? m.name : ''), genPw());
+      if (pw === null) return; if (pw.length < 8) return S.toast(t('pwShort'));
+      await API.teamFn('set_password', { user_id: d.resetpw, password: pw });
+      if (m) lastCreated = { name: m.name, email: m.email, password: pw }; render();
+    }
+    else if (d.rmm) {
+      const m = team.find(x => x.user_id === d.rmm); if (!m || !confirm(t('removeConfirm').replace('{n}', m.name))) return;
+      await API.teamFn('remove', { user_id: d.rmm }); await loadAll(); render();
+    }
+    else if ('logout' in d) { await API.signOut(); B = []; cur = null; me = null; team = []; view = 'login'; render(); }
     else if ('hideinstall' in d) { try { localStorage.setItem('cplus-noinstall', '1'); } catch (_) {} render(); }
     else if (d.leadst) { const [id, st] = d.leadst.split(':'); const l = leads.find(x => x.id === id); Object.assign(l, await API.update('leads', id, { status: st })); render(); }
     else if (d.leadp) {
@@ -490,7 +602,7 @@ async function makeSample() {
     await loadAll(); view = 'home';
     const h = location.hash.slice(1); if (h && B.some(b => b.project.id === h)) return openProject(h);
     render();
-  } catch (x) { err = x.message; view = 'login'; render(); }
+  } catch (x) { if (x.noaccess) view = 'noaccess'; else { err = x.message; view = 'login'; } render(); }
 })();
 document.addEventListener('visibilitychange', async () => {
   if (document.visibilityState !== 'visible' || view !== 'home') return;

@@ -11,45 +11,30 @@ Todo se guarda al momento. No hay que subir archivos cada vez.
 
 ---
 
-## Configuración (una sola vez, unos 15 minutos)
+## Equipo y roles
+| Rol | Qué ve y qué hace |
+|---|---|
+| **Admin** | Todo: proyectos, dinero, solicitudes, datos de la empresa y el **Equipo** (agrega personas, cambia roles y contraseñas, quita personas). |
+| **Project manager** | Todos los proyectos, cotizaciones, pagos, presupuesto y gastos, solicitudes del sitio. **Asigna** cada proyecto a un contratista. |
+| **Contratista** | Solo los proyectos que le asignan: pasos, materiales, avances con fotos, mensajes con el cliente y los datos del trabajo. **Nunca ve precios, pagos, presupuesto ni gastos.** |
 
-### 1. Crea el proyecto en Supabase
-1. Entra a **supabase.com** y crea una cuenta gratis.
-2. Presiona **New project**. Nombre: `cplus`. Pon una contraseña de base de datos (guárdala) y elige la región **West US**.
-3. Espera a que termine de crearse (1 o 2 minutos).
+La base de datos hace cumplir estas reglas, no solo la pantalla: aunque un contratista intente leer otra cosa, no la recibe.
 
-### 2. Crea las tablas
-1. En el menú de la izquierda abre **SQL Editor** y presiona **New query**.
-2. Abre el archivo `schema.sql`, copia **todo** su contenido y pégalo.
-3. Presiona **Run**. Debe decir *Success*.
+### Primera vez: crear el admin
+1. Abre `admin.html` y toca **¿Primera vez? Crear la cuenta del admin**.
+2. Escribe el **código de configuración**, tu nombre, correo y una contraseña. El código sirve una sola vez.
 
-### 3. Crea tu usuario de contratista
-1. Ve a **Authentication > Users** y presiona **Add user > Create new user**.
-2. Escribe el correo y la contraseña con los que vas a entrar. Marca **Auto Confirm User** y presiona crear.
-3. **Importante:** en la configuración de Authentication (sección **Sign In / Providers**), **desactiva "Allow new users to sign up"**. Así nadie más puede crear una cuenta.
+### Agregar al project manager y a los contratistas
+1. Entra como admin. Abajo, en **Equipo**, escribe nombre, correo, rol y la contraseña temporal (ya viene una sugerida).
+2. Presiona **Agregar persona**. Aparece un mensaje listo con el enlace, el correo y la contraseña: cópialo o mándalo por WhatsApp.
+3. Cada persona puede cambiar su contraseña en **Mi cuenta**.
 
-### 4. Conecta la app
-1. Ve a **Project Settings > API Keys** (o **Data API**).
-2. Copia la **Project URL** y la llave **publishable** (o **anon public**).
-3. Abre `config.js` y pégalas entre las comillas:
-   ```js
-   window.CPLUS_CONFIG = {
-     url: "https://TU-PROYECTO.supabase.co",
-     key: "sb_publishable_..."
-   };
-   ```
-   Usa solo la llave publishable o anon. **Nunca** pongas la llave *secret* o *service_role*: esa da acceso total.
+### Asignar proyectos
+En cada proyecto, arriba, **Asignado a** elige Contractor 1 o Contractor 2. En la lista de proyectos hay filtros por contratista y **Sin asignar**.
 
-### 5. Súbelo a GitHub
-En el repositorio `cplus`, presiona **Add file > Upload files** y sube **todos** estos archivos (reemplazan a los anteriores):
-
-todo el contenido de la carpeta, incluida la carpeta `img/` completa: `index.html`, `site.css`, `site.js`, `depth3d.js`, `proyecto.html`, `admin.html`, `client.js`, `admin.js`, `config.js`, `api.js`, `shared.js`, `styles.css`, `manifest.webmanifest`, los íconos, los logos, `DESIGN.md` y `README.md`.
-
-Para subir la carpeta `img/` en GitHub: en la página de subir archivos, arrastra la carpeta completa (no solo las fotos), para que queden dentro de `img/`.
-
-(`schema.sql` puede quedarse fuera del repositorio. No pasa nada si lo subes.)
-
----
+## Base de datos
+Ya está creada en Supabase (proyecto `cplus`) y conectada en `config.js`. La función `team` (en `supabase/functions/team`) crea las cuentas, porque eso necesita una llave secreta que nunca va en el sitio.
+Recomendado: en Supabase > **Authentication > Sign In / Providers**, apaga **Allow new users to sign up**.
 
 ## Cómo se usa
 

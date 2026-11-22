@@ -46,6 +46,16 @@
     photoUrl(path) { return sb.storage.from('photos').getPublicUrl(path).data.publicUrl; },
     async receiptUrl(path) { return ok(await sb.storage.from('receipts').createSignedUrl(path, 600)).signedUrl; },
 
+    /* team and roles */
+    async me() { const s = ok(await sb.auth.getSession()).session; if (!s) return null; return ok(await sb.from('team').select('*').eq('user_id', s.user.id).maybeSingle()); },
+    async team() { return ok(await sb.from('team').select('*').order('created_at')); },
+    async setRole(uid, role) { return ok(await sb.from('team').update({ role }).eq('user_id', uid).select().single()); },
+    async teamFn(action, body = {}) {
+      const { data, error } = await sb.functions.invoke('team', { body: { action, ...body } });
+      if (error) { let m = error.message; try { m = (await error.context.json()).error || m; } catch (_) {} throw new Error(m); }
+      return data;
+    },
+    async changePassword(password) { ok(await sb.auth.updateUser({ password })); },
     async listLeads() { return ok(await sb.from('leads').select('*').order('created_at', { ascending: false }).limit(200)); },
     async submitLead(f) { ok(await sb.rpc('submit_lead', { who: f.name, tel: f.phone, mail: f.email, town: f.city, svc: f.service, msg: f.message, lng: f.lang })); },
     /* client side: no login, only the private token */
