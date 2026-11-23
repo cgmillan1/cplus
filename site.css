@@ -344,3 +344,40 @@ svg.ix{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;str
 .cards .svc:nth-child(2){display:flex;flex-direction:column}
 .cards .svc:nth-child(2) .ph{flex:1;aspect-ratio:auto;min-height:220px}
 @media (max-width:980px){.cards .svc:nth-child(2) .ph{aspect-ratio:4/3;flex:none}}
+
+/* Scroll-built house, bottom-right card (build.js) */
+.build{position:fixed;right:18px;bottom:18px;z-index:55;width:clamp(200px,21vw,300px);padding:8px;border-radius:18px;
+  background:rgba(17,15,13,.92);border:1px solid #ffffff1f;box-shadow:0 24px 60px -18px #000c;color:#fff;
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  opacity:0;transform:translateY(24px) scale(.96);pointer-events:none;transition:opacity .45s var(--ease),transform .55s var(--ease),bottom .4s var(--ease)}
+.build.on{opacity:1;transform:none;pointer-events:auto}
+.build.away,.build.typing{opacity:0;transform:translateY(24px) scale(.96);pointer-events:none}
+.bFrame{position:relative;aspect-ratio:3/2;border-radius:12px;overflow:hidden;background:#2a241e}
+.bL{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scale(var(--z,1.08));transform-origin:50% 70%}
+.bL+.bL{clip-path:inset(100% 0 0 0)}
+.bEdge{position:absolute;left:0;right:0;height:2px;margin-top:-1px;background:var(--or2);box-shadow:0 0 14px 3px var(--or);opacity:0;pointer-events:none}
+.bMeta{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 6px 4px}
+.bTxt{display:flex;flex-direction:column;line-height:1.15}
+.bStep{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--or2)}
+.bName{font:700 18px/1.15 "Bricolage Grotesque",Figtree,sans-serif}
+.bCta{font-size:13px;font-weight:700;color:var(--night);background:var(--or);padding:7px 11px;border-radius:999px;text-decoration:none;white-space:nowrap;
+  opacity:0;transform:translateX(8px);pointer-events:none;transition:opacity .35s,transform .35s var(--ease),background .2s}
+.build.done .bCta{opacity:1;transform:none;pointer-events:auto}
+.bCta:hover{background:var(--or2)}
+.bBar{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:4px 6px 4px}
+.bBar i{height:3px;border-radius:3px;background:#ffffff26;transition:background .35s}
+.bBar i.f{background:var(--or)}
+.bX{position:absolute;top:-9px;right:-9px;width:26px;height:26px;border-radius:50%;border:1px solid #ffffff2e;background:#1b1713;color:#fff;
+  display:grid;place-items:center;cursor:pointer;padding:0;opacity:.85;transition:opacity .2s,transform .2s}
+.bX:hover{opacity:1;transform:scale(1.08)}
+.bX svg{width:13px;height:13px;stroke:currentColor;stroke-width:2.4;fill:none}
+@media (max-width:640px){
+  .build{width:170px;right:10px;bottom:10px;padding:6px;border-radius:14px}
+  .build.lift{bottom:78px}
+  .bName{font-size:15px}.bStep{font-size:10px}
+  .bMeta{flex-wrap:wrap;padding:7px 4px 2px}
+  .bCta{font-size:12px;padding:5px 9px;display:none}
+  .build.done .bCta{display:inline-block}
+}
+@media (prefers-reduced-motion:reduce){.build,.bCta,.bBar i{transition:none}.bL{transform:none}}
+@media print{.build{display:none}}
