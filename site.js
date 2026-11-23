@@ -118,7 +118,7 @@
   /* ---------- intro + nav ---------- */
   const root = document.documentElement;
   if (!reduce) root.classList.add('anim');
-  setTimeout(() => root.classList.add('done'), reduce ? 0 : 1100);
+  setTimeout(() => { if (!root.classList.contains('introVid')) root.classList.add('done'); }, reduce ? 0 : 1100);
   const nav = $('.nav'); let lastY = 0;
   addEventListener('scroll', () => {
     const y = scrollY;
@@ -130,6 +130,56 @@
   /* ---------- hero: the pergola photo as a live 3D scene ---------- */
   const hero = window.Depth3D && Depth3D.make($('#heroCanvas'), { amount: 0.045, pointerHost: $('.hero') });
   if (hero) hero.show('pergola-blanca').catch(() => {});
+
+  /* ---------- hero intro: the pergola builds itself in liquid metal, then hands off to the 3D photo ---------- */
+  (() => {
+    const box = $('.hero3d'), heroEl = $('.hero');
+    if (!box || !heroEl) return;
+    const T = PAGE === 'es' ? { skip: 'Saltar', replay: 'Ver cómo se construye' } : { skip: 'Skip', replay: 'Watch it build' };
+    const saveData = navigator.connection && navigator.connection.saveData;
+    let seen = false; try { seen = sessionStorage.getItem('cplus-build-intro') === '1'; } catch (_) {}
+    const vid = document.createElement('video');
+    vid.className = 'heroVid'; vid.muted = true; vid.playsInline = true; vid.preload = 'auto';
+    vid.setAttribute('muted', ''); vid.setAttribute('playsinline', ''); vid.setAttribute('aria-hidden', 'true');
+    const src = innerWidth < 760 ? 'img/pergola-build-sm.mp4' : 'img/pergola-build.mp4';
+    const bar = document.createElement('div'); bar.className = 'heroBar'; bar.innerHTML = '<i></i>';
+    const skip = document.createElement('button'); skip.type = 'button'; skip.className = 'heroSkip'; skip.textContent = T.skip;
+    const again = document.createElement('button'); again.type = 'button'; again.className = 'heroAgain';
+    again.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg><span>${T.replay}</span>`;
+    box.appendChild(vid); heroEl.append(bar, skip, again);
+
+    let raf = 0;
+    const tick = () => { if (vid.duration) bar.firstChild.style.transform = `scaleX(${vid.currentTime / vid.duration})`; raf = requestAnimationFrame(tick); };
+    const finish = () => {
+      cancelAnimationFrame(raf);
+      heroEl.classList.remove('building'); heroEl.classList.add('built');
+      root.classList.add('done');
+      setTimeout(() => { vid.pause(); }, 1200);
+    };
+    const play = () => {
+      if (!vid.src) vid.src = src;
+      vid.currentTime = 0;
+      heroEl.classList.remove('built'); heroEl.classList.add('building');
+      bar.firstChild.style.transform = 'scaleX(0)';
+      const go = vid.play();
+      if (go && go.catch) go.catch(finish);
+      raf = requestAnimationFrame(tick);
+    };
+    /* the headline lands just as the pergola takes shape */
+    vid.addEventListener('timeupdate', () => { if (vid.currentTime > 5.0) root.classList.add('done'); });
+    vid.addEventListener('ended', finish);
+    vid.addEventListener('error', finish);
+    skip.addEventListener('click', finish);
+    again.addEventListener('click', play);
+
+    if (reduce || saveData || seen) { heroEl.classList.add('built'); return; }
+    try { sessionStorage.setItem('cplus-build-intro', '1'); } catch (_) {}
+    root.classList.add('introVid');
+    vid.src = src;
+    /* start under the logo, so the first thing seen after it is the bare lot */
+    setTimeout(play, 700);
+    setTimeout(() => { if (!vid.currentTime) finish(); }, 4000);
+  })();
 
   /* ---------- fly-through: photos placed in 3D space, scroll moves the camera ---------- */
   const FLY = [0, 1, 2, 3, 4, 6, 7, 5, 10];

@@ -90,9 +90,31 @@ nav a:hover::after{transform:scaleX(1)}
 .anim .hero .lead,.anim .hero .ctas,.anim .hero .hint3d{opacity:0;transform:translateY(20px);transition:opacity .8s,transform .8s var(--ease)}
 .anim.done .hero h1 .ln>span{transform:none}
 .anim.done .hero h1 .ln:nth-child(2)>span{transition-delay:.12s}
-.anim.done .hero .anim.done .hero .lead{opacity:1;transform:none;transition-delay:.35s}
+.anim.done .hero .lead{opacity:1;transform:none;transition-delay:.35s}
 .anim.done .hero .ctas{opacity:1;transform:none;transition-delay:.5s}
 .anim.done .hero .hint3d{opacity:1;transform:none;transition-delay:.7s}
+
+/* hero intro video (site.js): plays once, ends on the same frame as the photo, then fades into it */
+.heroVid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2;opacity:0;transition:opacity 1.1s var(--ease)}
+.hero.building .heroVid{opacity:1;transition:opacity .25s}
+.introVid #intro{transition:opacity .8s .5s,visibility 0s 1.3s}
+.introVid.anim #intro{opacity:0;visibility:hidden}
+.hero .heroShade{transition:opacity 1.4s var(--ease)}
+.hero.building .heroShade{opacity:.25}
+.done .hero.building .heroShade{opacity:1}
+.heroBar{position:absolute;left:0;right:0;bottom:0;height:3px;background:#ffffff1f;z-index:3;opacity:0;transition:opacity .5s}
+.heroBar i{display:block;height:100%;background:var(--or);transform-origin:left;transform:scaleX(0);box-shadow:0 0 12px var(--or)}
+.hero.building .heroBar{opacity:1}
+.heroSkip,.heroAgain{position:absolute;right:clamp(16px,3vw,40px);bottom:clamp(20px,4vh,40px);z-index:3;font:600 14px/1 Figtree,sans-serif;color:#fff;background:#110f0d8c;
+  border:1px solid #ffffff38;border-radius:999px;padding:10px 16px;min-height:40px;cursor:pointer;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  opacity:0;pointer-events:none;transform:translateY(8px);transition:opacity .4s,transform .4s var(--ease),background .2s}
+.heroSkip:hover,.heroAgain:hover{background:#110f0dcc}
+.hero.building .heroSkip{opacity:1;pointer-events:auto;transform:none;transition-delay:1.2s}
+.hero.built .heroAgain{opacity:1;pointer-events:auto;transform:none;transition-delay:.9s}
+.heroAgain{display:flex;align-items:center;gap:8px}
+.heroAgain svg{width:14px;height:14px;fill:var(--or)}
+@media (max-width:640px){.heroSkip,.heroAgain{bottom:auto;top:84px;font-size:13px;padding:8px 13px}}
+@media print{.heroVid,.heroBar,.heroSkip,.heroAgain{display:none}}
 
 /* marquee */
 .marquee{background:var(--or);color:#1d1208;overflow:hidden;padding:16px 0;border-block:1px solid #00000022}
