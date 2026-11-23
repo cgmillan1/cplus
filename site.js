@@ -141,7 +141,7 @@
     const vid = document.createElement('video');
     vid.className = 'heroVid'; vid.muted = true; vid.playsInline = true; vid.preload = 'auto';
     vid.setAttribute('muted', ''); vid.setAttribute('playsinline', ''); vid.setAttribute('aria-hidden', 'true');
-    const src = innerWidth < 760 ? 'img/pergola-build-sm.mp4' : 'img/pergola-build.mp4';
+    const src = innerWidth < 760 ? 'img/pergola-build-sm.mp4?v=2' : 'img/pergola-build.mp4?v=2';
     const bar = document.createElement('div'); bar.className = 'heroBar'; bar.innerHTML = '<i></i>';
     const skip = document.createElement('button'); skip.type = 'button'; skip.className = 'heroSkip'; skip.textContent = T.skip;
     const again = document.createElement('button'); again.type = 'button'; again.className = 'heroAgain';
@@ -166,7 +166,7 @@
       raf = requestAnimationFrame(tick);
     };
     /* the headline lands just as the pergola takes shape */
-    vid.addEventListener('timeupdate', () => { if (vid.currentTime > 5.0) root.classList.add('done'); });
+    vid.addEventListener('timeupdate', () => { if (vid.currentTime > 5.2) root.classList.add('done'); });
     vid.addEventListener('ended', finish);
     vid.addEventListener('error', finish);
     skip.addEventListener('click', finish);
