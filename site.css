@@ -359,12 +359,12 @@ svg.ix{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;str
 .bMeta{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 6px 4px}
 .bTxt{display:flex;flex-direction:column;line-height:1.15}
 .bStep{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--or2)}
-.bName{font:700 18px/1.15 "Bricolage Grotesque",Figtree,sans-serif}
+.bName{font:700 18px/1.15 "Bricolage Grotesque",Figtree,sans-serif;white-space:nowrap}
 .bCta{font-size:13px;font-weight:700;color:var(--night);background:var(--or);padding:7px 11px;border-radius:999px;text-decoration:none;white-space:nowrap;
   opacity:0;transform:translateX(8px);pointer-events:none;transition:opacity .35s,transform .35s var(--ease),background .2s}
 .build.done .bCta{opacity:1;transform:none;pointer-events:auto}
 .bCta:hover{background:var(--or2)}
-.bBar{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:4px 6px 4px}
+.bBar{display:grid;grid-template-columns:repeat(6,1fr);gap:3px;padding:4px 6px 4px}
 .bBar i{height:3px;border-radius:3px;background:#ffffff26;transition:background .35s}
 .bBar i.f{background:var(--or)}
 .bX{position:absolute;top:-9px;right:-9px;width:26px;height:26px;border-radius:50%;border:1px solid #ffffff2e;background:#1b1713;color:#fff;
@@ -378,6 +378,12 @@ svg.ix{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;str
   .bMeta{flex-wrap:wrap;padding:7px 4px 2px}
   .bCta{font-size:12px;padding:5px 9px;display:none}
   .build.done .bCta{display:inline-block}
+  /* On the phone's landing screen: a small photo beside the hero buttons, full card once scrolling starts */
+  .build{transition:opacity .45s var(--ease),transform .55s var(--ease),bottom .4s var(--ease),width .4s var(--ease)}
+  .build.mini{width:96px;bottom:150px;padding:4px;border-radius:12px}
+  .build.mini .bFrame{border-radius:9px}
+  .build.mini .bMeta,.build.mini .bX{display:none}
+  .build.mini .bBar{padding:4px 2px 1px;gap:2px}
 }
 @media (prefers-reduced-motion:reduce){.build,.bCta,.bBar i{transition:none}.bL{transform:none}}
 @media print{.build{display:none}}
