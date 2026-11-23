@@ -75,7 +75,7 @@
 
     return {
       async show(name) {
-        const [im, dp] = await Promise.all([load(`img/${name}.jpg`), load(`img/${name}-d.jpg`)]);
+        const [im, dp] = await Promise.all([load(`img/${name}.webp`), load(`img/${name}-d.jpg`)]);
         iw = im.naturalWidth; ih = im.naturalHeight; setTex(0, im); setTex(1, dp);
         ready = true; t0 = performance.now(); size(); canvas.classList.add('live'); kick();
       },

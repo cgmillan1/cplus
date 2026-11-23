@@ -366,3 +366,16 @@ svg.ix{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;str
 .cards .svc:nth-child(2){display:flex;flex-direction:column}
 .cards .svc:nth-child(2) .ph{flex:1;aspect-ratio:auto;min-height:220px}
 @media (max-width:980px){.cards .svc:nth-child(2) .ph{aspect-ratio:4/3;flex:none}}
+
+/* reviews: two cards */
+.revGrid.two{grid-template-columns:1.6fr 1fr}
+.rcard .rbig{font:800 clamp(40px,5vw,64px)/1 "Bricolage Grotesque";color:var(--ink);margin:0}
+/* FAQ */
+.faqList{margin-top:32px;display:grid;grid-template-columns:minmax(0,1fr);gap:12px;max-width:880px}
+.faqI{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:0 22px}
+.faqI summary{cursor:pointer;list-style:none;padding:20px 32px 20px 0;font:600 19px/1.35 "Bricolage Grotesque";position:relative}
+.faqI summary::-webkit-details-marker{display:none}
+.faqI summary::after{content:"+";position:absolute;right:0;top:16px;font-size:26px;color:var(--mute);transition:transform .2s}
+.faqI[open] summary::after{transform:rotate(45deg)}
+.faqI p{margin:0 0 20px;color:var(--mute);line-height:1.6}
+@media (max-width:980px){.revGrid.two{grid-template-columns:1fr}}

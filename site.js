@@ -185,7 +185,7 @@
   const FLY = [0, 1, 2, 3, 4, 6, 7, 5, 10];
   const stage = $('#stage');
   stage.innerHTML = FLY.map((k, i) => { const p = P[k], tall = p[4] === 'tall';
-    return `<figure class="card3d${tall ? ' tall' : ''}" data-i="${i}"><img src="img/${p[0]}.jpg" data-alt="${k}" alt="" loading="${i < 3 ? 'eager' : 'lazy'}"><figcaption><small data-catname="${p[1]}"></small><span data-cap="${k}"></span></figcaption></figure>`; }).join('');
+    return `<figure class="card3d${tall ? ' tall' : ''}" data-i="${i}"><img src="img/${p[0]}.webp" data-alt="${k}" alt="" loading="${i < 3 ? 'eager' : 'lazy'}"><figcaption><small data-catname="${p[1]}"></small><span data-cap="${k}"></span></figcaption></figure>`; }).join('');
   const cards = $$('.card3d'), fly = $('.fly'), flyProg = $('#flyProg');
   if (reduce) { root.classList.add('noFly'); fly.classList.remove('closed'); $('.flyBtns').hidden = true; }
   else {
@@ -235,7 +235,7 @@
 
   /* ---------- portfolio grid + 3D viewer ---------- */
   const grid = $('#grid');
-  grid.innerHTML = P.map((p, i) => `<li class="${p[4]}" data-c="${p[1]}"><button data-open="${i}"><img src="img/${p[0]}.jpg" data-alt="${i}" alt="" loading="lazy"><span class="b3d" aria-hidden="true">3D</span><span class="cap" data-cap="${i}"></span></button></li>`).join('');
+  grid.innerHTML = P.map((p, i) => `<li class="${p[4]}" data-c="${p[1]}"><button data-open="${i}"><img src="img/${p[0]}.webp" data-alt="${i}" alt="" loading="lazy"><span class="b3d" aria-hidden="true">3D</span><span class="cap" data-cap="${i}"></span></button></li>`).join('');
   $$('.filters button').forEach(b => b.addEventListener('click', () => {
     $$('.filters button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
     $$('#grid li').forEach(li => { const show = b.dataset.f === 'all' || li.dataset.c === b.dataset.f; li.hidden = !show; li.classList.remove('pop'); if (show && !reduce) { void li.offsetWidth; li.classList.add('pop'); } });
@@ -245,7 +245,7 @@
   const visibleIdx = () => $$('#grid li:not([hidden]) [data-open]').map(b => +b.dataset.open);
   async function open(i) {
     viewerIdx = i; const p = P[i];
-    $('#vCap').textContent = cap(p); vImg.src = `img/${p[0]}.jpg`; vImg.alt = cap(p);
+    $('#vCap').textContent = cap(p); vImg.src = `img/${p[0]}.webp`; vImg.alt = cap(p);
     if (!dlg.open) { lastFocus = document.activeElement; dlg.showModal(); }
     if (!viewer && window.Depth3D) viewer = Depth3D.make($('#vCanvas'), { amount: 0.06 });
     if (!viewer) { vBox.classList.add('flat'); v3dBtn.hidden = true; return; }
