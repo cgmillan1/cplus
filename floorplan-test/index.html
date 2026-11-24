@@ -60,7 +60,7 @@ h1{margin:6px 0 0;font-size:clamp(28px,4vw,42px);line-height:1.05;text-wrap:bala
 /* photos and tour: show the whole picture, never crop */
 .stage:has(>.fotos:not([hidden])){height:auto;min-height:0}
 .stage>.fotos{position:relative;inset:auto}
-.cmp{flex:none;width:100%;aspect-ratio:1347/894;max-height:74vh}
+.cmp{flex:none;width:100%;aspect-ratio:1347/894;max-height:calc(100vh - 290px);min-height:240px}
 .cmp img{object-fit:contain}
 .cmp img.bg{object-fit:cover;filter:blur(28px) brightness(.8);transform:scale(1.15)}
 .play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:76px;height:76px;border-radius:50%;border:0;background:#fffffff0;cursor:pointer;display:grid;place-items:center;box-shadow:0 10px 30px #0005;transition:opacity .3s}
