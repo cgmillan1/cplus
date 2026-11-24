@@ -56,6 +56,14 @@ h1{margin:6px 0 0;font-size:clamp(28px,4vw,42px);line-height:1.05;text-wrap:bala
 .thumbs button[aria-pressed=true]{border-color:var(--or)}
 .thumbs img{display:block;width:100%;aspect-ratio:3/2;object-fit:cover}
 .thumbs span{display:block;padding:4px 6px}
+.cmp video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#ddd}
+.play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:76px;height:76px;border-radius:50%;border:0;background:#fffffff0;cursor:pointer;display:grid;place-items:center;box-shadow:0 10px 30px #0005;transition:opacity .3s}
+.play svg{width:30px;height:30px;fill:#1a1714;margin-left:4px}
+.playing .play{opacity:0;pointer-events:none}
+.tbar{position:absolute;left:0;right:0;bottom:0;height:4px;background:#ffffff40}.tbar i{display:block;height:100%;width:0;background:var(--or)}
+.chips{display:flex;gap:8px;padding:10px;flex-wrap:wrap}
+.chips button{border:1px solid var(--line);background:var(--sheet);border-radius:999px;padding:9px 16px;min-height:44px;font-weight:600;cursor:pointer}
+.chips button[aria-pressed=true]{background:var(--ink);color:var(--sheet);border-color:var(--ink)}
 .msg{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:24px;color:var(--mute)}
 aside{display:grid;gap:14px}
 aside .card{padding:16px 18px}
@@ -92,7 +100,7 @@ td{padding:6px 0;border-bottom:1px solid var(--line)}td.n{text-align:right;font-
   <div>
     <div class="mark"><i>+</i>C PLUS · Herramienta de obra</div>
     <h1>Del plano al recorrido en 3D</h1>
-    <p class="sub">Un plano de sótano convertido en maqueta, recorrido, fotos reales y lista de materiales. Sube la foto de cualquier plano y Claude lo dibuja igual.</p>
+    <p class="sub">Un plano de sótano convertido en maqueta 3D, recorrido en video, fotos reales y lista de materiales. Sube la foto de cualquier plano y Claude lo dibuja igual.</p>
   </div>
 </header>
 
@@ -101,7 +109,8 @@ td{padding:6px 0;border-bottom:1px solid var(--line)}td.n{text-align:right;font-
     <div class="tabs" role="tablist">
       <button role="tab" id="t-plan" aria-selected="true">Plano 2D</button>
       <button role="tab" id="t-doll" aria-selected="false">Maqueta 3D</button>
-      <button role="tab" id="t-walk" aria-selected="false">Recorrido</button>
+      <button role="tab" id="t-tour" aria-selected="false">Recorrido</button>
+      <button role="tab" id="t-walk" aria-selected="false">Caminar en 3D</button>
       <button role="tab" id="t-foto" aria-selected="false">Fotos reales</button>
       <span class="sp"></span>
       <select id="goto" aria-label="Ir a una habitación" hidden></select>
@@ -110,6 +119,12 @@ td{padding:6px 0;border-bottom:1px solid var(--line)}td.n{text-align:right;font-
       <svg id="plan" role="img" aria-label="Plano del sótano"></svg>
       <canvas id="gl" hidden></canvas>
       <div class="msg" id="glmsg" hidden>No se pudo cargar el visor 3D en este navegador. El plano 2D y las cantidades siguen funcionando.</div>
+      <div class="fotos" id="tour" hidden>
+        <div class="cmp"><video id="tv" src="https://d2ol7oe51mr4n9.cloudfront.net/user_38ur1oBOIIh5eVpMoWiUDtGB2bt/31649df4-3866-42bf-b836-73d84ff9dd69.mp4" poster="https://d2ol7oe51mr4n9.cloudfront.net/user_38ur1oBOIIh5eVpMoWiUDtGB2bt/fd662267-a0df-46bf-9da1-02433df93524.jpg" muted playsinline preload="metadata"></video>
+          <button class="play" id="tplay" aria-label="Reproducir recorrido"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></button>
+          <div class="tbar"><i id="tprog"></i></div></div>
+        <div class="chips" id="tchips"></div>
+      </div>
       <div class="fotos" id="fotos" hidden>
         <div class="cmp" id="cmp"><img id="fReal" alt=""><img id="f3d" alt="" class="d3">
           <div class="seg2" role="group" aria-label="Vista"><button id="vReal" aria-pressed="true">Foto final</button><button id="v3d" aria-pressed="false">Diseño 3D</button></div></div>
@@ -463,9 +478,9 @@ $('#goto').addEventListener('change', e => goRoom(e.target.value));
 
 /* ---- tabs ---- */
 function setMode(m) {
-  $('#fotos').hidden = m !== 'foto';
-  if (m === 'foto') { mode = m; ['plan', 'doll', 'walk', 'foto'].forEach(k => $('#t-' + k).setAttribute('aria-selected', String(k === m))); ['#plan', '#gl', '#glmsg', '#hint', '#pad', '#goto'].forEach(q => $(q).hidden = true); $('#stage').classList.remove('walk'); return; }
-  mode = m; ['plan', 'doll', 'walk', 'foto'].forEach(k => $('#t-' + k).setAttribute('aria-selected', String(k === m)));
+  $('#fotos').hidden = m !== 'foto'; $('#tour').hidden = m !== 'tour'; if (m !== 'tour') $('#tv').pause();
+  if (m === 'foto' || m === 'tour') { mode = m; ['plan', 'doll', 'tour', 'walk', 'foto'].forEach(k => $('#t-' + k).setAttribute('aria-selected', String(k === m))); ['#plan', '#gl', '#glmsg', '#hint', '#pad', '#goto'].forEach(q => $(q).hidden = true); $('#stage').classList.remove('walk'); return; }
+  mode = m; ['plan', 'doll', 'tour', 'walk', 'foto'].forEach(k => $('#t-' + k).setAttribute('aria-selected', String(k === m)));
   const three = m !== 'plan', ok = three && (G && G.root || build());
   $('#plan').hidden = three; $('#gl').hidden = !ok; $('#glmsg').hidden = !three || ok;
   $('#pad').hidden = $('#goto').hidden = !(ok && m === 'walk');
@@ -476,7 +491,19 @@ function setMode(m) {
   if (m === 'doll') { G.cam.position.set(-plan.W * .2, plan.W * .85, plan.H * 1.35); if (G.orbit) { G.orbit.target.set(0, 0, 0); G.orbit.enabled = true; } }
   else { if (G.orbit) G.orbit.enabled = false; const start = sel || plan.rooms.find(finished)?.n; $('#goto').value = start; goRoom(start); G.rise = 1; G.wallsG.scale.y = 1; }
 }
-['plan', 'doll', 'walk', 'foto'].forEach(k => $('#t-' + k).addEventListener('click', () => setMode(k)));
+['plan', 'doll', 'tour', 'walk', 'foto'].forEach(k => $('#t-' + k).addEventListener('click', () => setMode(k)));
+/* ---- tour: the real photos animated into one video ---- */
+const TOUR = [['Sala familiar', 0], ['Habitación', 4.44], ['Baño', 8.88], ['Oficina', 13.32]], tv = $('#tv');
+$('#tchips').innerHTML = TOUR.map(([n], i) => `<button data-i="${i}" aria-pressed="${i === 0}">${n}</button>`).join('');
+const tpress = () => { const t = tv.currentTime; let k = 0; TOUR.forEach(([, s], i) => { if (t >= s - .2) k = i; });
+  document.querySelectorAll('#tchips button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.i === k))); };
+const tplay = () => { const p = tv.play(); if (p && p.catch) p.catch(() => {}); };
+$('#tplay').addEventListener('click', () => { if (tv.ended) tv.currentTime = 0; tplay(); });
+tv.addEventListener('click', () => tv.paused ? tplay() : tv.pause());
+tv.addEventListener('play', () => $('#tour').classList.add('playing'));
+tv.addEventListener('pause', () => $('#tour').classList.remove('playing'));
+tv.addEventListener('timeupdate', () => { $('#tprog').style.width = (tv.currentTime / (tv.duration || 18.4) * 100) + '%'; tpress(); });
+$('#tchips').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; tv.currentTime = TOUR[+b.dataset.i][1] + .05; tplay(); });
 /* ---- real photos: generated from each 3D view ---- */
 const FOTOS = [['sala', 'Sala familiar'], ['recamara', 'Habitación'], ['bano', 'Baño'], ['oficina', 'Oficina']];
 $('#thumbs').innerHTML = FOTOS.map(([f, n], i) => `<button data-i="${i}" aria-pressed="${i === 0}"><img src="fotos/${f}.jpg" alt="" loading="lazy"><span>${n}</span></button>`).join('');
