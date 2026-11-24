@@ -164,12 +164,12 @@ const HT = 8;
 /* ---- sample basement, feet, origin at the top-left outside corner ---- */
 const SAMPLE = {name:'Sótano de ejemplo', sample:true,
  rooms:[
-  {n:'Sala familiar',x:0,y:0,w:24,h:14,f:'lvp'},{n:'Cocineta',x:24,y:0,w:10,h:9,f:'lvp'},
+  {n:'Sala familiar',x:0,y:0,w:24,h:14,f:'lvp'},{n:'Cocina',x:24,y:0,w:10,h:9,f:'lvp'},
   {n:'Pasillo',x:24,y:9,w:10,h:5,f:'lvp'},{n:'Pasillo',x:24,y:14,w:6,h:6,f:'lvp'},
-  {n:'Recámara',x:34,y:0,w:12,h:14,f:'carpet'},{n:'Escaleras',x:0,y:14,w:4,h:12,f:'carpet',stairs:true},
-  {n:'Oficina',x:4,y:14,w:12,h:12,f:'lvp'},{n:'Mecánico',x:16,y:14,w:8,h:12,f:'concrete'},
+  {n:'Habitación',x:34,y:0,w:12,h:14,f:'carpet'},{n:'Escaleras',x:0,y:14,w:4,h:12,f:'carpet',stairs:true},
+  {n:'Oficina',x:4,y:14,w:12,h:12,f:'lvp'},{n:'Cuarto de Maquinaria',x:16,y:14,w:8,h:12,f:'concrete'},
   {n:'Almacén',x:24,y:20,w:6,h:6,f:'concrete'},{n:'Lavandería',x:30,y:14,w:8,h:12,f:'tile'},{n:'Baño',x:38,y:14,w:8,h:12,f:'tile'}],
- views:{'Sala familiar':[2,12.5,-.93],'Recámara':[44.6,12.6,.71],'Baño':[39.4,15.4,-2.5],'Oficina':[14.6,15.4,2.36]},
+ views:{'Sala familiar':[2,12.5,-.93],'Habitación':[44.6,12.6,.71],'Baño':[39.4,15.4,-2.5],'Oficina':[14.6,15.4,2.36]},
  open:[{x:24,y:0,l:9,d:'v'},{x:24,y:14,l:6,d:'h'},{x:0,y:14,l:4,d:'h'},{x:25,y:9,l:4,d:'h'}],
  doors:[{x:24,y:10,l:3,d:'v'},{x:34,y:10,l:3,d:'v'},{x:30,y:15.5,l:3,d:'v'},{x:25.5,y:20,l:3,d:'h'},{x:24,y:15.5,l:3,d:'v'},{x:8,y:14,l:3,d:'h'},{x:40,y:14,l:3,d:'h'}],
  windows:[{x:5,y:0,l:5,d:'h'},{x:14,y:0,l:5,d:'h'},{x:28,y:0,l:4,d:'h'},{x:38,y:0,l:5,d:'h'},{x:8,y:26,l:4,d:'h'},{x:46,y:4,l:4,d:'v'},{x:46,y:20,l:2,d:'v'}],
@@ -291,7 +291,7 @@ function drawPlan() {
   const seen = new Set();
   for (const r of p.rooms) {
     if (seen.has(r.n)) continue; seen.add(r.n);
-    const a = Math.round(groups().find(g => g.n === r.n).a), fs = Math.min(1.1, r.w / 9.5, r.h / 3);
+    const a = Math.round(groups().find(g => g.n === r.n).a), fs = Math.min(1.1, r.w / Math.max(9.5, r.n.length * .62), r.h / 3);
     h += `<text x="${r.x + r.w / 2}" y="${r.y + r.h / 2}" text-anchor="middle" font-size="${fs}" font-weight="700" fill="${ink}" pointer-events="none">${esc(r.n)}</text><text x="${r.x + r.w / 2}" y="${r.y + r.h / 2 + fs * 1.1}" text-anchor="middle" font-size="${fs * .8}" fill="${ink}" opacity=".7" pointer-events="none">${ftin(r.w)} × ${ftin(r.h)} · ${a} ft²</text>`;
   }
   h += `<g stroke="${ink}" stroke-width=".06" fill="${ink}" font-size=".95"><line x1="0" x2="${p.W}" y1="-2.2" y2="-2.2"/><line x1="0" x2="0" y1="-2.8" y2="-1.6"/><line x1="${p.W}" x2="${p.W}" y1="-2.8" y2="-1.6"/><text x="${p.W / 2}" y="-2.6" text-anchor="middle" stroke="none">${ftin(p.W)}</text>
@@ -478,7 +478,7 @@ function setMode(m) {
 }
 ['plan', 'doll', 'walk', 'foto'].forEach(k => $('#t-' + k).addEventListener('click', () => setMode(k)));
 /* ---- real photos: generated from each 3D view ---- */
-const FOTOS = [['sala', 'Sala familiar'], ['recamara', 'Recámara'], ['bano', 'Baño'], ['oficina', 'Oficina']];
+const FOTOS = [['sala', 'Sala familiar'], ['recamara', 'Habitación'], ['bano', 'Baño'], ['oficina', 'Oficina']];
 $('#thumbs').innerHTML = FOTOS.map(([f, n], i) => `<button data-i="${i}" aria-pressed="${i === 0}"><img src="fotos/${f}.jpg" alt="" loading="lazy"><span>${n}</span></button>`).join('');
 function foto(i) { const [f, n] = FOTOS[i]; view3d(false); $('#fReal').src = `fotos/${f}.jpg`; $('#fReal').alt = n + ', foto final'; $('#f3d').src = `fotos/${f}-3d.jpg`; $('#f3d').alt = n + ', diseño 3D';
   document.querySelectorAll('#thumbs button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.i === i))); }
