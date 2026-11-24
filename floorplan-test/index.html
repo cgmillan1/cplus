@@ -90,6 +90,26 @@ td{padding:6px 0;border-bottom:1px solid var(--line)}td.n{text-align:right;font-
 .busy::after{content:"";display:inline-block;width:14px;height:14px;margin-left:8px;border:2px solid var(--or);border-right-color:transparent;border-radius:50%;animation:sp .8s linear infinite;vertical-align:-2px}
 @keyframes sp{to{transform:rotate(1turn)}}
 :focus-visible{outline:3px solid var(--or);outline-offset:2px}
+.lang{display:flex;background:var(--sheet);border:1px solid var(--line);border-radius:999px;padding:3px;align-self:center}
+.lang button{border:0;background:none;border-radius:999px;padding:7px 14px;min-height:38px;font-weight:700;font-size:14px;cursor:pointer}
+.lang button[aria-pressed=true]{background:var(--ink);color:var(--sheet)}
+.fin{display:flex;gap:6px;align-items:center;padding:8px 8px 0;flex-wrap:wrap;font-size:13px;font-weight:600;color:var(--mute)}
+.fin button{border:1px solid var(--line);background:var(--sheet);border-radius:999px;padding:7px 13px;min-height:38px;font-weight:600;font-size:14px;cursor:pointer;color:var(--ink);display:inline-flex;align-items:center;gap:7px}
+.fin button i{width:14px;height:14px;border-radius:50%;display:inline-block;border:1px solid #0002}
+.fin button[aria-pressed=true]{border-color:var(--or);box-shadow:0 0 0 1px var(--or) inset}
+.badge{position:absolute;left:12px;top:12px;background:#110f0dcc;color:#fff;font-size:13px;font-weight:600;padding:6px 11px;border-radius:999px}
+.cmp img.fade{transition:opacity .35s ease}
+.est{display:grid;gap:0;font-size:14.5px}
+.est .li{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:7px 0;border-bottom:1px solid var(--line)}
+.est .li b{font-weight:600}
+.est .li .t{font-weight:700;font-variant-numeric:tabular-nums;text-align:right;align-self:center;grid-row:span 2}
+.est .li small{color:var(--mute);font-size:13px;display:flex;align-items:center;gap:4px;flex-wrap:wrap;font-variant-numeric:tabular-nums}
+.est input{width:5.4em;border:1px solid var(--line);border-radius:7px;padding:3px 6px;background:var(--bg);font-variant-numeric:tabular-nums;font-size:13px;text-align:right}
+.est input:focus{border-color:var(--or);outline:0}
+.sum{display:grid;gap:4px;margin-top:10px;font-size:14.5px}
+.sum div{display:flex;justify-content:space-between;gap:8px;font-variant-numeric:tabular-nums}
+.sum .big{font-size:22px;font-weight:800;border-top:2px solid var(--ink);padding-top:8px;margin-top:4px}
+.sum .mu{color:var(--mute)}
 @media(max-width:900px){.wrap{grid-template-columns:minmax(0,1fr)}.viewer{position:static}.stage{height:62vh}}
 @media(max-width:600px){.tabs{flex-wrap:nowrap;overflow-x:auto}.tabs .sp{display:none}.tabs button{padding:10px 11px}.pad{grid-template-columns:repeat(3,44px)}.pad button{height:44px}.hint{right:160px}}
 @media(prefers-reduced-motion:reduce){.busy::after{animation:none}}
@@ -98,36 +118,38 @@ td{padding:6px 0;border-bottom:1px solid var(--line)}td.n{text-align:right;font-
 <body>
 <header>
   <div>
-    <div class="mark"><i>+</i>C PLUS · Herramienta de obra</div>
-    <h1>Del plano al recorrido en 3D</h1>
-    <p class="sub">Un plano de sótano convertido en maqueta 3D, recorrido en video, fotos reales y lista de materiales. Sube la foto de cualquier plano y Claude lo dibuja igual.</p>
+    <div class="mark"><i>+</i><span data-i="brand">C PLUS · Herramienta de obra</span></div>
+    <h1 data-i="h1">Del plano al recorrido en 3D</h1>
+    <p class="sub" data-i="sub">Un plano de sótano convertido en maqueta 3D, recorrido en video, fotos reales y lista de materiales. Sube la foto de cualquier plano y Claude lo dibuja igual.</p>
   </div>
+  <div class="lang" role="group" aria-label="Idioma / Language"><button data-l="es" aria-pressed="true">ES</button><button data-l="en" aria-pressed="false">EN</button></div>
 </header>
 
 <div class="wrap">
   <section class="card viewer">
     <div class="tabs" role="tablist">
-      <button role="tab" id="t-plan" aria-selected="true">Plano 2D</button>
-      <button role="tab" id="t-doll" aria-selected="false">Maqueta 3D</button>
-      <button role="tab" id="t-tour" aria-selected="false">Recorrido</button>
-      <button role="tab" id="t-walk" aria-selected="false">Caminar en 3D</button>
-      <button role="tab" id="t-foto" aria-selected="false">Fotos reales</button>
+      <button role="tab" id="t-plan" aria-selected="true" data-i="tPlan">Plano 2D</button>
+      <button role="tab" id="t-doll" aria-selected="false" data-i="tDoll">Maqueta 3D</button>
+      <button role="tab" id="t-tour" aria-selected="false" data-i="tTour">Recorrido</button>
+      <button role="tab" id="t-walk" aria-selected="false" data-i="tWalk">Caminar en 3D</button>
+      <button role="tab" id="t-foto" aria-selected="false" data-i="tFoto">Fotos reales</button>
       <span class="sp"></span>
       <select id="goto" aria-label="Ir a una habitación" hidden></select>
     </div>
     <div class="stage" id="stage">
       <svg id="plan" role="img" aria-label="Plano del sótano"></svg>
       <canvas id="gl" hidden></canvas>
-      <div class="msg" id="glmsg" hidden>No se pudo cargar el visor 3D en este navegador. El plano 2D y las cantidades siguen funcionando.</div>
+      <div class="msg" id="glmsg" data-i="glmsg" hidden>No se pudo cargar el visor 3D en este navegador. El plano 2D y las cantidades siguen funcionando.</div>
       <div class="fotos" id="tour" hidden>
         <div class="cmp"><video id="tv" src="https://d2ol7oe51mr4n9.cloudfront.net/user_38ur1oBOIIh5eVpMoWiUDtGB2bt/31649df4-3866-42bf-b836-73d84ff9dd69.mp4" poster="https://d2ol7oe51mr4n9.cloudfront.net/user_38ur1oBOIIh5eVpMoWiUDtGB2bt/fd662267-a0df-46bf-9da1-02433df93524.jpg" muted playsinline preload="metadata"></video>
           <button class="play" id="tplay" aria-label="Reproducir recorrido"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></button>
-          <div class="tbar"><i id="tprog"></i></div></div>
+          <div class="tbar"><i id="tprog"></i></div><div class="badge" id="tbadge" hidden></div></div>
         <div class="chips" id="tchips"></div>
       </div>
       <div class="fotos" id="fotos" hidden>
-        <div class="cmp" id="cmp"><img id="fReal" alt=""><img id="f3d" alt="" class="d3">
-          <div class="seg2" role="group" aria-label="Vista"><button id="vReal" aria-pressed="true">Foto final</button><button id="v3d" aria-pressed="false">Diseño 3D</button></div></div>
+        <div class="cmp" id="cmp"><img id="fReal" alt="" class="fade"><img id="f3d" alt="" class="d3">
+          <div class="seg2" role="group" aria-label="Vista"><button id="vReal" aria-pressed="true" data-i="vReal">Foto final</button><button id="v3d" aria-pressed="false" data-i="v3d">Diseño 3D</button></div></div>
+        <div class="fin" id="ffin"></div>
         <div class="thumbs" id="thumbs"></div>
       </div>
       <div class="hint" id="hint" hidden></div>
@@ -142,27 +164,33 @@ td{padding:6px 0;border-bottom:1px solid var(--line)}td.n{text-align:right;font-
     <div class="card">
       <h2 id="pname">Sótano de ejemplo</h2>
       <ul class="rooms" id="rooms"></ul>
-      <div class="tot"><span>Área terminada</span><span id="fin"></span></div>
+      <div class="tot"><span data-i="finArea">Área terminada</span><span id="fin"></span></div>
     </div>
     <div class="card">
-      <h2>Acabados</h2>
+      <h2 data-i="hFin">Acabados</h2>
       <div class="styles" id="styles"></div>
-      <p class="note">Cambia pisos y paredes en el plano y en el 3D al mismo tiempo.</p>
+      <p class="note" data-i="finNote">Cambia pisos y paredes en el plano, el 3D, las fotos reales y el estimado al mismo tiempo.</p>
     </div>
     <div class="card">
-      <h2>Cantidades para la cotización</h2>
+      <h2 data-i="hTake">Cantidades para la cotización</h2>
       <table><tbody id="take"></tbody></table>
-      <div class="row"><button class="btn ghost" id="copy">Copiar lista</button></div>
-      <p class="note" id="copied">Calculadas del plano: paredes de 8 pies, 10% de desperdicio. Son un punto de partida para la cotización, no una medida final.</p>
+      <p class="note" data-i="takeNote">Calculadas del plano: paredes de 8 pies, 10% de desperdicio. Son un punto de partida para la cotización, no una medida final.</p>
+    </div>
+    <div class="card">
+      <h2 data-i="hEst">Estimado del proyecto</h2>
+      <div class="est" id="est"></div>
+      <div class="sum" id="sum"></div>
+      <div class="row"><button class="btn" id="copy" data-i="copy">Copiar cotización</button><button class="btn ghost" id="preset" data-i="preset">Precios de ejemplo</button></div>
+      <p class="note" id="copied" data-i="estNote">Precios de ejemplo con material y mano de obra. Toca cualquier precio para ajustarlo; el total se recalcula solo.</p>
     </div>
     <div class="card" id="aiCard">
-      <h2>Subir un plano real</h2>
+      <h2 data-i="hUp">Subir un plano real</h2>
       <label class="drop" id="drop">
         <input type="file" id="file" accept="image/*">
-        <strong>Elegir foto del plano</strong><br><span class="note">JPG o PNG, una planta. Claude lee las medidas y arma el 3D.</span>
+        <strong data-i="upPick">Elegir foto del plano</strong><br><span class="note" data-i="upNote">JPG o PNG, una planta. Claude lee las medidas y arma el 3D.</span>
       </label>
       <p class="note" id="status" role="status"></p>
-      <div class="row"><button class="btn ghost" id="reset" hidden>Volver al ejemplo</button></div>
+      <div class="row"><button class="btn ghost" id="reset" data-i="reset" hidden>Volver al ejemplo</button></div>
     </div>
   </aside>
 </div>
@@ -175,6 +203,50 @@ td{padding:6px 0;border-bottom:1px solid var(--line)}td.n{text-align:right;font-
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const HT = 8;
+
+/* ---- language ---- */
+const TX = {
+ es:{brand:'C PLUS · Herramienta de obra',h1:'Del plano al recorrido en 3D',sub:'Un plano de sótano convertido en maqueta 3D, recorrido en video, fotos reales, lista de materiales y estimado. Sube la foto de cualquier plano y Claude lo dibuja igual.',
+  tPlan:'Plano 2D',tDoll:'Maqueta 3D',tTour:'Recorrido',tWalk:'Caminar en 3D',tFoto:'Fotos reales',glmsg:'No se pudo cargar el visor 3D en este navegador. El plano 2D y las cantidades siguen funcionando.',
+  vReal:'Foto final',v3d:'Diseño 3D',finArea:'Área terminada',hFin:'Acabados',finNote:'Cambia pisos y paredes en el plano, el 3D, las fotos reales y el estimado al mismo tiempo.',
+  hTake:'Cantidades para la cotización',takeNote:'Calculadas del plano: paredes de 8 pies, 10% de desperdicio. Son un punto de partida para la cotización, no una medida final.',
+  hEst:'Estimado del proyecto',copy:'Copiar cotización',preset:'Precios de ejemplo',estNote:'Precios de ejemplo con material y mano de obra. Toca cualquier precio para ajustarlo; el total se recalcula solo.',
+  hUp:'Subir un plano real',upPick:'Elegir foto del plano',upNote:'JPG o PNG, una planta. Claude lee las medidas y arma el 3D.',reset:'Volver al ejemplo',
+  unfinished:'sin terminar',goto:'Ir a una habitación',hintWalk:'Arrastra para mirar · flechas o W A S D para caminar',hintDoll:'Arrastra para girar · rueda o pellizca para acercar',
+  play:'Reproducir recorrido',tourBadge:'Video en acabado Moderno',finish:'Acabado',finalPhoto:'foto final',design3d:'diseño 3D',planLabel:'Plano del sótano',
+  st_moderno:'Moderno',st_calido:'Cálido',st_contraste:'Contraste',
+  lvp:'Piso vinílico (LVP)',tile:'Azulejo de piso',carpet:'Alfombra',stairs:'Alfombra de escalera',dry:'Tablaroca 4×8 (instalada y terminada)',drySh:'Tablaroca 4×8',paintW:'Pintura de paredes (2 manos)',paintC:'Pintura de techo',studs:'Postes 2×4 a 16"',base:'Zoclo',doors:'Puertas interiores',wins:'Ventanas',lights:'Luces empotradas',
+  elec:'Eléctrico: cableado y tomas',plumb:'Plomería de baño',permit:'Permisos y planos',
+  u_ft2:'ft²',u_steps:'escalones',u_sheets:'hojas',u_gal:'gal',u_pcs:'piezas',u_lf:'pies lin.',u_ea:'pzas',u_bath:'baños',u_job:'proyecto',
+  sub_:'Subtotal',cont:'Contingencia 10%',total:'Total estimado',perft:'Por ft² terminado',range:'Rango probable',to:'a',
+  copied:'Cotización copiada. Pégala en el proyecto o en un correo.',copyFail:'No se pudo copiar automáticamente en este navegador.',demo:'Demo: en el app de C Plus, el equipo sube la foto del plano y Claude arma el 3D automáticamente.',
+  big:'La foto pesa más de 8 MB. Prueba con una más ligera.',reading:'Claude está leyendo el plano…',ready:n=>`Listo: ${n} espacios. Revisa las medidas; si algo no cuadra, sube una foto más clara.`,
+  rate:'Demasiadas solicitudes seguidas. Espera un minuto.',perm:'Claude no tiene permiso para leer imágenes en esta página.',noplan:'No pude leer un plano en esa imagen. Prueba con una foto derecha y con las medidas visibles.',
+  fwd:'Adelante',back:'Atrás',left:'Girar a la izquierda',right:'Girar a la derecha',view:'Vista',estFor:'Estimado',title:'C Plus · Plano a 3D'},
+ en:{brand:'C PLUS · Job site tool',h1:'From floor plan to 3D walk-through',sub:'A basement floor plan turned into a 3D model, a video tour, real photos, a materials list and an estimate. Upload a photo of any plan and Claude draws it the same way.',
+  tPlan:'2D plan',tDoll:'3D model',tTour:'Video tour',tWalk:'Walk in 3D',tFoto:'Real photos',glmsg:'The 3D viewer could not load in this browser. The 2D plan and the quantities still work.',
+  vReal:'Final photo',v3d:'3D design',finArea:'Finished area',hFin:'Finishes',finNote:'Changes floors and walls in the plan, the 3D, the real photos and the estimate at once.',
+  hTake:'Quantities for the quote',takeNote:'Taken from the plan: 8 ft walls, 10% waste. A starting point for the quote, not a final measurement.',
+  hEst:'Project estimate',copy:'Copy quote',preset:'Sample prices',estNote:'Sample prices, materials and labor included. Tap any price to change it; the total updates by itself.',
+  hUp:'Upload a real plan',upPick:'Choose a plan photo',upNote:'JPG or PNG, one floor. Claude reads the dimensions and builds the 3D.',reset:'Back to the sample',
+  unfinished:'unfinished',goto:'Go to a room',hintWalk:'Drag to look · arrows or W A S D to walk',hintDoll:'Drag to orbit · scroll or pinch to zoom',
+  play:'Play the tour',tourBadge:'Video shows the Modern finish',finish:'Finish',finalPhoto:'final photo',design3d:'3D design',planLabel:'Basement floor plan',
+  st_moderno:'Modern',st_calido:'Warm',st_contraste:'Contrast',
+  lvp:'Vinyl plank floor (LVP)',tile:'Floor tile',carpet:'Carpet',stairs:'Stair carpet',dry:'Drywall 4×8 (hung and finished)',drySh:'Drywall 4×8',paintW:'Wall paint (2 coats)',paintC:'Ceiling paint',studs:'2×4 studs at 16"',base:'Baseboard',doors:'Interior doors',wins:'Windows',lights:'Recessed lights',
+  elec:'Electrical: wiring and outlets',plumb:'Bathroom plumbing',permit:'Permits and drawings',
+  u_ft2:'ft²',u_steps:'steps',u_sheets:'sheets',u_gal:'gal',u_pcs:'pcs',u_lf:'lin. ft',u_ea:'ea',u_bath:'baths',u_job:'job',
+  sub_:'Subtotal',cont:'Contingency 10%',total:'Estimated total',perft:'Per finished ft²',range:'Likely range',to:'to',
+  copied:'Quote copied. Paste it into the project or an email.',copyFail:'Could not copy automatically in this browser.',demo:'Demo: in the C Plus app, the team uploads the plan photo and Claude builds the 3D automatically.',
+  big:'The photo is over 8 MB. Try a lighter one.',reading:'Claude is reading the plan…',ready:n=>`Done: ${n} spaces. Check the dimensions; if something looks off, upload a clearer photo.`,
+  rate:'Too many requests in a row. Wait a minute.',perm:'Claude does not have permission to read images on this page.',noplan:'I could not find a floor plan in that image. Try a straight photo with the dimensions visible.',
+  fwd:'Forward',back:'Back',left:'Turn left',right:'Turn right',view:'View',estFor:'Estimate',title:'C Plus · Plan to 3D'}};
+const ROOMS_EN = {'Sala familiar':'Family room','Cocina':'Kitchen','Pasillo':'Hallway','Habitación':'Bedroom','Recámara':'Bedroom','Escaleras':'Stairs','Oficina':'Office','Cuarto de Maquinaria':'Mechanical room','Mecánico':'Mechanical room','Almacén':'Storage','Bodega':'Storage','Lavandería':'Laundry','Baño':'Bathroom','Medio baño':'Half bath','Comedor':'Dining room','Sala':'Living room','Gimnasio':'Gym','Cuarto de juegos':'Game room','Bar':'Bar','Clóset':'Closet','Sótano de ejemplo':'Sample basement','Plano subido':'Uploaded plan','Cuarto':'Room'};
+let lang = 'es';
+try { lang = new URLSearchParams(location.search).get('lang') || localStorage.getItem('fp-lang'); } catch (_) {}
+if (lang !== 'en') lang = 'es';
+const t = k => TX[lang][k] ?? TX.es[k] ?? k;
+const tn = n => lang === 'en' ? (ROOMS_EN[n] || n) : n;
+const money = v => '$' + Math.round(v).toLocaleString('en-US');
 
 /* ---- sample basement, feet, origin at the top-left outside corner ---- */
 const SAMPLE = {name:'Sótano de ejemplo', sample:true,
@@ -201,9 +273,9 @@ const SAMPLE = {name:'Sótano de ejemplo', sample:true,
   {k:'box',x:17,y:22,w:3,h:3,t:5,c:'#a7abaf',m:.5,r:.35},{k:'cyl',x:21,y:22.5,w:2.2,h:2.2,t:5,c:'#d8d9d6'},{k:'box',x:24.5,y:24.5,w:5,h:1.2,t:6,c:'#7d7468'}]};
 
 const STYLES = [
- {id:'moderno',n:'Moderno',lvp:'#bdb4a6',wall:'#f0efeb',tile:'#d9dbdc',carpet:'#9c9a96',con:'#b7b3ad'},
- {id:'calido',n:'Cálido',lvp:'#ad7848',wall:'#ebe0cd',tile:'#cdbfa9',carpet:'#8f7f6c',con:'#b7b3ad'},
- {id:'contraste',n:'Contraste',lvp:'#4d3d31',wall:'#aebaa6',tile:'#36383a',carpet:'#56514b',con:'#b7b3ad'}];
+ {id:'moderno',dot:'#bdb4a6',lvp:'#bdb4a6',wall:'#f0efeb',tile:'#d9dbdc',carpet:'#9c9a96',con:'#b7b3ad'},
+ {id:'calido',dot:'#ad7848',lvp:'#ad7848',wall:'#ebe0cd',tile:'#cdbfa9',carpet:'#8f7f6c',con:'#b7b3ad'},
+ {id:'contraste',dot:'#4d3d31',lvp:'#4d3d31',wall:'#aebaa6',tile:'#36383a',carpet:'#56514b',con:'#b7b3ad'}];
 let plan = SAMPLE, style = STYLES[0], sel = null, mode = 'plan';
 const fcol = f => ({lvp:style.lvp,tile:style.tile,carpet:style.carpet,concrete:style.con}[f] || style.lvp);
 const finished = r => r.f !== 'concrete';
@@ -243,10 +315,10 @@ function groups() {
   return [...g.values()];
 }
 function drawList() {
-  $('#pname').textContent = plan.name;
-  $('#rooms').innerHTML = groups().map(g => `<li data-n="${esc(g.n)}" class="${sel === g.n ? 'on' : ''}"><span>${esc(g.n)}${g.fin ? '' : ' <small style="color:var(--mute)">sin terminar</small>'}</span><span>${Math.round(g.a)} ft²</span></li>`).join('');
-  $('#fin').textContent = Math.round(plan.rooms.filter(finished).reduce((s, r) => s + r.w * r.h, 0)).toLocaleString('es-US') + ' ft²';
-  $('#goto').innerHTML = groups().map(g => `<option>${esc(g.n)}</option>`).join('');
+  $('#pname').textContent = tn(plan.name);
+  $('#rooms').innerHTML = groups().map(g => `<li data-n="${esc(g.n)}" class="${sel === g.n ? 'on' : ''}"><span>${esc(tn(g.n))}${g.fin ? '' : ` <small style="color:var(--mute)">${t('unfinished')}</small>`}</span><span>${Math.round(g.a)} ft²</span></li>`).join('');
+  $('#fin').textContent = Math.round(finArea()).toLocaleString('en-US') + ' ft²';
+  const gv = $('#goto').value; $('#goto').innerHTML = groups().map(g => `<option value="${esc(g.n)}">${esc(tn(g.n))}</option>`).join(''); if (gv) $('#goto').value = gv;
 }
 $('#rooms').addEventListener('click', e => { const li = e.target.closest('li'); if (li) pick(li.dataset.n); });
 $('#rooms').addEventListener('mouseover', e => { const li = e.target.closest('li'); if (li) hover(li.dataset.n); });
@@ -255,36 +327,74 @@ function hover(n) { document.querySelectorAll('#plan .room').forEach(r => r.clas
 function pick(n) { sel = sel === n ? null : n; drawList(); hover(null); if (mode === 'walk' && sel) goRoom(sel); }
 
 /* ---- takeoff ---- */
+const finArea = () => plan.rooms.filter(finished).reduce((s, r) => s + r.w * r.h, 0);
+const baths = () => new Set(plan.rooms.filter(r => /ba[ñn]o|bath/i.test(r.n)).map(r => r.n)).size;
 function takeoff() {
-  const fin = plan.rooms.filter(finished), area = f => plan.rooms.filter(r => r.f === f).reduce((s, r) => s + r.w * r.h, 0);
+  const area = f => plan.rooms.filter(r => r.f === f).reduce((s, r) => s + r.w * r.h, 0);
   let wallA = 0, frameLF = 0, base = 0, doors = 0, wins = 0;
   for (const w of plan.walls) { const sides = w.ext ? 1 : 2; frameLF += w.L;
     if (w.t === 'wall') { wallA += w.L * HT * sides; base += w.L * sides; }
     if (w.t === 'door') { wallA += w.L * (HT - 7) * sides; doors++; }
     if (w.t === 'win') { wallA += w.L * (HT - 2) + (sides - 1) * w.L * HT; base += w.L * sides; wins++; } }
-  const finA = fin.reduce((s, r) => s + r.w * r.h, 0), dry = wallA + finA;
-  const steps = plan.rooms.some(r => r.stairs) ? 13 : 0;
+  const finA = finArea(), dry = wallA + finA, stairA = plan.rooms.filter(r => r.stairs).reduce((s, r) => s + r.w * r.h, 0);
+  const steps = stairA ? 13 : 0;
   return [
-   ['Piso vinílico (LVP)', Math.ceil(area('lvp') * 1.1), 'ft²'], ['Azulejo de piso', Math.ceil(area('tile') * 1.1), 'ft²'],
-   ['Alfombra', Math.ceil(area('carpet') * 1.1 - (plan.rooms.filter(r => r.stairs).reduce((s, r) => s + r.w * r.h, 0)) * 1.1), 'ft²'], ['Alfombra de escalera', steps, 'escalones'], ['Tablaroca 4×8', Math.ceil(dry * 1.1 / 32), 'hojas'],
-   ['Pintura de paredes (2 manos)', Math.ceil(wallA * 2 / 350), 'gal'], ['Pintura de techo', Math.ceil(finA / 400), 'gal'],
-   ['Postes 2×4 a 16"', Math.ceil(frameLF * .75 + plan.walls.length * 2), 'piezas'], ['Zoclo', Math.ceil(base * 1.1), 'pies lin.'],
-   ['Puertas interiores', doors, 'pzas'], ['Ventanas', wins, 'pzas'], ['Luces empotradas', Math.ceil(finA / 45), 'pzas']
+   ['lvp', Math.ceil(area('lvp') * 1.1), 'u_ft2'], ['tile', Math.ceil(area('tile') * 1.1), 'u_ft2'],
+   ['carpet', Math.ceil((area('carpet') - stairA) * 1.1), 'u_ft2'], ['stairs', steps, 'u_steps'], ['dry', Math.ceil(dry * 1.1 / 32), 'u_sheets'],
+   ['paintW', Math.ceil(wallA * 2 / 350), 'u_gal'], ['paintC', Math.ceil(finA / 400), 'u_gal'],
+   ['studs', Math.ceil(frameLF * .75 + plan.walls.length * 2), 'u_pcs'], ['base', Math.ceil(base * 1.1), 'u_lf'],
+   ['doors', doors, 'u_ea'], ['wins', wins, 'u_ea'], ['lights', Math.ceil(finA / 45), 'u_ea']
   ].filter(r => r[1] > 0);
 }
-function drawTake() { $('#take').innerHTML = takeoff().map(r => `<tr><td>${esc(r[0])}</td><td class="n">${r[1].toLocaleString('es-US')}</td><td class="u">${esc(r[2])}</td></tr>`).join(''); }
+function drawTake() { $('#take').innerHTML = takeoff().map(r => `<tr><td>${esc(t(r[0] === 'dry' ? 'drySh' : r[0]))}</td><td class="n">${r[1].toLocaleString('en-US')}</td><td class="u">${esc(t(r[2]))}</td></tr>`).join(''); }
+
+/* ---- estimate: installed prices, materials and labor, typical for Utah; the team edits them ---- */
+const PRICE = {lvp: {moderno: 6.5, calido: 7.25, contraste: 8}, tile: {moderno: 14, calido: 15, contraste: 16.5}, carpet: {moderno: 4.5, calido: 4.75, contraste: 5.25},
+  stairs: 85, dry: 72, paintW: 115, paintC: 115, studs: 16, base: 6.5, doors: 425, wins: 650, lights: 175, elec: 3.5, plumb: 6500, permit: 1800};
+let over = {}; try { over = JSON.parse(localStorage.getItem('fp-prices') || '{}'); } catch (_) {}
+const pkey = k => typeof PRICE[k] === 'object' ? k + '_' + style.id : k;
+const price = k => over[pkey(k)] ?? (typeof PRICE[k] === 'object' ? PRICE[k][style.id] : PRICE[k]);
+function estimate() {
+  const lines = takeoff().map(([k, q, u]) => [k, q, u]);
+  lines.push(['elec', Math.round(finArea()), 'u_ft2']);
+  const b = baths(); if (b) lines.push(['plumb', b, 'u_bath']);
+  lines.push(['permit', 1, 'u_job']);
+  const rows = lines.map(([k, q, u]) => ({k, q, u, p: price(k), tot: q * price(k)}));
+  const sub = rows.reduce((s, r) => s + r.tot, 0), cont = sub * .1, total = sub + cont;
+  return {rows, sub, cont, total, per: total / (finArea() || 1)};
+}
+function drawEst() {
+  const e = estimate();
+  $('#est').innerHTML = e.rows.map(r => `<div class="li"><b>${esc(t(r.k))}</b><span class="t">${money(r.tot)}</span>
+    <small>${r.q.toLocaleString('en-US')} ${esc(t(r.u))} × $<input inputmode="decimal" data-k="${r.k}" value="${r.p}" aria-label="${esc(t(r.k))}"></small></div>`).join('');
+  drawSum(e);
+}
+function drawSum(e) {
+  $('#sum').innerHTML = `<div class="mu"><span>${t('sub_')}</span><span>${money(e.sub)}</span></div><div class="mu"><span>${t('cont')}</span><span>${money(e.cont)}</span></div>
+    <div class="big"><span>${t('total')}</span><span>${money(e.total)}</span></div><div class="mu"><span>${t('perft')}</span><span>${money(e.per)}</span></div>
+    <div class="mu"><span>${t('range')}</span><span>${money(Math.round(e.total * .9 / 500) * 500)} ${t('to')} ${money(Math.round(e.total * 1.15 / 500) * 500)}</span></div>`;
+}
+$('#est').addEventListener('input', e => { const i = e.target.closest('input'); if (!i) return;
+  const v = parseFloat(i.value.replace(/[^0-9.]/g, '')); if (!Number.isFinite(v)) return;
+  over[pkey(i.dataset.k)] = v; try { localStorage.setItem('fp-prices', JSON.stringify(over)); } catch (_) {}
+  const est = estimate(), r = est.rows.find(x => x.k === i.dataset.k); if (r) i.closest('.li').querySelector('.t').textContent = money(r.tot); drawSum(est); });
+$('#preset').addEventListener('click', () => { over = {}; try { localStorage.removeItem('fp-prices'); } catch (_) {} drawEst(); });
 $('#copy').addEventListener('click', async () => {
-  const txt = plan.name + '\n' + takeoff().map(r => `${r[0]}: ${r[1]} ${r[2]}`).join('\n');
-  try { await navigator.clipboard.writeText(txt); $('#copied').textContent = 'Lista copiada. Pégala en la cotización del proyecto.'; }
-  catch (_) { $('#copied').textContent = 'No se pudo copiar automáticamente en este navegador.'; }
+  const e = estimate();
+  const txt = [`C Plus · ${t('estFor')}: ${tn(plan.name)} · ${t('finish')}: ${t('st_' + style.id)}`, '',
+    ...e.rows.map(r => `${t(r.k)}: ${r.q.toLocaleString('en-US')} ${t(r.u)} × $${r.p} = ${money(r.tot)}`), '',
+    `${t('sub_')}: ${money(e.sub)}`, `${t('cont')}: ${money(e.cont)}`, `${t('total')}: ${money(e.total)}`].join('\n');
+  try { await navigator.clipboard.writeText(txt); $('#copied').textContent = t('copied'); }
+  catch (_) { $('#copied').textContent = t('copyFail'); }
 });
 
 /* ---- finishes ---- */
-$('#styles').innerHTML = STYLES.map(s => `<button data-s="${s.id}" aria-pressed="${s === style}"><div class="sw"><b style="background:${s.lvp}"></b><b style="background:${s.wall}"></b><b style="background:${s.tile}"></b></div>${s.n}</button>`).join('');
-$('#styles').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return;
-  style = STYLES.find(s => s.id === b.dataset.s);
-  document.querySelectorAll('#styles button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
-  drawPlan(); if (G) recolor(); });
+function drawStyles() {
+  $('#styles').innerHTML = STYLES.map(s => `<button data-s="${s.id}" aria-pressed="${s === style}"><div class="sw"><b style="background:${s.lvp}"></b><b style="background:${s.wall}"></b><b style="background:${s.tile}"></b></div>${t('st_' + s.id)}</button>`).join('');
+  $('#ffin').innerHTML = `<span>${t('finish')}:</span>` + STYLES.map(s => `<button data-s="${s.id}" aria-pressed="${s === style}"><i style="background:linear-gradient(135deg,${s.lvp} 50%,${s.wall} 50%)"></i>${t('st_' + s.id)}</button>`).join('');
+}
+function setStyle(id) { style = STYLES.find(s => s.id === id) || STYLES[0]; drawStyles(); drawPlan(); drawEst(); fotoSrc(); tbadge(); if (G) recolor(); }
+for (const q of ['#styles', '#ffin']) $(q).addEventListener('click', e => { const b = e.target.closest('button'); if (b) setStyle(b.dataset.s); });
 
 /* ---- 2D plan ---- */
 const ftin = v => `${Math.floor(v)}' ${Math.round((v % 1) * 12)}"`;
@@ -306,8 +416,8 @@ function drawPlan() {
   const seen = new Set();
   for (const r of p.rooms) {
     if (seen.has(r.n)) continue; seen.add(r.n);
-    const a = Math.round(groups().find(g => g.n === r.n).a), fs = Math.min(1.1, r.w / Math.max(9.5, r.n.length * .62), r.h / 3);
-    h += `<text x="${r.x + r.w / 2}" y="${r.y + r.h / 2}" text-anchor="middle" font-size="${fs}" font-weight="700" fill="${ink}" pointer-events="none">${esc(r.n)}</text><text x="${r.x + r.w / 2}" y="${r.y + r.h / 2 + fs * 1.1}" text-anchor="middle" font-size="${fs * .8}" fill="${ink}" opacity=".7" pointer-events="none">${ftin(r.w)} × ${ftin(r.h)} · ${a} ft²</text>`;
+    const a = Math.round(groups().find(g => g.n === r.n).a), fs = Math.min(1.1, r.w / Math.max(9.5, tn(r.n).length * .62), r.h / 3);
+    h += `<text x="${r.x + r.w / 2}" y="${r.y + r.h / 2}" text-anchor="middle" font-size="${fs}" font-weight="700" fill="${ink}" pointer-events="none">${esc(tn(r.n))}</text><text x="${r.x + r.w / 2}" y="${r.y + r.h / 2 + fs * 1.1}" text-anchor="middle" font-size="${fs * .8}" fill="${ink}" opacity=".7" pointer-events="none">${ftin(r.w)} × ${ftin(r.h)} · ${a} ft²</text>`;
   }
   h += `<g stroke="${ink}" stroke-width=".06" fill="${ink}" font-size=".95"><line x1="0" x2="${p.W}" y1="-2.2" y2="-2.2"/><line x1="0" x2="0" y1="-2.8" y2="-1.6"/><line x1="${p.W}" x2="${p.W}" y1="-2.8" y2="-1.6"/><text x="${p.W / 2}" y="-2.6" text-anchor="middle" stroke="none">${ftin(p.W)}</text>
    <line y1="0" y2="${p.H}" x1="-2.2" x2="-2.2"/><line y1="0" y2="0" x1="-2.8" x2="-1.6"/><line y1="${p.H}" y2="${p.H}" x1="-2.8" x2="-1.6"/><text x="-2.6" y="${p.H / 2}" text-anchor="middle" stroke="none" transform="rotate(-90 -2.6 ${p.H / 2})">${ftin(p.H)}</text></g>`;
@@ -484,7 +594,7 @@ function setMode(m) {
   const three = m !== 'plan', ok = three && (G && G.root || build());
   $('#plan').hidden = three; $('#gl').hidden = !ok; $('#glmsg').hidden = !three || ok;
   $('#pad').hidden = $('#goto').hidden = !(ok && m === 'walk');
-  $('#hint').hidden = !ok; $('#hint').textContent = m === 'walk' ? 'Arrastra para mirar · flechas o W A S D para caminar' : 'Arrastra para girar · rueda o pellizca para acercar';
+  $('#hint').hidden = !ok; $('#hint').textContent = t(m === 'walk' ? 'hintWalk' : 'hintDoll');
   $('#stage').classList.toggle('walk', ok && m === 'walk');
   if (!ok) return;
   G.walkG.visible = m === 'walk'; G.sun.visible = m !== 'walk'; G.hemi.intensity = m === 'walk' ? .9 : .5; G.ren.toneMappingExposure = m === 'walk' ? .95 : .72; G.sun.intensity = 1.8; G.cam.fov = m === 'walk' ? 68 : 50; G.cam.updateProjectionMatrix();
@@ -494,7 +604,8 @@ function setMode(m) {
 ['plan', 'doll', 'tour', 'walk', 'foto'].forEach(k => $('#t-' + k).addEventListener('click', () => setMode(k)));
 /* ---- tour: the real photos animated into one video ---- */
 const TOUR = [['Sala familiar', 0], ['Habitación', 4.44], ['Baño', 8.88], ['Oficina', 13.32]], tv = $('#tv');
-$('#tchips').innerHTML = TOUR.map(([n], i) => `<button data-i="${i}" aria-pressed="${i === 0}">${n}</button>`).join('');
+const drawChips = () => { const k = document.querySelector('#tchips [aria-pressed=true]'); $('#tchips').innerHTML = TOUR.map(([n], i) => `<button data-i="${i}" aria-pressed="${k ? +k.dataset.i === i : i === 0}">${esc(tn(n))}</button>`).join(''); };
+const tbadge = () => { $('#tbadge').hidden = style.id === 'moderno'; $('#tbadge').textContent = t('tourBadge'); };
 const tpress = () => { const t = tv.currentTime; let k = 0; TOUR.forEach(([, s], i) => { if (t >= s - .2) k = i; });
   document.querySelectorAll('#tchips button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.i === k))); };
 const tplay = () => { const p = tv.play(); if (p && p.catch) p.catch(() => {}); };
@@ -506,17 +617,40 @@ tv.addEventListener('timeupdate', () => { $('#tprog').style.width = (tv.currentT
 $('#tchips').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; tv.currentTime = TOUR[+b.dataset.i][1] + .05; tplay(); });
 /* ---- real photos: generated from each 3D view ---- */
 const FOTOS = [['sala', 'Sala familiar'], ['recamara', 'Habitación'], ['bano', 'Baño'], ['oficina', 'Oficina']];
-$('#thumbs').innerHTML = FOTOS.map(([f, n], i) => `<button data-i="${i}" aria-pressed="${i === 0}"><img src="fotos/${f}.jpg" alt="" loading="lazy"><span>${n}</span></button>`).join('');
-function foto(i) { const [f, n] = FOTOS[i]; view3d(false); $('#fReal').src = `fotos/${f}.jpg`; $('#fReal').alt = n + ', foto final'; $('#f3d').src = `fotos/${f}-3d.jpg`; $('#f3d').alt = n + ', diseño 3D';
-  document.querySelectorAll('#thumbs button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.i === i))); }
+let fi = 0;
+/* Cálido and Contraste photos: GPT Image edits of the real photos, hosted on the C Plus Higgsfield account */
+const CDN = 'https://d2ol7oe51mr4n9.cloudfront.net/user_38ur1oBOIIh5eVpMoWiUDtGB2bt/';
+const ALT = {calido: {sala: '572ab37a-b0f7-4b37-b2fc-1cb889aa622a', recamara: 'f82f486d-2f5a-4506-b6a1-5635880649b4', bano: '08a2b926-b2b2-421d-8906-e87c9ba50a8a', oficina: '533f761e-ac0f-478e-8225-bd2976a18578'},
+  contraste: {sala: '1c819220-be6f-4691-9ed3-2e7fe5742cd7', recamara: 'e1aebc47-e018-47ec-8d7f-59dc96f9c691', bano: 'bc84c309-8bea-43ab-b9c0-d69fb7f0e5db', oficina: 'ad163dc7-52cf-4df8-a7d1-fbb045e7b7c6'}};
+const fsrc = (f, id = style.id) => ALT[id] ? CDN + ALT[id][f] + '.jpg' : `fotos/${f}.jpg`;
+function drawThumbs() { $('#thumbs').innerHTML = FOTOS.map(([f, n], i) => `<button data-i="${i}" aria-pressed="${i === fi}"><img src="${fsrc(f)}" alt="" loading="lazy"><span>${esc(tn(n))}</span></button>`).join(''); }
+function fotoSrc() { const [f, n] = FOTOS[fi], im = $('#fReal'), src = fsrc(f);
+  im.alt = tn(n) + ', ' + t('finalPhoto') + ' · ' + t('st_' + style.id); $('#f3d').src = `fotos/${f}-3d.jpg`; $('#f3d').alt = tn(n) + ', ' + t('design3d');
+  if (!im.getAttribute('src')) im.src = src;
+  else if (!im.src.endsWith(src)) { const pre = new Image(); pre.onload = () => { im.style.opacity = .25; setTimeout(() => { im.src = src; im.style.opacity = 1; }, 160); }; pre.src = src; }
+  drawThumbs(); }
+function foto(i) { fi = i; view3d(false); fotoSrc(); }
 $('#thumbs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) foto(+b.dataset.i); });
+addEventListener('load', () => FOTOS.forEach(([f]) => Object.keys(ALT).forEach(id => { const p = new Image(); p.src = fsrc(f, id); })));
 const view3d = on => { $('#cmp').classList.toggle('show3d', on); $('#v3d').setAttribute('aria-pressed', String(on)); $('#vReal').setAttribute('aria-pressed', String(!on)); };
 $('#vReal').addEventListener('click', () => view3d(false)); $('#v3d').addEventListener('click', () => view3d(true));
 foto(0);
 
 window.__view = n => { const v = plan.views && plan.views[n]; if (!v) return false; setMode('walk'); G.walk.x = G.ox + v[0]; G.walk.z = G.oz + v[1]; G.walk.yaw = v[2]; G.walk.pitch = -.04; G.cam.fov = 72; G.cam.updateProjectionMatrix(); return true; };
-function render() { prep(plan); drawList(); drawPlan(); drawTake(); if (G && G.root) { build(); setMode(mode); } }
-render();
+function render() { prep(plan); drawList(); drawPlan(); drawTake(); drawEst(); if (G && G.root) { build(); setMode(mode); } }
+function setLang(l) {
+  lang = l; try { localStorage.setItem('fp-lang', l); } catch (_) {}
+  document.documentElement.lang = l; document.title = t('title');
+  document.querySelectorAll('[data-i]').forEach(el => el.textContent = t(el.dataset.i));
+  document.querySelectorAll('.lang button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.l === l)));
+  $('#goto').setAttribute('aria-label', t('goto')); $('#plan').setAttribute('aria-label', t('planLabel')); $('#tplay').setAttribute('aria-label', t('play'));
+  $('.seg2').setAttribute('aria-label', t('view'));
+  [['f', 'fwd'], ['b', 'back'], ['l', 'left'], ['r', 'right']].forEach(([k, s]) => $(`#pad [data-k="${k}"]`).setAttribute('aria-label', t(s)));
+  if ($('#file').disabled) st(t('demo'));
+  drawStyles(); drawChips(); tbadge(); fotoSrc(); render();
+  if (mode === 'doll' || mode === 'walk') $('#hint').textContent = t(mode === 'walk' ? 'hintWalk' : 'hintDoll');
+}
+document.querySelector('.lang').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setLang(b.dataset.l); });
 
 /* ---- upload a real plan: Claude reads it ---- */
 const ASK = `You read a photo or scan of a residential floor plan (usually a basement). Return ONLY JSON, no prose:
@@ -540,21 +674,22 @@ const st = (t, busy) => { $('#status').textContent = t; $('#status').classList.t
 (async () => {
   try { sample = window.claude && await window.claude.use('sample'); } catch (_) { sample = null; }
   let imgs = false; try { imgs = sample && (await sample.limits()).images; } catch (_) {}
-  if (!imgs) { $('#file').disabled = true; st('Demo: en el app de C Plus, el equipo sube la foto del plano y Claude arma el 3D automáticamente.'); }
+  if (!imgs) { $('#file').disabled = true; st(t('demo')); }
 })();
 $('#file').addEventListener('change', async e => {
   const f = e.target.files[0]; e.target.value = ''; if (!f || !sample) return;
-  if (f.size > 8e6) return st('La foto pesa más de 8 MB. Prueba con una más ligera.');
-  st('Claude está leyendo el plano…', true);
+  if (f.size > 8e6) return st(t('big'));
+  st(t('reading'), true);
   try {
     const r = await sample(ASK, {images: [f], modelTier: 'complex', cache: false});
     const m = r.text.match(/\{[\s\S]*\}/); plan = clean(JSON.parse(m ? m[0] : r.text)); sel = null;
     render(); setMode('doll'); $('#reset').hidden = false;
-    st(`Listo: ${plan.rooms.length} espacios. Revisa las medidas; si algo no cuadra, sube una foto más clara.`);
+    st(t('ready')(plan.rooms.length));
   } catch (err) {
-    st(err && err.code === 'rate_limited' ? 'Demasiadas solicitudes seguidas. Espera un minuto.' : err && err.code === 'not_granted' ? 'Claude no tiene permiso para leer imágenes en esta página.' : 'No pude leer un plano en esa imagen. Prueba con una foto derecha y con las medidas visibles.');
+    st(t(err && err.code === 'rate_limited' ? 'rate' : err && err.code === 'not_granted' ? 'perm' : 'noplan'));
   }
 });
+setLang(lang);
 $('#reset').addEventListener('click', () => { plan = SAMPLE; sel = null; $('#reset').hidden = true; st(''); render(); setMode('plan'); });
 }
 </script>
