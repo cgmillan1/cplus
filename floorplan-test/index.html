@@ -217,7 +217,7 @@ const TX = {
   st_moderno:'Moderno',st_calido:'Cálido',st_contraste:'Contraste',
   lvp:'Piso vinílico (LVP)',tile:'Azulejo de piso',carpet:'Alfombra',stairs:'Alfombra de escalera',dry:'Tablaroca 4×8 (instalada y terminada)',drySh:'Tablaroca 4×8',paintW:'Pintura de paredes (2 manos)',paintC:'Pintura de techo',studs:'Postes 2×4 a 16"',base:'Zoclo',doors:'Puertas interiores',wins:'Ventanas',lights:'Luces empotradas',
   elec:'Eléctrico: cableado y tomas',plumb:'Plomería de baño',permit:'Permisos y planos',
-  u_ft2:'ft²',u_steps:'escalones',u_sheets:'hojas',u_gal:'gal',u_pcs:'piezas',u_lf:'pies lin.',u_ea:'pzas',u_bath:'baños',u_job:'proyecto',
+  u_ft2:'ft²',u_steps:'escalones',u_sheets:'hojas',u_gal:'gal',u_pcs:'piezas',u_lf:'pies lin.',u_ea:'pzas',u_bath:'baños',u_bath1:'baño',u_job:'proyecto',
   sub_:'Subtotal',cont:'Contingencia 10%',total:'Total estimado',perft:'Por ft² terminado',range:'Rango probable',to:'a',
   copied:'Cotización copiada. Pégala en el proyecto o en un correo.',copyFail:'No se pudo copiar automáticamente en este navegador.',demo:'Demo: en el app de C Plus, el equipo sube la foto del plano y Claude arma el 3D automáticamente.',
   big:'La foto pesa más de 8 MB. Prueba con una más ligera.',reading:'Claude está leyendo el plano…',ready:n=>`Listo: ${n} espacios. Revisa las medidas; si algo no cuadra, sube una foto más clara.`,
@@ -234,7 +234,7 @@ const TX = {
   st_moderno:'Modern',st_calido:'Warm',st_contraste:'Contrast',
   lvp:'Vinyl plank floor (LVP)',tile:'Floor tile',carpet:'Carpet',stairs:'Stair carpet',dry:'Drywall 4×8 (hung and finished)',drySh:'Drywall 4×8',paintW:'Wall paint (2 coats)',paintC:'Ceiling paint',studs:'2×4 studs at 16"',base:'Baseboard',doors:'Interior doors',wins:'Windows',lights:'Recessed lights',
   elec:'Electrical: wiring and outlets',plumb:'Bathroom plumbing',permit:'Permits and drawings',
-  u_ft2:'ft²',u_steps:'steps',u_sheets:'sheets',u_gal:'gal',u_pcs:'pcs',u_lf:'lin. ft',u_ea:'ea',u_bath:'baths',u_job:'job',
+  u_ft2:'ft²',u_steps:'steps',u_sheets:'sheets',u_gal:'gal',u_pcs:'pcs',u_lf:'lin. ft',u_ea:'ea',u_bath:'baths',u_bath1:'bath',u_job:'job',
   sub_:'Subtotal',cont:'Contingency 10%',total:'Estimated total',perft:'Per finished ft²',range:'Likely range',to:'to',
   copied:'Quote copied. Paste it into the project or an email.',copyFail:'Could not copy automatically in this browser.',demo:'Demo: in the C Plus app, the team uploads the plan photo and Claude builds the 3D automatically.',
   big:'The photo is over 8 MB. Try a lighter one.',reading:'Claude is reading the plan…',ready:n=>`Done: ${n} spaces. Check the dimensions; if something looks off, upload a clearer photo.`,
@@ -357,7 +357,7 @@ const price = k => over[pkey(k)] ?? (typeof PRICE[k] === 'object' ? PRICE[k][sty
 function estimate() {
   const lines = takeoff().map(([k, q, u]) => [k, q, u]);
   lines.push(['elec', Math.round(finArea()), 'u_ft2']);
-  const b = baths(); if (b) lines.push(['plumb', b, 'u_bath']);
+  const b = baths(); if (b) lines.push(['plumb', b, b === 1 ? 'u_bath1' : 'u_bath']);
   lines.push(['permit', 1, 'u_job']);
   const rows = lines.map(([k, q, u]) => ({k, q, u, p: price(k), tot: q * price(k)}));
   const sub = rows.reduce((s, r) => s + r.tot, 0), cont = sub * .1, total = sub + cont;
