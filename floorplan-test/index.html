@@ -117,7 +117,33 @@ td{padding:6px 0;border-bottom:1px solid var(--line)}td.n{text-align:right;font-
 .sum .big{font-size:22px;font-weight:800;border-top:2px solid var(--ink);padding-top:8px;margin-top:4px}
 .sum .mu{color:var(--mute)}
 @media(max-width:900px){.wrap{grid-template-columns:minmax(0,1fr)}.viewer{position:static}.stage{height:62vh}}
-@media(max-width:600px){.tabs{flex-wrap:nowrap;overflow-x:auto}.tabs .sp{display:none}.tabs button{padding:10px 11px}.pad{grid-template-columns:repeat(3,44px)}.pad button{height:44px}.hint{right:160px}}
+.tabs button{flex:none}
+@media(max-width:600px){
+ header{position:relative;padding:16px 16px 12px}
+ header>div:first-child{padding-right:96px}
+ .lang{position:absolute;top:12px;right:16px}.lang button{padding:6px 11px;min-height:36px;font-size:13px}
+ h1{font-size:27px}.sub{font-size:14.5px}
+ .wrap{padding:0 10px 32px;gap:12px}
+ .tabs{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;padding:6px}
+ .tabs button{grid-column:span 2;padding:8px 4px;font-size:14px;min-height:42px;white-space:normal;line-height:1.15}
+ .tabs button:nth-of-type(n+4){grid-column:span 3}
+ .tabs .sp{display:none}
+ .tabs select{grid-column:1/-1;min-height:42px}
+ .stage{height:70vh;min-height:360px}
+ .stage[data-mode=plan]{height:auto;min-height:0;aspect-ratio:54/34}
+ .pad{grid-template-columns:repeat(3,46px);right:10px;bottom:10px}.pad button{height:46px}
+ .hint{left:10px;right:166px;bottom:10px;font-size:12px}
+ .seg2{bottom:8px}.seg2 button{font-size:13px;padding:7px 12px;min-height:36px}
+ .fin{gap:5px;padding:8px 8px 0}.fin>span{display:none}.fin button{padding:6px 10px;font-size:13.5px;min-height:36px}
+ .thumbs button{width:104px}
+ .thumbs,.tabs{scrollbar-width:none}
+ .chips{padding:8px;gap:6px}.chips button{padding:7px 12px;min-height:40px;font-size:14px}
+ .play{width:64px;height:64px}
+ aside .card{padding:14px 14px}
+ #finCard{order:-1}
+ .est input{width:5em;font-size:16px;padding:2px 6px}
+ .sum .big{font-size:20px}
+}
 @media(prefers-reduced-motion:reduce){.busy::after{animation:none}}
 </style>
 </head>
@@ -142,7 +168,7 @@ td{padding:6px 0;border-bottom:1px solid var(--line)}td.n{text-align:right;font-
       <span class="sp"></span>
       <select id="goto" aria-label="Ir a una habitación" hidden></select>
     </div>
-    <div class="stage" id="stage">
+    <div class="stage" id="stage" data-mode="plan">
       <svg id="plan" role="img" aria-label="Plano del sótano"></svg>
       <canvas id="gl" hidden></canvas>
       <div class="msg" id="glmsg" data-i="glmsg" hidden>No se pudo cargar el visor 3D en este navegador. El plano 2D y las cantidades siguen funcionando.</div>
@@ -172,7 +198,7 @@ td{padding:6px 0;border-bottom:1px solid var(--line)}td.n{text-align:right;font-
       <ul class="rooms" id="rooms"></ul>
       <div class="tot"><span data-i="finArea">Área terminada</span><span id="fin"></span></div>
     </div>
-    <div class="card">
+    <div class="card" id="finCard">
       <h2 data-i="hFin">Acabados</h2>
       <div class="styles" id="styles"></div>
       <p class="note" data-i="finNote">Cambia pisos y paredes en el plano, el 3D, las fotos reales y el estimado al mismo tiempo.</p>
@@ -594,6 +620,7 @@ $('#goto').addEventListener('change', e => goRoom(e.target.value));
 
 /* ---- tabs ---- */
 function setMode(m) {
+  $('#stage').dataset.mode = m;
   $('#fotos').hidden = m !== 'foto'; $('#tour').hidden = m !== 'tour'; if (m !== 'tour') $('#tv').pause();
   if (m === 'foto' || m === 'tour') { mode = m; ['plan', 'doll', 'tour', 'walk', 'foto'].forEach(k => $('#t-' + k).setAttribute('aria-selected', String(k === m))); ['#plan', '#gl', '#glmsg', '#hint', '#pad', '#goto'].forEach(q => $(q).hidden = true); $('#stage').classList.remove('walk'); return; }
   mode = m; ['plan', 'doll', 'tour', 'walk', 'foto'].forEach(k => $('#t-' + k).setAttribute('aria-selected', String(k === m)));
