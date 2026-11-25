@@ -1,5 +1,5 @@
 /* pwa-kit service worker. Generated: do not hand-edit the version; rerun pwa_kit.py instead. */
-const VERSION = '1babe1672a';
+const VERSION = '2e8ef1362d';
 const CACHE = 'shell-' + VERSION;
 const RUNTIME = 'runtime-' + VERSION;
 /* C Plus edit: static files match their exact ?v= URL so a deploy is picked up at once. Keep when rerunning pwa_kit.py. */

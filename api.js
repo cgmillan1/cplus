@@ -5,7 +5,7 @@
   const ready = !!(cfg.url && cfg.key && window.supabase);
   const sb = ready ? window.supabase.createClient(cfg.url, cfg.key, { auth: { flowType: 'pkce' } }) : null;
   const ok = ({ data, error }) => { if (error) throw new Error(error.message || String(error)); return data; };
-  const CHILD = ['items', 'materials', 'steps', 'updates', 'payments', 'milestones', 'change_orders', 'budget', 'expenses', 'comments', 'documents', 'photos', 'checklists', 'checklist_items', 'tasks', 'daily_logs'];
+  const CHILD = ['items', 'materials', 'steps', 'updates', 'payments', 'invoices', 'milestones', 'change_orders', 'budget', 'expenses', 'comments', 'documents', 'photos', 'checklists', 'checklist_items', 'tasks', 'daily_logs'];
 
   window.API = {
     ready,

@@ -552,3 +552,24 @@ td.neg,.neg{color:#b23a26}
 }
 .alerts .alrow>span[aria-hidden]{justify-self:end;font-size:18px;color:var(--mute)}
 .alerts .alrow:has(>span[aria-hidden]){grid-template-columns:minmax(0,1fr) 28px}
+/* v7: invoices, aging, margin tables */
+.pill.inv-draft{background:light-dark(#ece8e2,#2a2a2e)}.pill.inv-sent{background:light-dark(#e3eefc,#1c2b40);color:light-dark(#1d5fae,#8fbaf0)}
+.pill.inv-paid{background:#e6f3ea;color:#21633a}.pill.inv-void{background:light-dark(#ece8e2,#2a2a2e);color:var(--mute);text-decoration:line-through}
+.pill.inv-late{background:#fbeceb;color:#b23a26}
+.co.inv .acts{align-items:center}
+#invf .chips{display:flex;flex-wrap:wrap;gap:8px}#invf .chips .btn2{min-height:38px;font-size:14px}
+.agtot{font:700 30px "Barlow Semi Condensed";margin:8px 0 4px}.agtot small{font-size:15px;font-weight:600;color:var(--mute);margin-inline-start:6px;font-family:system-ui,sans-serif}
+.aging{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;align-items:end;height:150px;margin:10px 0 8px}
+.agb{display:grid;grid-template-rows:auto 1fr auto;height:100%;text-align:center;gap:4px}
+.agv{font-size:13px;font-weight:700}.agl{font-size:12px;color:var(--mute);font-weight:600}
+.agbar{display:flex;align-items:flex-end;justify-content:center;background:var(--bg);border-radius:6px}
+.agbar i{display:block;width:70%;border-radius:4px 4px 0 0;background:var(--s1)}
+.ag-60 .agbar i,.ag-90 .agbar i,.ag-90p .agbar i{background:#d0503a}.ag-30 .agbar i{background:#d08a2a}
+.mtab{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px}
+.mtab th{text-align:start;color:var(--mute);font-weight:700;padding:6px 4px;border-bottom:1px solid var(--line)}
+.mtab td{padding:10px 4px;border-bottom:1px solid var(--line);vertical-align:top}.mtab tr:last-child td{border-bottom:0}
+.mtab th:nth-child(n+2),.mtab td:nth-child(n+2){text-align:end}
+.mtab small{display:block;color:var(--mute);font-size:12px}
+.mtab .pos{color:var(--ok)}.mtab .neg{color:#b23a26}.mtab .warnt{color:#a8640f}
+.mbar{display:block;height:6px;background:var(--bg);border-radius:4px;margin-top:4px;overflow:hidden}
+.mbar i{display:block;height:100%;border-radius:4px}.mbar i.pos{background:var(--ok)}.mbar i.warnt{background:#d08a2a}.mbar i.neg{background:#d0503a}
