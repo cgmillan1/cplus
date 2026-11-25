@@ -125,6 +125,7 @@ function home() {
   if (hview === 'settings') return settingsView();
   if (!staff()) return homeContractor();
   if (hview === 'review') return topbar() + `<main><div class="wrap">${hnav()}${reviewList()}</div></main>`;
+  if (hview === 'dash') return topbar() + `<main><div class="wrap">${hnav()}${dashView()}</div></main>`;
   if (hview === 'feed') return topbar() + `<main><div class="wrap">${hnav()}<div class="secthead"><h1>${t('feedT')}</h1></div><p class="sub">${t('feedS')}</p><div class="card">${feedHtml(events(B))}</div></div></main>`;
   if (hview === 'taxes') return topbar() + `<main><div class="wrap">${hnav()}${taxView()}</div></main>`;
   const shown = B.filter(b => rvOf(b.project) === 'approved' && matchQ(b) && (pfilter === 'all' || stOf(b.project) === pfilter) && (afilter === 'all' || (afilter === 'none' ? !b.project.assigned_to : b.project.assigned_to === afilter)));
@@ -433,7 +434,7 @@ app.addEventListener('submit', async e => {
   try {
     if (id === 'loginf') {
       lastEmail = $('#em').value.trim(); const pw = $('#pw').value; busy = true; err = ''; render();
-      try { await API.signIn(lastEmail, pw); await loadAll(); view = 'home'; pushRefresh().then(() => { if (view === 'home') render(); }); const h = location.hash.slice(1); busy = false; if (h && B.some(b => b.project.id === h)) return openProject(h); }
+      try { await API.signIn(lastEmail, pw); await loadAll(); view = 'home'; if (isAdmin() && hview === 'projects') { hview = 'dash'; loadDash(); } pushRefresh().then(() => { if (view === 'home') render(); }); const h = location.hash.slice(1); busy = false; if (h && B.some(b => b.project.id === h)) return openProject(h); }
       catch (x) { if (x.noaccess) view = 'noaccess'; else { err = x.message; view = 'login'; } }
       busy = false; return render();
     }
@@ -441,7 +442,7 @@ app.addEventListener('submit', async e => {
       const code = $('#fc').value.trim(), name = $('#fn').value.trim(), email = $('#fe').value.trim().toLowerCase(), pw = $('#fp').value;
       if (pw.length < 8) { err = t('pwShort'); return render(); }
       busy = true; err = ''; render();
-      try { await API.teamFn('bootstrap', { code, name, email, password: pw }); await API.signIn(email, pw); await loadAll(); view = 'home'; }
+      try { await API.teamFn('bootstrap', { code, name, email, password: pw }); await API.signIn(email, pw); await loadAll(); view = 'home'; if (isAdmin() && hview === 'projects') { hview = 'dash'; loadDash(); } }
       catch (x) { err = x.message === 'code' ? t('errCode') : x.message === 'done' ? t('errDone') : x.message === 'exists' ? t('errExists') : x.message; }
       busy = false; return render();
     }
@@ -654,7 +655,7 @@ async function makeSample() {
 /* =====================================================================
    v5 · proyectos recibidos, herramientas de obra (como CompanyCam) y gastos para taxes
    ===================================================================== */
-S.addText({totalMonth:'Gastos del mes',month:'Mes',allYear:'Todo el año',showing:'Mostrando',dlNote:'las descargas usan este periodo',byMonth:'Gastos por mes',byMonthHint:'Toca un mes para ver y descargar solo ese mes.',rvaT:"Análisis del presupuesto",rvaS:"Revisa números y alcance antes de aprobar. No adivina precios del mercado: compara lo que te pagan contra lo que tú calculas que te va a costar.",rvaEst:"Tu costo estimado",rvaProfit:"Ganancia estimada",rvaMargin:"margen",rvaLine:"Línea",rvaRecv:"Te pagan",rvaOur:"Tu costo",rvaOurPh:"¿Cuánto te cuesta?",rvaLeft:"Te queda",rvaNoLines:"El proyecto no tiene líneas de presupuesto.",rvaSum:"Las líneas suman {a} y el contrato es {b}. Diferencia: {c}.",rvaLoss:"{l}: te cuesta {m} más de lo que te pagan.",rvaThin:"{l}: solo te queda {p}% en esta línea.",rvaNoEst:"Falta tu costo en {n} línea(s). Mientras tanto se cuenta lo que te pagan, así que la ganancia puede ser menor.",rvaZero:"{l}: la línea está en $0.",rvaDup:"{l} aparece dos veces.",rvaMissing:"No veo línea para: {l}. Puede estar dentro de otra línea; confírmalo.",rvaHist:"{l}: en {n} proyectos terminados gastaste en promedio {p}% más de lo que te pagaron.",rvaHistOn:"También compara con lo que de verdad gastaste en proyectos terminados.",rvaHistOff:"Cuando termines más proyectos, aquí también verás cuánto gastaste de verdad en cada tipo de línea.",rvaClean:"No encontré problemas en los números.",rvqT:"Preguntas para la empresa",rvqIntro:"Hola, antes de aprobar el proyecto tenemos estas preguntas:",rvqSum:"Las líneas del presupuesto no suman el total del contrato (diferencia de {c}). ¿Qué cubre esa diferencia?",rvqMissing:"¿Dónde está incluido {l}?",rvaConfirm:"El margen es de {p}% y hay {n} alerta(s) en rojo. ¿Aprobar de todos modos?",rvaFlag1:"alerta",rvaFlags:"alertas",sc_demo:"Demolición",sc_disposal:"Basura o dumpster",sc_permits:"Permisos",sc_plumbing:"Plomería",sc_electrical:"Electricidad",sc_framing:"Framing",sc_drywall:"Drywall",sc_paint:"Pintura",sc_flooring:"Pisos",sc_tile:"Azulejo",sc_insulation:"Aislante",sc_hvac:"Calefacción y aire (HVAC)",sc_concrete:"Concreto o zapatas",sc_cabinets:"Gabinetes",sc_counters:"Cubiertas",sc_contingency:"Contingencia",sc_cleanup:"Limpieza",installS:'En Safari toca Compartir y luego "Agregar a pantalla de inicio". Se abre como app y te pueden llegar notificaciones.',pushT:'Notificaciones',pushOn:'Notificaciones activadas en este dispositivo.',pushOnBtn:'Activar notificaciones',pushOffBtn:'Desactivar en este dispositivo',pushTest:'Enviar una prueba',pushSent:'Prueba enviada. Debe llegar en unos segundos.',pushWhyStaff:'Te avisamos cuando llegue un proyecto para revisar, un gasto pase el 90% del presupuesto, un cliente mande mensaje, entre una solicitud de cotización o la cuadrilla llene la bitácora.',pushWhyCrew:'Te avisamos cuando te asignen un proyecto o una tarea.',pushIOS:'En iPhone primero instala la app: en Safari toca Compartir y luego "Agregar a pantalla de inicio". Ábrela desde el ícono y vuelve aquí para activar las notificaciones.',pushHowIOS:'Cómo instalarla',pushDenied:'Las notificaciones están bloqueadas para este sitio. Actívalas en los ajustes del navegador o del teléfono.',pushNo:'Este navegador no permite notificaciones.',pushAskT:'¿Te aviso en el celular?',notNow:'Ahora no',installApp:'Instalar app',gLogin:'Entrar con Google',orEmail:'o con tu correo',settingsNav:'Ajustes',lang:'Idioma',g_sum:'Resumen',g_money:'Dinero',g_work:'Obra',g_client:'Cliente',qaExpense:'Gasto',qaPay:'Pago del cliente',
+S.addText({hv_dash:"Resumen",dashT:"Resumen del negocio",dashS:"Lo que entró, lo que salió y cómo van los proyectos. Entradas = pagos registrados; salidas = gastos registrados.",dPeriod:"Periodo",dpMonth:"Este mes",dpQ:"3 meses",dpYtd:"Este año",dp12:"12 meses",dCollected:"Cobrado",dCollectedS:"pagos recibidos",dSpent:"Gastado",dExpN:"gastos",dNet:"Neto",dNetS:"cobrado menos gastado",dOwed:"Por cobrar",dOwedS:"de proyectos aprobados",dWon:"Trabajo aprobado",dProj1:"proyecto",dProjN:"proyectos",dActive:"Proyectos activos",dActiveS:"aprobados y sin terminar",dAttention:"Necesita atención",dRev1:"proyecto por revisar",dRevN:"proyectos por revisar",dInContracts:"en contratos",dLate:"pasos atrasados",dNoRc:"gastos sin recibo",dNoRcS:"en este periodo; súbelos antes de los impuestos",dCashT:"Cobrado vs gastado por mes",dCashS:"Últimos 12 meses. Toca un mes para ver los números.",dTable:"Ver como tabla",dByCat:"¿En qué se va el dinero?",dByCatS:"Gastos del periodo por categoría",dByCo:"Trabajo por constructora",dByCoS:"Valor de los proyectos aprobados",dProjT:"Cómo va cada proyecto",dProjS:"Ganancia estimada = contrato menos el costo estimado (o lo gastado, si ya es mayor).",dProfitEst:"Ganancia est.",dOfBudget:"del presupuesto gastado",dOwedShort:"por cobrar",directClient:"Cliente directo",totalMonth:'Gastos del mes',month:'Mes',allYear:'Todo el año',showing:'Mostrando',dlNote:'las descargas usan este periodo',byMonth:'Gastos por mes',byMonthHint:'Toca un mes para ver y descargar solo ese mes.',rvaT:"Análisis del presupuesto",rvaS:"Revisa números y alcance antes de aprobar. No adivina precios del mercado: compara lo que te pagan contra lo que tú calculas que te va a costar.",rvaEst:"Tu costo estimado",rvaProfit:"Ganancia estimada",rvaMargin:"margen",rvaLine:"Línea",rvaRecv:"Te pagan",rvaOur:"Tu costo",rvaOurPh:"¿Cuánto te cuesta?",rvaLeft:"Te queda",rvaNoLines:"El proyecto no tiene líneas de presupuesto.",rvaSum:"Las líneas suman {a} y el contrato es {b}. Diferencia: {c}.",rvaLoss:"{l}: te cuesta {m} más de lo que te pagan.",rvaThin:"{l}: solo te queda {p}% en esta línea.",rvaNoEst:"Falta tu costo en {n} línea(s). Mientras tanto se cuenta lo que te pagan, así que la ganancia puede ser menor.",rvaZero:"{l}: la línea está en $0.",rvaDup:"{l} aparece dos veces.",rvaMissing:"No veo línea para: {l}. Puede estar dentro de otra línea; confírmalo.",rvaHist:"{l}: en {n} proyectos terminados gastaste en promedio {p}% más de lo que te pagaron.",rvaHistOn:"También compara con lo que de verdad gastaste en proyectos terminados.",rvaHistOff:"Cuando termines más proyectos, aquí también verás cuánto gastaste de verdad en cada tipo de línea.",rvaClean:"No encontré problemas en los números.",rvqT:"Preguntas para la empresa",rvqIntro:"Hola, antes de aprobar el proyecto tenemos estas preguntas:",rvqSum:"Las líneas del presupuesto no suman el total del contrato (diferencia de {c}). ¿Qué cubre esa diferencia?",rvqMissing:"¿Dónde está incluido {l}?",rvaConfirm:"El margen es de {p}% y hay {n} alerta(s) en rojo. ¿Aprobar de todos modos?",rvaFlag1:"alerta",rvaFlags:"alertas",sc_demo:"Demolición",sc_disposal:"Basura o dumpster",sc_permits:"Permisos",sc_plumbing:"Plomería",sc_electrical:"Electricidad",sc_framing:"Framing",sc_drywall:"Drywall",sc_paint:"Pintura",sc_flooring:"Pisos",sc_tile:"Azulejo",sc_insulation:"Aislante",sc_hvac:"Calefacción y aire (HVAC)",sc_concrete:"Concreto o zapatas",sc_cabinets:"Gabinetes",sc_counters:"Cubiertas",sc_contingency:"Contingencia",sc_cleanup:"Limpieza",installS:'En Safari toca Compartir y luego "Agregar a pantalla de inicio". Se abre como app y te pueden llegar notificaciones.',pushT:'Notificaciones',pushOn:'Notificaciones activadas en este dispositivo.',pushOnBtn:'Activar notificaciones',pushOffBtn:'Desactivar en este dispositivo',pushTest:'Enviar una prueba',pushSent:'Prueba enviada. Debe llegar en unos segundos.',pushWhyStaff:'Te avisamos cuando llegue un proyecto para revisar, un gasto pase el 90% del presupuesto, un cliente mande mensaje, entre una solicitud de cotización o la cuadrilla llene la bitácora.',pushWhyCrew:'Te avisamos cuando te asignen un proyecto o una tarea.',pushIOS:'En iPhone primero instala la app: en Safari toca Compartir y luego "Agregar a pantalla de inicio". Ábrela desde el ícono y vuelve aquí para activar las notificaciones.',pushHowIOS:'Cómo instalarla',pushDenied:'Las notificaciones están bloqueadas para este sitio. Actívalas en los ajustes del navegador o del teléfono.',pushNo:'Este navegador no permite notificaciones.',pushAskT:'¿Te aviso en el celular?',notNow:'Ahora no',installApp:'Instalar app',gLogin:'Entrar con Google',orEmail:'o con tu correo',settingsNav:'Ajustes',lang:'Idioma',g_sum:'Resumen',g_money:'Dinero',g_work:'Obra',g_client:'Cliente',qaExpense:'Gasto',qaPay:'Pago del cliente',
 
   hv_projects: 'Proyectos', hv_review: 'Por revisar', hv_feed: 'Actividad', hv_taxes: 'Gastos y taxes',
   search: 'Buscar proyecto, cliente, dirección o empresa', recvProject: 'Recibir proyecto', scanReceipt: 'Escanear factura',
@@ -702,7 +703,7 @@ S.addText({totalMonth:'Gastos del mes',month:'Mes',allYear:'Todo el año',showin
   scanReview: 'Revisa los datos antes de guardar', scanLow: 'No se leyó todo con seguridad: revisa el total y la fecha.', scanItems: 'Artículos leídos', saveExpense: 'Guardar gasto',
   scanSaved: 'Gasto guardado con su factura', scanAgain: 'Escanear otra', readFail: 'No se pudo leer la factura. Llena los datos a mano.',
   nReview1: '1 proyecto por revisar', nReview: '{n} proyectos por revisar', budgetCat: 'Categoría del budget', vendor: 'Tienda o proveedor', descr: 'Qué se compró'
-}, {totalMonth:'Expenses this month',month:'Month',allYear:'Whole year',showing:'Showing',dlNote:'downloads use this period',byMonth:'Expenses by month',byMonthHint:'Tap a month to see and download only that month.',rvaT:"Budget check",rvaS:"Checks the numbers and scope before you approve. It does not guess market prices: it compares what you are paid with what you expect it to cost you.",rvaEst:"Your estimated cost",rvaProfit:"Estimated profit",rvaMargin:"margin",rvaLine:"Line",rvaRecv:"They pay",rvaOur:"Your cost",rvaOurPh:"What does it cost you?",rvaLeft:"You keep",rvaNoLines:"The project has no budget lines.",rvaSum:"The lines add up to {a} and the contract is {b}. Difference: {c}.",rvaLoss:"{l}: costs you {m} more than you are paid.",rvaThin:"{l}: you only keep {p}% on this line.",rvaNoEst:"Your cost is missing on {n} line(s). Until you add it, the amount paid is used, so profit may be lower.",rvaZero:"{l}: the line is $0.",rvaDup:"{l} appears twice.",rvaMissing:"No line for: {l}. It may be inside another line; confirm it.",rvaHist:"{l}: on {n} finished projects you spent {p}% more than you were paid, on average.",rvaHistOn:"It also compares with what you really spent on finished projects.",rvaHistOff:"As you finish more projects, this will also show what you really spent on each kind of line.",rvaClean:"No problems found in the numbers.",rvqT:"Questions for the company",rvqIntro:"Hi, before we approve the project we have these questions:",rvqSum:"The budget lines do not add up to the contract total (difference of {c}). What does that difference cover?",rvqMissing:"Where is {l} included?",rvaConfirm:"The margin is {p}% and there are {n} red alert(s). Approve anyway?",rvaFlag1:"alert",rvaFlags:"alerts",sc_demo:"Demolition",sc_disposal:"Dumpster or haul-off",sc_permits:"Permits",sc_plumbing:"Plumbing",sc_electrical:"Electrical",sc_framing:"Framing",sc_drywall:"Drywall",sc_paint:"Paint",sc_flooring:"Flooring",sc_tile:"Tile",sc_insulation:"Insulation",sc_hvac:"HVAC",sc_concrete:"Concrete or footings",sc_cabinets:"Cabinets",sc_counters:"Countertops",sc_contingency:"Contingency",sc_cleanup:"Cleanup",installS:'In Safari tap Share, then "Add to Home Screen". It opens like an app and can get notifications.',pushT:'Notifications',pushOn:'Notifications are on for this device.',pushOnBtn:'Turn on notifications',pushOffBtn:'Turn off on this device',pushTest:'Send a test',pushSent:'Test sent. It should arrive in a few seconds.',pushWhyStaff:'We let you know when a project arrives for review, an expense passes 90% of a budget, a client sends a message, a quote request comes in or the crew fills in the daily log.',pushWhyCrew:'We let you know when you are assigned a project or a task.',pushIOS:'On iPhone, install the app first: in Safari tap Share, then "Add to Home Screen". Open it from the icon and come back here to turn on notifications.',pushHowIOS:'How to install',pushDenied:'Notifications are blocked for this site. Turn them on in your browser or phone settings.',pushNo:'This browser does not support notifications.',pushAskT:'Want alerts on your phone?',notNow:'Not now',installApp:'Install app',gLogin:'Sign in with Google',orEmail:'or with your email',settingsNav:'Settings',lang:'Language',g_sum:'Overview',g_money:'Money',g_work:'Job',g_client:'Client',qaExpense:'Expense',qaPay:'Client payment',
+}, {hv_dash:"Overview",dashT:"Business overview",dashS:"What came in, what went out and how projects are doing. In = recorded payments; out = recorded expenses.",dPeriod:"Period",dpMonth:"This month",dpQ:"3 months",dpYtd:"This year",dp12:"12 months",dCollected:"Collected",dCollectedS:"payments received",dSpent:"Spent",dExpN:"expenses",dNet:"Net",dNetS:"collected minus spent",dOwed:"To collect",dOwedS:"from approved projects",dWon:"Work approved",dProj1:"project",dProjN:"projects",dActive:"Active projects",dActiveS:"approved and not finished",dAttention:"Needs attention",dRev1:"project to review",dRevN:"projects to review",dInContracts:"in contracts",dLate:"late steps",dNoRc:"expenses without a receipt",dNoRcS:"in this period; upload them before taxes",dCashT:"Collected vs spent by month",dCashS:"Last 12 months. Tap a month to see the numbers.",dTable:"View as table",dByCat:"Where does the money go?",dByCatS:"Expenses in the period by category",dByCo:"Work by builder",dByCoS:"Value of approved projects",dProjT:"How each project is doing",dProjS:"Estimated profit = contract minus estimated cost (or what was spent, if higher).",dProfitEst:"Est. profit",dOfBudget:"of budget spent",dOwedShort:"to collect",directClient:"Direct client",totalMonth:'Expenses this month',month:'Month',allYear:'Whole year',showing:'Showing',dlNote:'downloads use this period',byMonth:'Expenses by month',byMonthHint:'Tap a month to see and download only that month.',rvaT:"Budget check",rvaS:"Checks the numbers and scope before you approve. It does not guess market prices: it compares what you are paid with what you expect it to cost you.",rvaEst:"Your estimated cost",rvaProfit:"Estimated profit",rvaMargin:"margin",rvaLine:"Line",rvaRecv:"They pay",rvaOur:"Your cost",rvaOurPh:"What does it cost you?",rvaLeft:"You keep",rvaNoLines:"The project has no budget lines.",rvaSum:"The lines add up to {a} and the contract is {b}. Difference: {c}.",rvaLoss:"{l}: costs you {m} more than you are paid.",rvaThin:"{l}: you only keep {p}% on this line.",rvaNoEst:"Your cost is missing on {n} line(s). Until you add it, the amount paid is used, so profit may be lower.",rvaZero:"{l}: the line is $0.",rvaDup:"{l} appears twice.",rvaMissing:"No line for: {l}. It may be inside another line; confirm it.",rvaHist:"{l}: on {n} finished projects you spent {p}% more than you were paid, on average.",rvaHistOn:"It also compares with what you really spent on finished projects.",rvaHistOff:"As you finish more projects, this will also show what you really spent on each kind of line.",rvaClean:"No problems found in the numbers.",rvqT:"Questions for the company",rvqIntro:"Hi, before we approve the project we have these questions:",rvqSum:"The budget lines do not add up to the contract total (difference of {c}). What does that difference cover?",rvqMissing:"Where is {l} included?",rvaConfirm:"The margin is {p}% and there are {n} red alert(s). Approve anyway?",rvaFlag1:"alert",rvaFlags:"alerts",sc_demo:"Demolition",sc_disposal:"Dumpster or haul-off",sc_permits:"Permits",sc_plumbing:"Plumbing",sc_electrical:"Electrical",sc_framing:"Framing",sc_drywall:"Drywall",sc_paint:"Paint",sc_flooring:"Flooring",sc_tile:"Tile",sc_insulation:"Insulation",sc_hvac:"HVAC",sc_concrete:"Concrete or footings",sc_cabinets:"Cabinets",sc_counters:"Countertops",sc_contingency:"Contingency",sc_cleanup:"Cleanup",installS:'In Safari tap Share, then "Add to Home Screen". It opens like an app and can get notifications.',pushT:'Notifications',pushOn:'Notifications are on for this device.',pushOnBtn:'Turn on notifications',pushOffBtn:'Turn off on this device',pushTest:'Send a test',pushSent:'Test sent. It should arrive in a few seconds.',pushWhyStaff:'We let you know when a project arrives for review, an expense passes 90% of a budget, a client sends a message, a quote request comes in or the crew fills in the daily log.',pushWhyCrew:'We let you know when you are assigned a project or a task.',pushIOS:'On iPhone, install the app first: in Safari tap Share, then "Add to Home Screen". Open it from the icon and come back here to turn on notifications.',pushHowIOS:'How to install',pushDenied:'Notifications are blocked for this site. Turn them on in your browser or phone settings.',pushNo:'This browser does not support notifications.',pushAskT:'Want alerts on your phone?',notNow:'Not now',installApp:'Install app',gLogin:'Sign in with Google',orEmail:'or with your email',settingsNav:'Settings',lang:'Language',g_sum:'Overview',g_money:'Money',g_work:'Job',g_client:'Client',qaExpense:'Expense',qaPay:'Client payment',
   hv_projects: 'Projects', hv_review: 'To review', hv_feed: 'Activity', hv_taxes: 'Expenses and taxes',
   search: 'Search project, client, address or company', recvProject: 'Receive project', scanReceipt: 'Scan receipt',
   recvT: 'Receive a project from another company', recvS: 'For jobs that arrive with their budget already set. The project manager reviews and approves it before work starts.',
@@ -772,9 +773,99 @@ function parseLines(txt) {
 }
 
 /* ---------- inicio: barra de vistas ---------- */
+/* ---------- owner dashboard (admin) ---------- */
+let dashRows = null, dper = 'ytd';
+async function loadDash() {
+  dashRows = null; render();
+  const y = new Date().getFullYear();
+  try { const [a, b] = await Promise.all([API.expensesYear(y), API.expensesYear(y - 1)]); dashRows = [...a, ...b]; }
+  catch (x) { dashRows = []; fail(x); }
+  render();
+}
+const ymd = d => d.toISOString().slice(0, 10);
+function dRange(p) {
+  const n = new Date(), y = n.getFullYear(), m = n.getMonth();
+  if (p === 'month') return [ymd(new Date(Date.UTC(y, m, 1))), ymd(n)];
+  if (p === 'q') return [ymd(new Date(Date.UTC(y, m - 2, 1))), ymd(n)];
+  if (p === '12m') return [ymd(new Date(Date.UTC(y, m - 11, 1))), ymd(n)];
+  return [`${y}-01-01`, ymd(n)];
+}
+const inR = (d, [a, b]) => d && String(d).slice(0, 10) >= a && String(d).slice(0, 10) <= b;
+const kfmt = v => { const a = Math.abs(v); return (v < 0 ? '-$' : '$') + (a >= 1e6 ? (a / 1e6).toFixed(1) + 'M' : a >= 1e3 ? (a / 1e3).toFixed(a >= 1e4 ? 0 : 1) + 'k' : Math.round(a)); };
+const mshort = m => new Date(2000, m, 1).toLocaleDateString(S.L === 'en' ? 'en-US' : 'es-MX', { month: 'short' }).replace('.', '').replace(/^./, c => c.toUpperCase());
+
+function dashData() {
+  const R = dRange(dper), pays = B.flatMap(b => b.payments.map(p => ({ ...p, pt: b.project.title })));
+  const exps = dashRows || [];
+  const rev = pays.filter(p => inR(p.paid_on, R)).reduce((a, p) => a + (+p.amount || 0), 0);
+  const ePer = exps.filter(e => inR(e.spent_on, R)), spent = ePer.reduce((a, e) => a + (+e.amount || 0), 0);
+  const AP = B.filter(b => rvOf(b.project) === 'approved');
+  const active = AP.filter(b => stOf(b.project) !== 'done');
+  const owed = AP.reduce((a, b) => a + Math.max(0, S.calc(b).bal), 0);
+  const won = AP.filter(b => inR(b.project.reviewed_at || b.project.created_at, R));
+  const review = B.filter(b => rvOf(b.project) === 'review');
+  // last 12 months, cash in vs cash out
+  const n = new Date(), months = [];
+  for (let i = 11; i >= 0; i--) { const d = new Date(Date.UTC(n.getFullYear(), n.getMonth() - i, 1)); months.push({ k: ymd(d).slice(0, 7), m: d.getUTCMonth(), y: d.getUTCFullYear(), rev: 0, exp: 0 }); }
+  const mk = Object.fromEntries(months.map(x => [x.k, x]));
+  pays.forEach(p => { const x = mk[String(p.paid_on || '').slice(0, 7)]; if (x) x.rev += +p.amount || 0; });
+  exps.forEach(e => { const x = mk[String(e.spent_on || '').slice(0, 7)]; if (x) x.exp += +e.amount || 0; });
+  const byCat = TAXCATS.map(([k]) => ({ k, l: t('tc_' + k), v: ePer.filter(e => (e.tax_cat || 'materials') === k).reduce((a, e) => a + (+e.amount || 0), 0) })).filter(x => x.v > 0).sort((a, b) => b.v - a.v);
+  const projs = AP.map(b => { const c = S.calc(b), est = b.budget.reduce((a, x) => a + (x.est_cost != null && x.est_cost !== '' ? +x.est_cost : +x.amount || 0), 0), cost = Math.max(c.spent, est), profit = c.tot - cost;
+    return { b, c, cost, profit, pct: c.tot ? profit / c.tot * 100 : 0, used: c.bud ? c.spent / c.bud * 100 : 0, done: stOf(b.project) === 'done' }; }).sort((a, b) => a.done - b.done || b.c.tot - a.c.tot);
+  const byCo = {}; AP.forEach(b => { const k = b.project.source_company || t('directClient'); byCo[k] = (byCo[k] || 0) + (+S.calc(b).tot || 0); });
+  const noRc = ePer.filter(e => !e.receipt).length;
+  const overCats = AP.flatMap(b => { const c = S.calc(b); return b.budget.filter(x => +x.amount > 0 && c.byCat(x.id) > +x.amount).map(x => ({ b, x, over: c.byCat(x.id) - +x.amount })); });
+  const late = active.flatMap(b => b.steps.filter(s => !s.done && s.due_date && s.due_date < S.today()).map(s => ({ b, s })));
+  return { R, rev, spent, net: rev - spent, owed, active, won, review, months, byCat, projs, byCo: Object.entries(byCo).sort((a, b) => b[1] - a[1]), noRc, overCats, late, nExp: ePer.length };
+}
+
+function cashChart(ms) {
+  const sm = matchMedia('(max-width: 600px)').matches, W = sm ? 380 : 680, H = sm ? 250 : 250, L = sm ? 42 : 52, Rt = 4, T = 14, Bm = 30, iw = W - L - Rt, ih = H - T - Bm;
+  const max = Math.max(1, ...ms.flatMap(x => [x.rev, x.exp])), step = Math.pow(10, Math.floor(Math.log10(max))), top = Math.ceil(max / step / (max / step > 5 ? 2 : 1)) * step * (max / step > 5 ? 2 : 1);
+  const gw = iw / ms.length, bw = Math.max(4, (gw - (sm ? 6 : 10)) / 2 - 1), y = v => T + ih - v / top * ih;
+  const bar = (x, v, cls) => { const h = Math.max(0, ih - (y(v) - T)), r = Math.min(4, h, bw / 2); if (h <= 0) return ''; const y0 = T + ih;
+    return `<path class="${cls}" d="M${x},${y0} V${y0 - h + r} Q${x},${y0 - h} ${x + r},${y0 - h} H${x + bw - r} Q${x + bw},${y0 - h} ${x + bw},${y0 - h + r} V${y0} Z"/>`; };
+  let g = '';
+  for (let i = 0; i <= 4; i++) { const v = top * i / 4, yy = y(v); g += `<line class="gl" x1="${L}" x2="${W - Rt}" y1="${yy}" y2="${yy}"/><text class="ax" x="${L - 8}" y="${yy + 4}" text-anchor="end">${kfmt(v)}</text>`; }
+  ms.forEach((m, i) => { const x0 = L + i * gw + (sm ? 3 : 5);
+    g += bar(x0, m.rev, 'b1') + bar(x0 + bw + 2, m.exp, 'b2');
+    g += `<text class="ax" x="${x0 + bw + 1}" y="${H - 9}" text-anchor="middle">${sm ? mshort(m.m).slice(0, 1) : mshort(m.m)}</text>`;
+    g += `<rect class="hit" x="${L + i * gw}" y="${T}" width="${gw}" height="${ih + 8}" data-tip="${esc(`<b>${mshort(m.m)} ${m.y}</b><span><i class="sw b1"></i>${t('dCollected')}: ${money(m.rev)}</span><span><i class="sw b2"></i>${t('dSpent')}: ${money(m.exp)}</span><span>${t('dNet')}: <b>${money(m.rev - m.exp)}</b></span>`)}"/>`; });
+  g += `<line class="base" x1="${L}" x2="${W - Rt}" y1="${T + ih}" y2="${T + ih}"/>`;
+  return `<svg class="cash" viewBox="0 0 ${W} ${H}" role="img" aria-label="${t('dCashT')}">${g}</svg>`;
+}
+const hbars = (rows, fmt = money) => { const max = Math.max(1, ...rows.map(r => r[1]));
+  return `<div class="hbars">${rows.map(([l, v, sub]) => `<div class="hb"><div class="hbl"><span>${esc(l)}</span><b>${fmt(v)}</b></div><div class="hbt"><i style="width:${Math.max(1.5, v / max * 100)}%"></i></div>${sub ? `<small>${sub}</small>` : ''}</div>`).join('')}</div>`; };
+
+function dashView() {
+  if (!dashRows) return `<div class="card"><p>${t('loading')}</p></div>`;
+  const d = dashData();
+  const per = [['month', t('dpMonth')], ['q', t('dpQ')], ['ytd', t('dpYtd')], ['12m', t('dp12')]];
+  const tile = (l, v, cls = '', e = '') => `<div class="kpi dk ${cls}"><small>${l}</small><b>${typeof v === 'number' ? money(v) : v}</b>${e ? `<em>${e}</em>` : ''}</div>`;
+  const att = [];
+  if (d.review.length) att.push(`<button class="alrow" data-hv="review"><span><b>${d.review.length} ${t(d.review.length === 1 ? 'dRev1' : 'dRevN')}</b><small>${money(d.review.reduce((a, b) => a + (+b.project.contract_amount || 0), 0))} ${t('dInContracts')}</small></span><span aria-hidden="true">→</span></button>`);
+  d.overCats.slice(0, 4).forEach(o => att.push(`<button class="alrow" data-open="${o.b.project.id}"><span><b>${esc(o.b.project.title)} · ${esc(o.x.category)}</b><small class="neg">${t('overBy')} ${money(o.over)}</small></span><span aria-hidden="true">→</span></button>`));
+  if (d.late.length) att.push(`<div class="alrow"><span><b>${d.late.length} ${t('dLate')}</b><small>${d.late.slice(0, 3).map(x => esc(x.s.title) + ' · ' + esc(x.b.project.title)).join(' / ')}</small></span></div>`);
+  if (d.noRc) att.push(`<button class="alrow" data-hv="taxes"><span><b>${d.noRc} ${t('dNoRc')}</b><small>${t('dNoRcS')}</small></span><span aria-hidden="true">→</span></button>`);
+  const tbl = `<details class="dtable"><summary>${t('dTable')}</summary><table><thead><tr><th>${t('month')}</th><th>${t('dCollected')}</th><th>${t('dSpent')}</th><th>${t('dNet')}</th></tr></thead><tbody>${d.months.map(m => `<tr><td>${mshort(m.m)} ${m.y}</td><td>${money(m.rev)}</td><td>${money(m.exp)}</td><td class="${m.rev - m.exp < 0 ? 'neg' : ''}">${money(m.rev - m.exp)}</td></tr>`).join('')}</tbody></table></details>`;
+  return `<div class="secthead"><h1>${t('dashT')}</h1></div><p class="sub">${t('dashS')}</p>
+  <div class="filters dper" role="group" aria-label="${t('dPeriod')}">${per.map(([k, l]) => `<button data-dper="${k}" class="${dper === k ? 'on' : ''}" aria-pressed="${dper === k}">${l}</button>`).join('')}</div>
+  <div class="kpis dkpis">${tile(t('dCollected'), d.rev, '', t('dCollectedS'))}${tile(t('dSpent'), d.spent, '', `${d.nExp} ${t('dExpN')}`)}${tile(t('dNet'), d.net, d.net < 0 ? 'neg' : 'pos', t('dNetS'))}${tile(t('dOwed'), d.owed, '', t('dOwedS'))}${tile(t('dWon'), d.won.reduce((a, b) => a + S.calc(b).tot, 0), '', `${d.won.length} ${t(d.won.length === 1 ? 'dProj1' : 'dProjN')}`)}${tile(t('dActive'), String(d.active.length), '', t('dActiveS'))}</div>
+  ${att.length ? `<div class="card alerts"><h2>${t('dAttention')}</h2>${att.join('')}</div>` : ''}
+  <div class="card"><div class="top2"><h2>${t('dCashT')}</h2><span class="legend"><span><i class="sw b1"></i>${t('dCollected')}</span><span><i class="sw b2"></i>${t('dSpent')}</span></span></div><p class="sub">${t('dCashS')}</p>
+  <div class="chartwrap">${cashChart(d.months)}<div class="ctip" hidden></div></div>${tbl}</div>
+  <div class="cols"><div class="card"><h2>${t('dByCat')}</h2><p class="sub">${t('dByCatS')}</p>${d.byCat.length ? hbars(d.byCat.slice(0, 7).map(x => [x.l, x.v])) : `<p class="sub">${t('none')}</p>`}</div>
+  <div class="card"><h2>${t('dByCo')}</h2><p class="sub">${t('dByCoS')}</p>${d.byCo.length ? hbars(d.byCo.slice(0, 6)) : `<p class="sub">${t('none')}</p>`}</div></div>
+  <div class="card"><h2>${t('dProjT')}</h2><p class="sub">${t('dProjS')}</p>
+  ${d.projs.map(x => `<button class="dproj" data-open="${x.b.project.id}"><div class="dp1"><b>${esc(x.b.project.title)}</b><span class="pill ${x.done ? '' : 'st-' + stOf(x.b.project)}">${t('st_' + stOf(x.b.project))}</span></div>
+    <div class="dp2"><span>${t('contract')} <b>${money(x.c.tot)}</b></span><span>${t('dSpent')} <b>${money(x.c.spent)}</b></span><span>${t('dProfitEst')} <b class="${x.profit < 0 ? 'neg' : 'pos'}">${money(x.profit)} · ${Math.round(x.pct)}%</b></span></div>
+    <div class="meter ${x.used > 100 ? 'over' : x.used >= 90 ? 'warn' : ''}"><i style="width:${Math.min(100, x.used)}%"></i></div><small class="sub">${Math.round(x.used)}% ${t('dOfBudget')}${x.c.bal > 0 ? ` · ${t('dOwedShort')} ${money(x.c.bal)}` : ''}</small></button>`).join('') || `<p class="sub">${t('none')}</p>`}</div>`;
+}
+
 function hnav() {
   const nr = B.filter(b => rvOf(b.project) === 'review').length;
-  return `<div class="hnav" role="tablist">${[['projects', t('hv_projects')], ['review', t('hv_review'), nr], ['feed', t('hv_feed')], ['taxes', t('hv_taxes')]].map(([k, l, n]) => `<button role="tab" data-hv="${k}" aria-selected="${hview === k}" class="${hview === k ? 'on' : ''}">${l}${n ? ` <span class="badge">${n}</span>` : ''}</button>`).join('')}</div>`;
+  return `<div class="hnav" role="tablist">${[...(isAdmin() ? [['dash', t('hv_dash')]] : []), ['projects', t('hv_projects')], ['review', t('hv_review'), nr], ['feed', t('hv_feed')], ['taxes', t('hv_taxes')]].map(([k, l, n]) => `<button role="tab" data-hv="${k}" aria-selected="${hview === k}" class="${hview === k ? 'on' : ''}">${l}${n ? ` <span class="badge">${n}</span>` : ''}</button>`).join('')}</div>`;
 }
 function homeTools() {
   return `<div class="htools"><label class="search"><span class="sr">${t('search')}</span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input id="hq" type="search" value="${esc(q)}" placeholder="${t('search')}" autocomplete="off"></label>
@@ -1343,7 +1434,8 @@ app.addEventListener('click', async e => {
     if ('pushtest' in d) { await API.pushTest(); S.toast(t('pushSent')); return; }
     if ('pushlater' in d) { try { localStorage.setItem('cplus-pushlater', '1'); } catch (_) {} render(); return; }
     if ('ioshint' in d) { window.PWAKit && PWAKit.showIOSHint(true); return; }
-    if (d.hv) { if (view !== 'home') { view = 'home'; cur = null; try { history.replaceState(null, '', location.pathname); } catch (_) {} } hview = d.hv; recv = false; if (hview === 'taxes' && !taxRows) return loadTax(); render(); scrollTo(0, 0); }
+    if (d.dper) { dper = d.dper; render(); return; }
+    if (d.hv) { if (view !== 'home') { view = 'home'; cur = null; try { history.replaceState(null, '', location.pathname); } catch (_) {} } hview = d.hv; recv = false; if (hview === 'taxes' && !taxRows) return loadTax(); if (hview === 'dash' && !dashRows) return loadDash(); render(); scrollTo(0, 0); }
     else if ('recv' in d) { if (hview !== 'review' && hview !== 'projects') hview = 'review'; recv = true; render(); $('#recvf')?.scrollIntoView({ block: 'start' }); $('#rv-company')?.focus(); }
     else if ('cancelrecv' in d) { recv = false; render(); }
     else if (d.openrv) { ctab = 'review'; openProject(d.openrv); }
@@ -1409,6 +1501,15 @@ $('#rcfile').addEventListener('change', async e => {
   } catch (x) { fail(x); }
 }, true);
 
+/* chart tooltip */
+const tipAt = e => { const h = e.target.closest && e.target.closest('[data-tip]'), wrap = e.target.closest && e.target.closest('.chartwrap'); if (!wrap) return; const tip = wrap.querySelector('.ctip');
+  wrap.querySelectorAll('.hit.on').forEach(x => x !== h && x.classList.remove('on'));
+  if (!h) { tip.hidden = true; return; } h.classList.add('on'); tip.innerHTML = h.dataset.tip; tip.hidden = false;
+  const r = wrap.getBoundingClientRect(), hr = h.getBoundingClientRect(), tw = tip.offsetWidth;
+  tip.style.left = Math.max(4, Math.min(r.width - tw - 4, hr.left - r.left + hr.width / 2 - tw / 2)) + 'px'; tip.style.top = '4px'; };
+document.addEventListener('pointermove', tipAt); document.addEventListener('pointerdown', tipAt);
+document.addEventListener('pointerleave', e => { if (e.target.classList && e.target.classList.contains('chartwrap')) { const t2 = e.target.querySelector('.ctip'); if (t2) t2.hidden = true; } }, true);
+
 /* ---------- start ---------- */
 (async function boot() {
   if (!API.ready) { view = 'setup'; return render(); }
@@ -1416,7 +1517,7 @@ $('#rcfile').addEventListener('change', async e => {
   try {
     const s = await API.session();
     if (!s) { view = 'login'; return render(); }
-    await loadAll(); view = 'home';
+    await loadAll(); view = 'home'; if (isAdmin() && hview === 'projects') { hview = 'dash'; loadDash(); }
     pushRefresh().then(() => { if (view === 'home') render(); });
     const h = location.hash.slice(1); if (h && B.some(b => b.project.id === h)) return openProject(h);
     render();
