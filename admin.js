@@ -34,6 +34,8 @@ const fail = e => { console.error(e); S.toast(/fetch|network/i.test(e.message ||
 function setup() { return `<div class="lock"><div class="box">${S.MARK('l')}<h1>${t('setupT')}</h1><p>${t('setupS')}</p></div></div>`; }
 function login() {
   return `<div class="lock"><form class="box" id="loginf">${S.MARK('l')}<h1>${t('loginT')}</h1><p>${t('loginS')}</p>
+  <button type="button" class="gbtn" data-google><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.6 5.4 2.7 13.3l7.9 6.1C12.5 13.6 17.8 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.4 5.7c4.3-4 6.9-9.9 6.9-17.1z"/><path fill="#FBBC05" d="M10.6 28.6c-.5-1.4-.8-3-.8-4.6s.3-3.2.8-4.6l-7.9-6.1C1 16.6 0 20.2 0 24s1 7.4 2.7 10.7l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.4-5.7c-2.1 1.4-4.8 2.3-8.5 2.3-6.2 0-11.5-4.1-13.4-9.8l-7.9 6.1C6.6 42.6 14.6 48 24 48z"/></svg><span>${t('gLogin')}</span></button>
+  <div class="orline"><span>${t('orEmail')}</span></div>
   <input id="em" type="email" value="${esc(lastEmail)}" autocomplete="username" placeholder="${t('email')}" aria-label="${t('email')}" style="letter-spacing:0;font-size:17px;text-align:start">
   <input id="pw" type="password" autocomplete="current-password" placeholder="${t('password')}" aria-label="${t('password')}" style="letter-spacing:0;font-size:17px;text-align:start">
   <div class="err" role="alert">${esc(err)}</div><button class="primary" type="submit"${busy ? ' disabled' : ''}>${busy ? t('loading') : t('login')}</button>
@@ -49,7 +51,8 @@ function first() {
   <div class="err" role="alert">${esc(err)}</div><button class="primary" type="submit"${busy ? ' disabled' : ''}>${busy ? t('loading') : t('createAdmin')}</button>
   <p style="margin-top:14px"><button type="button" class="btn2" data-tologin>${t('login')}</button></p></form></div>`;
 }
-function noAccess() { return `<div class="lock"><div class="box">${S.MARK('l')}<h1>${t('noAccessT')}</h1><p>${t('noAccessS')}</p><button class="btn2" data-logout>${t('logout')}</button></div></div>`; }
+let noEmail = '';
+function noAccess() { return `<div class="lock"><div class="box">${S.MARK('l')}<h1>${t('noAccessT')}</h1><p>${t('noAccessS')}</p>${noEmail ? `<p><b>${esc(noEmail)}</b></p>` : ''}<button class="btn2" data-logout>${t('logout')}</button></div></div>`; }
 const topbar = () => S.header(`<span id="savedot" class="savedot" aria-live="polite"></span><button class="ghost" data-logout style="min-height:40px;padding:6px 12px">${t('logout')}</button>`, `<span class="role">${esc(me ? (me.name || '') + ' · ' + t('role_' + me.role) : t('contractor'))}</span>`);
 
 function homeContractor() {
@@ -331,7 +334,7 @@ function render() {
 /* ---------- data ---------- */
 async function loadAll() {
   me = await API.me();
-  if (!me || !me.active) { me = null; B = []; throw Object.assign(new Error('noaccess'), { noaccess: true }); }
+  if (!me || !me.active) { try { const ss = await API.session(); noEmail = ss && ss.user ? ss.user.email : ''; } catch (_) {} me = null; B = []; throw Object.assign(new Error('noaccess'), { noaccess: true }); }
   [settings, B, leads, team] = await Promise.all([API.getSettings().catch(() => ({})), API.loadAll(), staff() ? API.listLeads().catch(() => []) : [], API.team().catch(() => [])]);
   if (!staff()) ctab = 'progress';
   leadUrls = staff() ? await API.leadPhotoUrls(leads.flatMap(l => l.photos || [])).catch(() => ({})) : {};
@@ -458,11 +461,12 @@ app.addEventListener('submit', async e => {
 
 app.addEventListener('click', async e => {
   const b = e.target.closest('button'); if (!b || (b.type === 'submit' && b.form) || b.dataset.busy) return; const d = b.dataset;
-  const guard = !(d.lang || d.ctab || d.photo || d.rc || d.af || 'home' in d || 'print' in d || 'first' in d || 'tologin' in d || 'hidecreds' in d);
+  const guard = !(d.lang || d.ctab || d.photo || d.rc || d.af || 'home' in d || 'print' in d || 'first' in d || 'tologin' in d || 'google' in d || 'hidecreds' in d);
   if (guard) { b.dataset.busy = '1'; b.disabled = true; }
   try {
     if (d.lang) { S.setLang(d.lang); render(); }
     else if ('first' in d) { err = ''; view = 'first'; render(); }
+    else if ('google' in d) { err = ''; try { await API.signInGoogle(); } catch (x) { err = x.message; render(); } }
     else if ('tologin' in d) { err = ''; view = 'login'; render(); }
     else if (d.af) { afilter = d.af; render(); }
     else if ('hidecreds' in d) { lastCreated = null; render(); }
@@ -609,7 +613,8 @@ async function makeSample() {
 /* =====================================================================
    v5 · proyectos recibidos, herramientas de obra (como CompanyCam) y gastos para taxes
    ===================================================================== */
-S.addText({
+S.addText({gLogin:'Entrar con Google',orEmail:'o con tu correo',
+
   hv_projects: 'Proyectos', hv_review: 'Por revisar', hv_feed: 'Actividad', hv_taxes: 'Gastos y taxes',
   search: 'Buscar proyecto, cliente, dirección o empresa', recvProject: 'Recibir proyecto', scanReceipt: 'Escanear factura',
   recvT: 'Recibir un proyecto de otra empresa', recvS: 'Para trabajos que llegan con su budget ya hecho. El project manager lo revisa y lo aprueba antes de empezar.',
@@ -656,7 +661,7 @@ S.addText({
   scanReview: 'Revisa los datos antes de guardar', scanLow: 'No se leyó todo con seguridad: revisa el total y la fecha.', scanItems: 'Artículos leídos', saveExpense: 'Guardar gasto',
   scanSaved: 'Gasto guardado con su factura', scanAgain: 'Escanear otra', readFail: 'No se pudo leer la factura. Llena los datos a mano.',
   nReview1: '1 proyecto por revisar', nReview: '{n} proyectos por revisar', budgetCat: 'Categoría del budget', vendor: 'Tienda o proveedor', descr: 'Qué se compró'
-}, {
+}, {gLogin:'Sign in with Google',orEmail:'or with your email',
   hv_projects: 'Projects', hv_review: 'To review', hv_feed: 'Activity', hv_taxes: 'Expenses and taxes',
   search: 'Search project, client, address or company', recvProject: 'Receive project', scanReceipt: 'Scan receipt',
   recvT: 'Receive a project from another company', recvS: 'For jobs that arrive with their budget already set. The project manager reviews and approves it before work starts.',

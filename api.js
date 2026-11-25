@@ -3,7 +3,7 @@
   if (window.CPLUS_MOCK) { window.API = window.CPLUS_MOCK; return; }
   const cfg = window.CPLUS_CONFIG || {};
   const ready = !!(cfg.url && cfg.key && window.supabase);
-  const sb = ready ? window.supabase.createClient(cfg.url, cfg.key) : null;
+  const sb = ready ? window.supabase.createClient(cfg.url, cfg.key, { auth: { flowType: 'pkce' } }) : null;
   const ok = ({ data, error }) => { if (error) throw new Error(error.message || String(error)); return data; };
   const CHILD = ['items', 'materials', 'steps', 'updates', 'payments', 'milestones', 'change_orders', 'budget', 'expenses', 'comments', 'documents', 'photos', 'checklists', 'checklist_items', 'tasks', 'daily_logs'];
 
@@ -13,6 +13,10 @@
     async session() { return ok(await sb.auth.getSession()).session; },
     onAuth(cb) { sb.auth.onAuthStateChange((_e, s) => cb(s)); },
     async signIn(email, password) { return ok(await sb.auth.signInWithPassword({ email, password })); },
+    async signInGoogle() {
+      const to = new URL('admin.html', location.href).href;
+      ok(await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: to, queryParams: { prompt: 'select_account' } } }));
+    },
     async signOut() { await sb.auth.signOut(); },
 
     async getSettings() {

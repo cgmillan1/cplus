@@ -429,3 +429,8 @@ label.drop{display:inline-flex!important;align-items:center;gap:8px;cursor:point
  .hnav button{padding:9px 6px;font-size:15px}
  .taxacts{display:grid!important;grid-template-columns:1fr 1fr}.taxacts .cam{grid-column:1/-1}
 }
+/* Google sign-in */
+.gbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:48px;border:1px solid #dadce0;background:#fff;color:#1f1f1f;border-radius:10px;font:600 15px/1 inherit;font-family:inherit;cursor:pointer;margin:6px 0 4px;transition:background .15s,box-shadow .15s}
+.gbtn:hover{background:#f8f9fa;box-shadow:0 1px 3px rgba(0,0,0,.12)}.gbtn:active{background:#f1f3f4}
+.orline{display:flex;align-items:center;gap:10px;margin:12px 0 4px;color:var(--muted,#777);font-size:13px}
+.orline::before,.orline::after{content:"";flex:1;height:1px;background:currentColor;opacity:.3}
