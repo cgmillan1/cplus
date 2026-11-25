@@ -2085,7 +2085,8 @@ function weekCard() {
 let audit = {}; // key: project id or '*'
 const TBL = { projects: 'auProject', expenses: 'auExpense', payments: 'auPayment', invoices: 'auInvoice', budget: 'auBudget', targets: 'auTargets', change_orders: 'auChange', documents: 'auDoc', time_entries: 'auHours', items: 'auItem', milestones: 'auMilestone', team: 'auTeam', settings: 'auSettings' };
 const MONEYF = ['amount', 'contract_amount', 'est_cost', 'est_mat', 'est_sub', 'labor_rate', 'price', 'approve_over', 'total', 'sales_tax'];
-const fv = (k, v) => v === null || v === undefined || v === '' ? '∅' : MONEYF.includes(k) && isFinite(+v) ? money(+v) : typeof v === 'boolean' ? (v ? '✓' : '✕') : /^\d{4}-\d\d-\d\dT/.test(String(v)) ? ftime(v) : /^[0-9a-f-]{36}$/.test(String(v)) ? esc(nameOf(v) || '…') : Array.isArray(v) ? esc(v.map(x => nameOf(x) || x).join(', ')) : esc(String(v).slice(0, 80));
+const tr1 = v => { for (const pre of ['st_', 'rv_', 'ds_', 'inv_', 'apx_', 'es_', 'role_', 'svc_', 'tc_']) { const x = t(pre + v); if (x && x !== pre + v) return esc(x); } return null; };
+const fv = (k, v) => typeof v === 'string' && /^(status|review_status|approval|sign_status|role|service|tax_cat|kind)$/.test(k) && tr1(v) ? tr1(v) : v === null || v === undefined || v === '' ? '∅' : MONEYF.includes(k) && isFinite(+v) ? money(+v) : typeof v === 'boolean' ? (v ? '✓' : '✕') : /^\d{4}-\d\d-\d\dT/.test(String(v)) ? ftime(v) : /^[0-9a-f-]{36}$/.test(String(v)) ? esc(nameOf(v) || '…') : Array.isArray(v) ? esc(v.map(x => nameOf(x) || x).join(', ')) : esc(String(v).slice(0, 80));
 const fl = k => { const x = t('f_' + k); return x && x !== 'f_' + k ? x : k.replace(/_/g, ' '); };
 function auRow(r, showProj) {
   const pt = showProj && r.project_id ? (B.find(b => b.project.id === r.project_id) || {}).project : null;
