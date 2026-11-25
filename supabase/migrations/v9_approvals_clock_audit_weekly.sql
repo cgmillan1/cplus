@@ -1,0 +1,4 @@
+-- v9 (applied via Supabase MCP 2026-11-25): settings.approve_over/weekly_email; expenses.approval/approved_by/approved_at/approval_note
+-- with trigger expenses_approval + push to admins; projects.site_lat/site_lng; time_entries clock_in/out with location and
+-- server-side distance + hours (time_entries_geo); rpc set_site; audit_log + private.audit triggers on money/project tables;
+-- rpc weekly_push (service_role only); pg_cron job 'cplus-weekly' Mondays 14:03 UTC -> edge function weekly.

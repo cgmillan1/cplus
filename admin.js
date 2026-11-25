@@ -58,7 +58,7 @@ const topbar = () => S.header(`<span id="savedot" class="savedot" aria-live="pol
 function homeContractor() {
   const today = S.today(), lim = new Date(Date.now() + 14 * 864e5).toISOString().slice(0, 10);
   const up = B.flatMap(b => b.steps.filter(s => !s.done && s.due_date && s.due_date <= lim).map(s => ({ ...s, pt: b.project.title, late: s.due_date < today }))).sort((a, b) => a.due_date.localeCompare(b.due_date));
-  return topbar() + `<main><div class="wrap"><div class="secthead"><h1>${t('myProjects')}</h1></div>${pushPrompt()}${crewHomeExtra()}
+  return topbar() + `<main><div class="wrap"><div class="secthead"><h1>${t('myProjects')}</h1></div>${clockBanner()}${pushPrompt()}${crewHomeExtra()}
   <div class="plist">${B.length ? B.map(b => { const c = S.calc(b), u = unseen(b) + msgUnread(b), nx = b.steps.slice().sort((x, y) => (x.sort || 0) - (y.sort || 0)).find(s => !s.done); return `<button class="pcard" data-open="${b.project.id}">${u ? `<span class="badge">${u}</span>` : ''}
     <span class="who2">${esc(b.project.client_name || '·')}</span><h3>${esc(b.project.title || t('project'))}</h3><span class="pill st-${stOf(b.project)}">${t('st_' + stOf(b.project))}</span>
     <div class="bar"><i style="width:${c.pct}%"></i></div><small class="sub">${c.pct}% ${t('done')}</small>
@@ -116,7 +116,7 @@ function pushPrompt() {
 function settingsView() {
   if (isAdmin() && !esignSt) setTimeout(loadEsign, 0);
   const back = `<button class="btn2" data-hv="projects">${t('back')}</button>`;
-  const company = isAdmin() ? `<div class="card ed"><h2>${t('settings')}</h2><div class="grid2" style="margin-top:12px"><label>${t('company')}${fld('settings', settings, 'company')}</label><label>${t('cname')}${fld('settings', settings, 'contact_name')}</label><label>${t('phone')}${fld('settings', settings, 'phone', 'tel')}</label><label>${t('email')}${fld('settings', settings, 'email', 'email')}</label><label>${t('sharePct')}${fld('settings', { ...settings, share_pct: pct() }, 'share_pct', 'number')}</label><label>${t('laborRate')}${fld('settings', { ...settings, labor_rate: coRate() }, 'labor_rate', 'number')}</label></div><p class="hint">${t('shareHint')}</p><p class="hint">${t('laborHint')}</p></div>` : '';
+  const company = isAdmin() ? `<div class="card ed"><h2>${t('settings')}</h2><div class="grid2" style="margin-top:12px"><label>${t('company')}${fld('settings', settings, 'company')}</label><label>${t('cname')}${fld('settings', settings, 'contact_name')}</label><label>${t('phone')}${fld('settings', settings, 'phone', 'tel')}</label><label>${t('email')}${fld('settings', settings, 'email', 'email')}</label><label>${t('sharePct')}${fld('settings', { ...settings, share_pct: pct() }, 'share_pct', 'number')}</label><label>${t('laborRate')}${fld('settings', { ...settings, labor_rate: coRate() }, 'labor_rate', 'number')}</label><label>${t('approveOver')}${fld('settings', settings, 'approve_over', 'number')}</label></div><p class="hint">${t('approveHint')}</p><label class="chkrow">${chk('settings', settings, 'weekly_email', t('weeklyOn'))} ${t('weeklyOn')}</label><p class="hint">${t('weeklyHint')}</p><p class="hint">${t('shareHint')}</p><p class="hint">${t('laborHint')}</p></div>` : '';
   return topbar() + `<main><div class="wrap"><div class="secthead"><h1>${t('settingsNav')}</h1>${back}</div>
   ${pushCard()}${isAdmin() ? esignSettings() : ''}${company}${isAdmin() ? teamCard() : ''}${accountCard()}
   <div class="card"><h2>${t('lang')}</h2><div style="margin-top:10px">${S.langSeg()}</div></div>
@@ -130,6 +130,7 @@ function home() {
   if (hview === 'feed') return topbar() + `<main><div class="wrap">${hnav()}<div class="secthead"><h1>${t('feedT')}</h1></div><p class="sub">${t('feedS')}</p><div class="card">${feedHtml(events(B))}</div></div></main>`;
   if (hview === 'taxes') return topbar() + `<main><div class="wrap">${hnav()}${taxView()}</div></main>`;
   if (hview === 'crew') return topbar() + `<main><div class="wrap">${hnav()}${crewView()}</div></main>`;
+  if (hview === 'history' && isAdmin()) return topbar() + `<main><div class="wrap">${hnav()}${historyView()}</div></main>`;
   if (hview === 'inbox') return topbar() + `<main><div class="wrap">${hnav()}${inboxView()}</div></main>`;
   const shown = B.filter(b => rvOf(b.project) === 'approved' && matchQ(b) && (pfilter === 'all' || stOf(b.project) === pfilter) && (afilter === 'all' || (afilter === 'none' ? !b.project.assigned_to : b.project.assigned_to === afilter)));
   const cs = shown.map(b => S.calc(b)), sum = k => cs.reduce((a, c) => a + (c[k] || 0), 0);
@@ -147,6 +148,7 @@ function home() {
   ${B.length ? `<div class="kpis">${kpi(t('contracts'), sum('tot'))}${kpi(t('collected'), sum('paid'))}${kpi(t('receivable'), sum('bal'))}${kpi(t('spent'), sum('spent'))}${kpi(t('profit'), sum('profit'), sum('profit') < 0 ? 'neg' : 'pos', t('profitSub'))}</div>
   ${showShare() ? `<div class="kpis">${(() => { const sh = cs.map(shareOf), tot = k => sh.reduce((x, y) => x + y[k], 0); return kpi(`${t('share')} ${pct()}%`, tot('s'), '', t('shareOf')) + kpi(t('shareEarned'), tot('earned'), 'pos', t('shareEarnedSub')) + kpi(t('sharePending'), tot('pending')) + kpi(t('profitAfter'), tot('after'), tot('after') < 0 ? 'neg' : ''); })()}</div>` : ''}` : ''}
   ${(() => { const n = B.filter(b => rvOf(b.project) === 'review').length; return n ? `<button class="card rvbanner" data-hv="review"><b>${t(n === 1 ? 'nReview1' : 'nReview').replace('{n}', n)}</b><span>${t('reviewBtn')} →</span></button>` : ''; })()}
+  ${approvalsCard()}
   ${budgetAlerts()}
   ${leadsCard()}
   <div class="plist">${shown.length ? '' : (B.length ? `<p class="sub">${t('noneInStatus')}</p>` : '')}${shown.map((b, i) => { const c = cs[i], u = unseen(b); return `<button class="pcard" data-open="${b.project.id}">${u ? `<span class="badge" title="${t('unread')}">${u}</span>` : ''}
@@ -197,11 +199,11 @@ function leadsCard() {
 }
 function project() {
   const u = unseen(cur), p = cur.project;
-  const tabs = staff() ? Object.assign({ dash: cDash, cost: cCost }, isRecv(p) ? { review: cReview } : {}, { team: cTeam, project: cProj, estimate: cEst, money: cMoney, pays: cPays, invoices: cInvoices, changes: cChanges, photos: cPhotos, checks: cChecks, logs: cLogs, progress: cProgress, materials: cMats, docs: cDocs, messages: cMsgs })
+  const tabs = staff() ? Object.assign({ dash: cDash, cost: cCost }, isRecv(p) ? { review: cReview } : {}, { team: cTeam }, isAdmin() ? { history: cHistory } : {}, { project: cProj, estimate: cEst, money: cMoney, pays: cPays, invoices: cInvoices, changes: cChanges, photos: cPhotos, checks: cChecks, logs: cLogs, progress: cProgress, materials: cMats, docs: cDocs, messages: cMsgs })
     : { progress: cProgress, photos: cPhotos, checks: cChecks, logs: cLogs, materials: cMats, hours: cHours, team: cTeam, messages: cMsgs, info: cInfo };
-  const TN = { invoices: 'invoicesTab', photos: 'photosTab', checks: 'checksTab', logs: 'logsTab', review: 'review', cost: 'costTab', team: 'teamTab', hours: 'hoursTab' };
+  const TN = { invoices: 'invoicesTab', photos: 'photosTab', checks: 'checksTab', logs: 'logsTab', review: 'review', cost: 'costTab', team: 'teamTab', hours: 'hoursTab', history: 'history' };
   if (!tabs[ctab]) ctab = Object.keys(tabs)[0];
-  const GR = staff() ? [['g_sum', ['dash', 'cost', 'review']], ['g_money', ['estimate', 'money', 'pays', 'invoices', 'changes']], ['g_work', ['progress', 'photos', 'checks', 'logs', 'materials']], ['g_team', ['team']], ['g_client', ['project', 'docs', 'messages']]]
+  const GR = staff() ? [['g_sum', ['dash', 'cost', 'review', 'history']], ['g_money', ['estimate', 'money', 'pays', 'invoices', 'changes']], ['g_work', ['progress', 'photos', 'checks', 'logs', 'materials']], ['g_team', ['team']], ['g_client', ['project', 'docs', 'messages']]]
     : [['g_work', ['progress', 'photos', 'checks', 'logs', 'materials', 'hours']], ['g_team', ['team']], ['g_client', ['messages']], ['info', ['info']]];
   const groups = GR.map(([g, ks]) => [g, ks.filter(k => tabs[k])]).filter(([, ks]) => ks.length);
   const curG = groups.find(([, ks]) => ks.includes(ctab)) || groups[0];
@@ -212,7 +214,7 @@ function project() {
   if (!staff()) return topbar() + nav + `
   <main class="ed"><div class="wrap"><div class="phead"><h1 class="titleinp" style="border:0">${esc(p.title || t('project'))}</h1><span class="pill st-${stOf(p)}">${t('st_' + stOf(p))}</span></div>
   <div class="pclient"><b>${esc(p.client_name || '·')}</b>${p.client_phone ? `<a href="tel:+${S.intl(p.client_phone)}">${esc(p.client_phone)}</a>` : ''}${p.address ? `<span>${esc(p.address)}</span>` : ''}</div>
-  ${tabs[ctab]()}</div></main>`;
+  ${clockCard(cur)}${tabs[ctab]()}</div></main>`;
   return topbar() + nav + `
   <main class="ed"><div class="wrap"><div class="phead"><label class="sr" for="ptitle-top">${t('ptitle')}</label><input id="ptitle-top" class="titleinp" data-t="projects" data-id="${p.id}" data-f="title" value="${esc(p.title)}" placeholder="${t('ptitleEx')}" maxlength="200">
   <label class="stlab"><span class="sr">${t('status')}</span><select class="stsel2 st-${stOf(p)}" data-t="projects" data-id="${p.id}" data-f="status">${STATUSES.map(s => `<option value="${s}"${stOf(p) === s ? ' selected' : ''}>${t('st_' + s)}</option>`).join('')}</select></label></div>
@@ -249,17 +251,17 @@ function cInfo() {
 function cDash() {
   const c = S.calc(cur);
   const banner = stOf(cur.project) === 'estimate_accepted' && !cur.documents.some(x => x.kind === 'contract' && x.status !== 'void') ? `<div class="card" style="border-color:var(--cu);display:flex;gap:12px;align-items:center;flex-wrap:wrap"><b style="flex:1 1 260px">${t('contractBanner')}</b><button class="primary" data-ctab="docs">${t('goDocs')}</button></div>` : '';
-  return banner + budgetHealth(c) + `<div class="kpis">${kpi(t('contract'), c.tot)}${kpi(t('collected'), c.paid)}${kpi(t('receivable'), c.bal)}${kpi(t('budget'), c.bud)}${kpi(t('spent'), c.spent, '', (c.bud ? Math.round(c.spent / c.bud * 100) : 0) + '% ' + t('of') + ' ' + t('budget').toLowerCase())}${kpi(t('left'), c.left, c.left < 0 ? 'neg' : '')}${kpi(t('profit'), c.profit, c.profit < 0 ? 'neg' : 'pos', t('profitSub'))}</div>
+  return banner + approvalsCard(cur) + budgetHealth(c) + `<div class="kpis">${kpi(t('contract'), c.tot)}${kpi(t('collected'), c.paid)}${kpi(t('receivable'), c.bal)}${kpi(t('budget'), c.bud)}${kpi(t('spent'), c.spent, '', (c.bud ? Math.round(c.spent / c.bud * 100) : 0) + '% ' + t('of') + ' ' + t('budget').toLowerCase())}${kpi(t('left'), c.left, c.left < 0 ? 'neg' : '')}${kpi(t('profit'), c.profit, c.profit < 0 ? 'neg' : 'pos', t('profitSub'))}</div>
   ${showShare() ? `<div class="kpis">${(() => { const sh = shareOf(c); return kpi(`${t('share')} ${pct()}%`, sh.s, '', t('shareOf')) + kpi(t('shareEarned'), sh.earned, 'pos', t('shareEarnedSub')) + kpi(t('sharePending'), sh.pending) + kpi(t('profitAfter'), sh.after, sh.after < 0 ? 'neg' : ''); })()}</div>` : ''}
   ${jcMini(jc(cur))}
   <div class="qacts"><button class="primary cam" data-scan="${cur.project.id}">${camIco}${t('scanReceipt')}</button><button class="btn2" data-ctab="team">${t('msgBtn')}</button><button class="btn2" data-ctab="money">+ ${t('qaExpense')}</button><button class="btn2" data-ctab="pays">+ ${t('qaPay')}</button></div>
-  <div class="cols"><div class="card"><h2>${t('byCat')}</h2>${catBars(c)}</div><div class="card"><h2>${t('recent')}</h2>${expSorted().slice(0, 6).map(e => `<div class="mat"><div><b>${esc(e.description)}</b><small>${fdate(e.spent_on)} · ${esc(e.vendor)} · ${esc(catName(e.budget_id))}</small></div><span class="n">${money(e.amount)}</span></div>`).join('') || `<p class="sub">${t('none')}</p>`}</div></div>
+  <div class="cols"><div class="card"><h2>${t('byCat')}</h2>${catBars(c)}</div><div class="card"><h2>${t('recent')}</h2>${expSorted().slice(0, 6).map(e => `<div class="mat"><div><b>${esc(e.description)}</b> ${apxPill(e)}<small>${fdate(e.spent_on)} · ${esc(e.vendor)} · ${esc(catName(e.budget_id))}</small></div><span class="n">${money(e.amount)}</span></div>`).join('') || `<p class="sub">${t('none')}</p>`}</div></div>
   ${allCard()}`;
 }
 const expSorted = () => cur.expenses.slice().sort((a, b) => String(b.spent_on).localeCompare(String(a.spent_on)));
 function cMoney() {
   const c = S.calc(cur);
-  return buyForm() + `<div class="card"><h2>${t('budget')}</h2><p class="sub">${money(c.spent)} ${t('of')} ${money(c.bud)} · ${t('left')}: <b>${money(c.left)}</b></p>
+  return approvalsCard(cur) + buyForm() + `<div class="card"><h2>${t('budget')}</h2><p class="sub">${money(c.spent)} ${t('of')} ${money(c.bud)} · ${t('left')}: <b>${money(c.left)}</b></p>
   ${sorted('budget').map(b => `<div class="row r-bud">${fld('budget', b, 'category', 'text', 'ct')}${fld('budget', b, 'amount', 'number', 'am')}<span class="spent">${money(c.byCat(b.id))}</span>${del('budget', b.id)}</div>`).join('')}<button class="add" data-add="budget">${t('addCat')}</button></div>
   <div class="card"><h2>${t('expLog')}</h2><p class="sub">${cur.expenses.length} · ${money(c.spent)}</p>
   ${expSorted().map(e => `<div class="row r-exp2">${fld('expenses', e, 'spent_on', 'date', 'dt')}${fld('expenses', e, 'description', 'text', 'ds')}${sel('expenses', e, 'budget_id', budOpts(), 'cs')}${sel('expenses', { ...e, tax_cat: e.tax_cat || 'materials' }, 'tax_cat', taxOpts(), 'tc')}${fld('expenses', e, 'vendor', 'text', 'st')}${fld('expenses', e, 'amount', 'number', 'am')}${e.receipt ? `<button class="btn2 rc" data-rcv="${esc(e.receipt)}">${t('viewReceipt')}</button>` : `<button class="btn2 rc" data-rc="${e.id}">${t('addReceipt')}</button>`}${del('expenses', e.id)}</div>`).join('') || `<p class="sub">${t('none')}</p>`}</div>`;
@@ -377,6 +379,7 @@ function render() {
   if (key) { const n = document.querySelector(key); if (n) n.focus({ preventScroll: true }); }
   const ch = $('#chat'); if (ch) ch.scrollTop = ch.scrollHeight;
   const on = document.querySelector('.cbar button.on'); if (on && on.scrollIntoView) on.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  const hon = document.querySelector('.hnav button.on'); if (hon && hon.parentNode.scrollWidth > hon.parentNode.clientWidth) hon.parentNode.scrollLeft = hon.offsetLeft - 8;
   v8After();
 }
 
@@ -421,7 +424,7 @@ app.addEventListener('change', async e => {
   if (d.setrole) { try { const r = await API.setRole(d.setrole, n.value); Object.assign(team.find(m => m.user_id === d.setrole), r); S.toast(t('saved') + ' ✓'); } catch (x) { fail(x); } return render(); }
   if (!d.f) return;
   let v = n.type === 'checkbox' ? n.checked : n.value;
-  if (n.type === 'number') v = v === '' ? (d.f === 'est_cost' || d.f === 'labor_rate' ? null : 0) : +v;
+  if (n.type === 'number') v = v === '' ? (d.f === 'est_cost' || d.f === 'labor_rate' || d.f === 'approve_over' ? null : 0) : +v;
   if (n.type === 'date' && !v) v = null;
   if ((d.f === 'budget_id' || d.f === 'assigned_to') && !v) v = null;
   if (d.t === 'projects' && (d.f === 'client_phone' || d.f === 'client_phone2') && v) { if (!S.phoneOk(v)) { S.toast(t('errPhone')); n.setAttribute('aria-invalid', 'true'); return n.focus(); } v = S.fmtPhone(v); n.value = v; n.removeAttribute('aria-invalid'); }
@@ -1008,7 +1011,9 @@ function dashView() {
   return `<div class="secthead"><h1>${t('dashT')}</h1></div><p class="sub">${t('dashS')}</p>
   <div class="filters dper" role="group" aria-label="${t('dPeriod')}">${per.map(([k, l]) => `<button data-dper="${k}" class="${dper === k ? 'on' : ''}" aria-pressed="${dper === k}">${l}</button>`).join('')}</div>
   <div class="kpis dkpis">${tile(t('dCollected'), d.rev, '', t('dCollectedS'))}${tile(t('dSpent'), d.spent, '', `${d.nExp} ${t('dExpN')}`)}${tile(t('dNet'), d.net, d.net < 0 ? 'neg' : 'pos', t('dNetS'))}${tile(t('dOwed'), d.owed, '', t('dOwedS'))}${tile(t('dWon'), d.won.reduce((a, b) => a + S.calc(b).tot, 0), '', `${d.won.length} ${t(d.won.length === 1 ? 'dProj1' : 'dProjN')}`)}${tile(t('dActive'), String(d.active.length), '', t('dActiveS'))}</div>
+  ${approvalsCard()}
   ${att.length ? `<div class="card alerts"><h2>${t('dAttention')}</h2>${att.join('')}</div>` : ''}
+  ${weekCard()}
   ${esignCard()}
   <div class="card"><div class="top2"><h2>${t('dCashT')}</h2><span class="legend"><span><i class="sw b1"></i>${t('dCollected')}</span><span><i class="sw b2"></i>${t('dSpent')}</span></span></div><p class="sub">${t('dCashS')}</p>
   <div class="chartwrap">${cashChart(d.months)}<div class="ctip" hidden></div></div>${tbl}</div>
@@ -1020,6 +1025,7 @@ function dashView() {
     return A.length ? `<div class="card"><div class="top2"><h2>${t('dJcT')}</h2><button class="lnk" data-hv="crew">${t('hv_crew')} →</button></div><p class="sub">${t('dJcS')}</p>
     ${W.length ? `<div class="kpis dkpis">${tile(t('dJcE'), E)}${tile(t('dJcF'), F, F < E - 0.5 ? 'neg' : 'pos', (F - E >= 0 ? '+' : '') + money(F - E))}${tile(t('jc_over'), String(n('over')), n('over') ? 'neg' : '', t('dProjN'))}${tile(t('jc_watch'), String(n('watch')), '', t('dProjN'))}</div>` : ''}
     ${no ? `<p class="hint">${t('dJcNoEst').replace('{n}', no)}</p>` : ''}</div>` : ''; })()}
+  ${priceCard()}
   <div class="card"><h2>${t('dProjT')}</h2><p class="sub">${t('dProjS')}</p>
   ${d.projs.map(x => `<button class="dproj" data-open="${x.b.project.id}"><div class="dp1"><b>${esc(x.b.project.title)}</b><span class="pill ${x.done ? '' : 'st-' + stOf(x.b.project)}">${t('st_' + stOf(x.b.project))}</span>${x.j.has ? jpill(x.j) : ''}</div>
     <div class="dp2"><span>${t('contract')} <b>${money(x.c.tot)}</b></span><span>${t('dSpent')} <b>${money(x.c.spent)}</b></span><span>${t('dProfitEst')} <b class="${x.profit < 0 ? 'neg' : 'pos'}">${money(x.profit)} · ${Math.round(x.pct)}%</b></span></div>
@@ -1028,7 +1034,7 @@ function dashView() {
 
 function hnav() {
   const nr = B.filter(b => rvOf(b.project) === 'review').length;
-  return `<div class="hnav" role="tablist">${[...(isAdmin() ? [['dash', t('hv_dash')]] : []), ['projects', t('hv_projects')], ['crew', t('hv_crew'), B.filter(b => rvOf(b.project) === 'approved' && stOf(b.project) !== 'done' && jc(b).st === 'over').length], ['inbox', t('hv_inbox'), allUnread()], ['review', t('hv_review'), nr], ['feed', t('hv_feed')], ['taxes', t('hv_taxes')]].map(([k, l, n]) => `<button role="tab" data-hv="${k}" aria-selected="${hview === k}" class="${hview === k ? 'on' : ''}">${l}${n ? ` <span class="badge">${n}</span>` : ''}</button>`).join('')}</div>`;
+  return `<div class="hnav" role="tablist">${[...(isAdmin() ? [['dash', t('hv_dash')]] : []), ['projects', t('hv_projects')], ['crew', t('hv_crew'), B.filter(b => rvOf(b.project) === 'approved' && stOf(b.project) !== 'done' && jc(b).st === 'over').length], ['inbox', t('hv_inbox'), allUnread()], ['review', t('hv_review'), nr], ['feed', t('hv_feed')], ['taxes', t('hv_taxes')], ...(isAdmin() ? [['history', t('hv_history')]] : [])].map(([k, l, n]) => `<button role="tab" data-hv="${k}" aria-selected="${hview === k}" class="${hview === k ? 'on' : ''}">${l}${n ? ` <span class="badge">${n}</span>` : ''}</button>`).join('')}</div>`;
 }
 function homeTools() {
   return `<div class="htools"><label class="search"><span class="sr">${t('search')}</span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input id="hq" type="search" value="${esc(q)}" placeholder="${t('search')}" autocomplete="off"></label>
@@ -1765,14 +1771,14 @@ function cCost() {
     <label>${t('jf_est_hours')}${tfld('est_hours', '0')}</label>
     <label>${t('jf_labor_rate')}${tfld('labor_rate', String(coRate()))}<small class="hint">${t('jcRateHint').replace('{r}', money(coRate()))}</small></label>
     <label>${t('jf_est_sub')}${tfld('est_sub', '0')}<small class="hint">${t('jcSubHint')}</small></label></div>
-    ${reviewEst ? `<p class="hint">${t('jcReviewEst').replace('{a}', money(reviewEst))}</p>` : ''}</div>`;
+    ${histSuggest(j)}${reviewEst ? `<p class="hint">${t('jcReviewEst').replace('{a}', money(reviewEst))}</p>` : ''}</div>`;
   const cmp = `<div class="card"><h2>${t('jcCmpT')}</h2><p class="sub">${t('jcContract')} <b>${money(j.rev)}</b></p>
     ${jbar(t('jcMat'), j.estMat, j.matAct, money)}
     ${jbar(t('jcHours'), j.estH, j.hrs, hfmt, j.hSrc === 'logs' ? t('jcFromLogs') : '')}
     ${jbar(t('jcLab').replace('{r}', money(j.rate)), j.estLab, j.labAct, money)}
     ${j.estSub || j.subAct ? jbar(t('jcSub'), j.estSub, j.subAct, money) : ''}
     ${jbar(t('jcTotal'), j.estCost, j.actCost, money)}</div>`;
-  return j.has ? head + cmp + hoursCard() + est : head + est + cmp + hoursCard();
+  return j.has ? head + cmp + siteCard() + hoursCard() + est : head + est + cmp + siteCard() + hoursCard();
 }
 
 function hoursCard() {
@@ -1789,7 +1795,7 @@ function hoursCard() {
   <label class="wide">${t('hrsNote')}<input id="hr-note" maxlength="500" placeholder="${t('hrsNotePh')}"></label>
   <button class="primary" type="submit">${t('hrsAdd')}</button></form>
   ${!mine && ppl.length ? `<div class="hbars2">${ppl.map(x => `<div class="hb"><span>${esc(nameOf(x.u) || '·')}</span><div class="meter"><i style="width:${x.h / mx * 100}%"></i></div><b>${hfmt(x.h)}</b></div>`).join('')}</div>` : ''}
-  ${rows.length ? `<div class="hlist">${rows.slice(0, 12).map(x => `<div class="hrow"><time>${fdate(x.work_date)}</time><div><b>${hfmt(x.hours)}</b>${mine ? '' : ` · ${esc(nameOf(x.user_id) || '·')}`}${x.note ? `<small>${esc(x.note)}</small>` : ''}</div>${staff() || x.user_id === me.user_id ? del('time_entries', x.id) : ''}</div>`).join('')}</div>${rows.length > 12 ? `<p class="sub">+${rows.length - 12}</p>` : ''}` : `<p class="sub">${t('hrsNone')}</p>`}</div>`;
+  ${rows.length ? `<div class="hlist">${rows.slice(0, 12).map(x => `<div class="hrow"><time>${fdate(x.work_date)}</time><div><b>${x.hours ? hfmt(x.hours) : t('ckNow')}</b>${mine ? '' : ` · ${esc(nameOf(x.user_id) || '·')}`}${x.note ? `<small>${esc(x.note)}</small>` : ''}${clockLine(x)}</div>${staff() || x.user_id === me.user_id ? del('time_entries', x.id) : ''}</div>`).join('')}</div>${rows.length > 12 ? `<p class="sub">+${rows.length - 12}</p>` : ''}` : `<p class="sub">${t('hrsNone')}</p>`}</div>`;
 }
 const cHours = () => hoursCard();
 
@@ -1980,6 +1986,190 @@ laborRate:'Labor cost per hour ($)',laborHint:'The cost per hour turns logged ho
 dJcT:'Estimate vs actual',dJcS:'Active projects with an estimate: the profit you expected versus where it is heading.',dJcE:'Estimated profit',dJcF:'Projected profit',dJcNoEst:'{n} active project(s) without an estimate. Add it in Cost vs estimate on each project.',dOfEst:'of estimated cost used',
 dProjS:'Projected profit = contract minus the estimated cost (or what was spent, if higher).',
 pushWhyCrew:'We let you know when you are assigned a project or a task, or someone on the team writes to you.',pushWhyStaff:'We let you know when a project arrives for review, an expense passes 90% of a budget, a teammate or client sends a message, a quote request comes in or the crew fills in the daily log.'
+});
+
+/* ---------- v9: aprobación de gastos, entrada con ubicación, resumen semanal, costo real por tipo de trabajo, historial ---------- */
+const OPEN = () => B.flatMap(b => (b.time_entries || []).filter(x => x.user_id === (me && me.user_id) && x.clock_in && !x.clock_out).map(x => ({ x, b })))[0] || null;
+const hm = d => new Date(d).toLocaleTimeString(LOC(), { hour: 'numeric', minute: '2-digit' });
+const distTxt = m => m == null ? '' : m < 1000 ? Math.round(m) + ' m' : (m / 1000).toFixed(1) + ' km';
+const NEAR = 300;
+const distPill = (m, label) => m == null ? `<span class="pill gp">${label}: ${t('ckNoLoc')}</span>` : `<span class="pill gp ${m <= NEAR ? 'gp-ok' : 'gp-far'}">${label}: ${m <= NEAR ? t('ckAtSite') : t('ckAway').replace('{d}', distTxt(m))}</span>`;
+
+/* toast when an expense needs approval, whatever screen created it */
+{ const ins = API.insert; API.insert = async (tb, row) => { const r = await ins(tb, row); if (tb === 'expenses' && r && r.approval === 'pending') setTimeout(() => S.toast(t('apxPendingToast').replace('{a}', money(settings.approve_over ?? 500))), 700); return r; }; }
+
+/* ----- approvals ----- */
+const pendingExp = () => B.flatMap(b => (b.expenses || []).filter(e => e.approval === 'pending').map(e => ({ e, b })));
+function approvalsCard(only) {
+  const xs = pendingExp().filter(x => !only || x.b === only); if (!xs.length) return '';
+  return `<div class="card apx"><div class="top2"><h2>${t('apxT')} <span class="badge">${xs.length}</span></h2></div><p class="sub">${t(isAdmin() ? 'apxS' : 'apxSMgr').replace('{a}', money(settings.approve_over ?? 500))}</p>
+  ${xs.map(({ e, b }) => `<div class="apxrow"><div><b>${money(e.amount)} · ${esc(e.vendor || e.description || '·')}</b><small>${esc(e.description || '')}${only ? '' : ' · ' + esc(b.project.title || '')} · ${fdate(e.spent_on)}${e.created_by ? ' · ' + esc(nameOf(e.created_by)) : ''}</small></div>
+  <div class="acts">${e.receipt ? `<button class="btn2" data-rcv="${esc(e.receipt)}">${t('viewReceipt')}</button>` : ''}${isAdmin() ? `<button class="btn2 danger" data-apx="${e.id}:rejected">${t('apxNo')}</button><button class="primary" data-apx="${e.id}:approved">${t('apxYes')}</button>` : `<span class="pill jc jc-watch">${t('apx_pending')}</span>`}</div></div>`).join('')}</div>`;
+}
+const apxPill = e => e.approval === 'pending' ? `<span class="pill jc jc-watch">${t('apx_pending')}</span>` : e.approval === 'rejected' ? `<span class="pill jc jc-over" title="${esc(e.approval_note || '')}">${t('apx_rejected')}</span>` : '';
+
+/* ----- clock in / out ----- */
+async function siteFor(b) {
+  const p = b.project; if (p.site_lat != null) return true;
+  if (!p.address) return false;
+  try {
+    const r = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=us&q=' + encodeURIComponent(p.address + ', Utah'), { headers: { 'Accept-Language': 'en' } });
+    const j = await r.json(); if (!j[0]) return false;
+    const lat = +(+j[0].lat).toFixed(6), lng = +(+j[0].lon).toFixed(6);
+    await API.setSite(p.id, lat, lng); p.site_lat = lat; p.site_lng = lng; return true;
+  } catch (_) { return false; }
+}
+function clockCard(b) {
+  const o = OPEN(); const here = o && o.b === b;
+  if (o && !here) return `<div class="card ck ck-else"><b>${t('ckElse').replace('{p}', esc(o.b.project.title || ''))}</b><button class="btn2" data-open="${o.b.project.id}" data-ctabgo="hours">${t('ckGo')}</button></div>`;
+  if (!here) return `<div class="card ck"><div><b>${t('ckT')}</b><small class="sub">${t('ckS')}</small></div><button class="primary ckbtn" data-ckin="${b.project.id}">${t('ckIn')}</button></div>`;
+  const long = Date.now() - new Date(o.x.clock_in) > 12 * 36e5;
+  return `<div class="card ck ck-on"><div><b>${t('ckOn').replace('{t}', hm(o.x.clock_in))}</b><small class="sub">${t('ckOnS').replace('{h}', hfmt((Date.now() - new Date(o.x.clock_in)) / 36e5))}</small>${distPill(o.x.in_dist, t('ckInL'))}</div>
+  ${long ? `<form class="ckfix" id="ckfix"><label>${t('ckForgot')}<input type="time" id="ck-out" value="${new Date(new Date(o.x.clock_in).getTime() + 8 * 36e5).toTimeString().slice(0, 5)}"></label><button class="primary" type="submit">${t('ckOut')}</button></form>` : `<button class="primary ckbtn out" data-ckout="${o.x.id}">${t('ckOut')}</button>`}</div>`;
+}
+function clockBanner() {
+  const o = OPEN(); if (!o) return '';
+  return `<button class="card ck ck-on bn" data-open="${o.b.project.id}" data-ctabgo="hours"><span><b>${t('ckOnP').replace('{p}', esc(o.b.project.title || '')).replace('{t}', hm(o.x.clock_in))}</b><small class="sub">${t('ckTapOut')}</small></span><span aria-hidden="true">→</span></button>`;
+}
+function siteCard() {
+  const p = cur.project, maps = p.site_lat != null ? `https://maps.google.com/?q=${p.site_lat},${p.site_lng}` : '';
+  return `<div class="card site"><div><b>${t('siteT')}</b><small class="sub">${p.site_lat != null ? t('siteOk') : t('siteNo')}</small></div><div class="acts">${maps ? `<a class="btn2" href="${maps}" target="_blank" rel="noopener">${t('openMaps')}</a>` : ''}<button class="btn2" data-siteaddr>${t('siteAddr')}</button><button class="btn2" data-sitehere>${t('siteHere')}</button></div></div>`;
+}
+const clockLine = x => x.clock_in ? `<small class="ckline">${hm(x.clock_in)} → ${x.clock_out ? hm(x.clock_out) : t('ckNow')} ${distPill(x.in_dist, t('ckInL'))}${x.clock_out ? ' ' + distPill(x.out_dist, t('ckOutL')) : ''}</small>` : '';
+
+/* ----- real cost by type of work (finished jobs) ----- */
+function costHistory() {
+  const done = B.filter(b => rvOf(b.project) === 'approved' && stOf(b.project) === 'done').map(b => ({ b, j: jc(b) })).filter(x => x.j.rev > 0);
+  const g = {}; done.forEach(x => { const k = x.b.project.service || 'other', r = g[k] = g[k] || { k, n: 0, rev: 0, cost: 0, mat: 0, sub: 0, hrs: 0, lab: 0, est: 0, estN: 0, act: 0 };
+    r.n++; r.rev += x.j.rev; r.cost += x.j.actCost; r.mat += x.j.matAct; r.sub += x.j.subAct; r.hrs += x.j.hrs; r.lab += x.j.labAct; if (x.j.has) { r.est += x.j.estCost; r.act += x.j.actCost; r.estN++; } });
+  return Object.values(g).map(r => ({ ...r, marg: (r.rev - r.cost) / r.rev * 100, matP: r.mat / r.rev, subP: r.sub / r.rev, hPer1k: r.hrs / (r.rev / 1000), over: r.est ? (r.act / r.est - 1) * 100 : null })).sort((a, b) => b.n - a.n || b.rev - a.rev);
+}
+function priceCard() {
+  const H = costHistory();
+  return `<div class="card"><h2>${t('pxT')}</h2><p class="sub">${t('pxS')}</p>
+  ${H.length ? `<div class="mscroll"><table class="mtab pxtab"><thead><tr><th>${t('service')}</th><th>${t('pxJobs')}</th><th>${t('pxMargin')}</th><th>${t('pxMat')}</th><th>${t('pxHours')}</th><th>${t('pxSub')}</th><th>${t('pxOver')}</th></tr></thead><tbody>
+  ${H.map(r => `<tr><td><b>${t('svc_' + r.k)}</b><small>${money(r.rev / r.n)} ${t('pxAvg')}</small></td><td>${r.n}</td><td class="${r.marg < 10 ? 'neg' : ''}">${Math.round(r.marg)}%</td><td>${Math.round(r.matP * 100)}%</td><td>${hfmt(r.hPer1k)}</td><td>${Math.round(r.subP * 100)}%</td><td class="${r.over > 5 ? 'neg' : ''}">${r.over == null ? '·' : (r.over > 0 ? '+' : '') + Math.round(r.over) + '%'}</td></tr>`).join('')}</tbody></table></div><p class="hint">${t('pxHint')}</p>` : `<p class="sub">${t('pxNone')}</p>`}</div>`;
+}
+function histSuggest(j) {
+  const H = costHistory(); if (!H.length) return '';
+  const svc = cur.project.service || 'other', own = H.find(r => r.k === svc);
+  const r = own || H.reduce((a, x) => ({ k: 'all', n: a.n + x.n, rev: a.rev + x.rev, mat: a.mat + x.mat, sub: a.sub + x.sub, hrs: a.hrs + x.hrs, cost: a.cost + x.cost }), { n: 0, rev: 0, mat: 0, sub: 0, hrs: 0, cost: 0 });
+  const k = j.rev / r.rev, sm = Math.round(r.mat * k), sh = Math.round(r.hrs * k), ss = Math.round(r.sub * k);
+  return `<div class="hsug"><b>${t(own ? 'pxSug' : 'pxSugAll').replace('{n}', r.n).replace('{s}', t('svc_' + svc))}</b>
+  <span>${t('jcMat')} ${money(sm)} · ${t('jcHours')} ${hfmt(sh)} · ${t('jcSub')} ${money(ss)} · ${t('pxMargin')} ${Math.round((r.rev - r.cost) / r.rev * 100)}%</span>
+  <button class="btn2" data-usehist="${sm}:${sh}:${ss}">${t('pxUse')}</button></div>`;
+}
+async function setTargets(patch) {
+  const tg = (cur.targets || [])[0];
+  if (tg) Object.assign(tg, await API.update('targets', tg.id, patch));
+  else cur.targets.push(await API.insert('targets', { project_id: cur.project.id, ...patch }));
+}
+
+/* ----- weekly summary (same numbers as the Monday email) ----- */
+function weekCard() {
+  const wk = new Date(Date.now() - 6 * 864e5).toISOString().slice(0, 10), today = S.today();
+  const rev = sumBy(B.flatMap(b => b.payments.filter(p => String(p.paid_on) >= wk)), p => p.amount);
+  const spent = sumBy(B.flatMap(b => b.expenses.filter(e => String(e.spent_on) >= wk)), e => e.amount);
+  const AP = B.filter(b => rvOf(b.project) === 'approved' && stOf(b.project) !== 'done').map(b => jc(b));
+  const late = B.flatMap(b => (b.invoices || []).filter(i => i.status === 'sent' && String(i.due_on) < today));
+  const hrs = {}; B.forEach(b => (b.time_entries || []).filter(x => x.hours && x.work_date >= wk).forEach(x => hrs[x.user_id] = (hrs[x.user_id] || 0) + +x.hours));
+  const hr = Object.entries(hrs).sort((a, b) => b[1] - a[1]);
+  const tile = (l, v, cls = '', e = '') => `<div class="kpi dk ${cls}"><small>${l}</small><b>${v}</b>${e ? `<em>${e}</em>` : ''}</div>`;
+  return `<div class="card wkc"><div class="top2"><h2>${t('wkT')}</h2>${isAdmin() ? `<button class="btn2" data-wktest>${t('wkSend')}</button>` : ''}</div><p class="sub">${t('wkS')}</p>
+  <div class="kpis dkpis">${tile(t('dCollected'), money(rev))}${tile(t('dSpent'), money(spent))}${tile(t('dNet'), money(rev - spent), rev - spent < 0 ? 'neg' : 'pos')}
+  ${tile(t('jc_over'), String(AP.filter(j => j.st === 'over').length), AP.some(j => j.st === 'over') ? 'neg' : '', t('dProjN'))}${tile(t('apxT'), String(pendingExp().length), pendingExp().length ? 'neg' : '')}${tile(t('dLateInvN'), String(late.length), late.length ? 'neg' : '', money(sumBy(late, i => i.amount)))}</div>
+  ${hr.length ? `<div class="hbars2">${hr.map(([u, h]) => `<div class="hb"><span>${esc(nameOf(u) || '·')}</span><div class="meter"><i style="width:${h / hr[0][1] * 100}%"></i></div><b>${hfmt(h)}</b></div>`).join('')}</div>` : ''}</div>`;
+}
+
+/* ----- change history (admins) ----- */
+let audit = {}; // key: project id or '*'
+const TBL = { projects: 'auProject', expenses: 'auExpense', payments: 'auPayment', invoices: 'auInvoice', budget: 'auBudget', targets: 'auTargets', change_orders: 'auChange', documents: 'auDoc', time_entries: 'auHours', items: 'auItem', milestones: 'auMilestone', team: 'auTeam', settings: 'auSettings' };
+const MONEYF = ['amount', 'contract_amount', 'est_cost', 'est_mat', 'est_sub', 'labor_rate', 'price', 'approve_over', 'total', 'sales_tax'];
+const fv = (k, v) => v === null || v === undefined || v === '' ? '∅' : MONEYF.includes(k) && isFinite(+v) ? money(+v) : typeof v === 'boolean' ? (v ? '✓' : '✕') : /^\d{4}-\d\d-\d\dT/.test(String(v)) ? ftime(v) : /^[0-9a-f-]{36}$/.test(String(v)) ? esc(nameOf(v) || '…') : Array.isArray(v) ? esc(v.map(x => nameOf(x) || x).join(', ')) : esc(String(v).slice(0, 80));
+const fl = k => { const x = t('f_' + k); return x && x !== 'f_' + k ? x : k.replace(/_/g, ' '); };
+function auRow(r, showProj) {
+  const pt = showProj && r.project_id ? (B.find(b => b.project.id === r.project_id) || {}).project : null;
+  const what = r.action === 'update' ? Object.entries(r.changes).slice(0, 6).map(([k, [o, n]]) => `<li><b>${esc(fl(k))}</b>: ${fv(k, o)} → ${fv(k, n)}</li>`).join('')
+    : `<li>${esc(['description', 'title', 'vendor', 'number', 'category', 'name', 'note'].map(k => r.changes[k]).filter(Boolean)[0] || '')}${r.changes.amount != null ? ' · ' + money(+r.changes.amount) : r.changes.hours != null ? ' · ' + hfmt(r.changes.hours) : ''}</li>`;
+  return `<div class="aurow au-${r.action}"><time>${ftime(r.at)}</time><div><b>${esc(r.who || t('auSystem'))}</b> ${t('au_' + r.action)} <span class="pill">${t(TBL[r.tbl] || r.tbl)}</span>${pt ? ` · <button class="lnk" data-open="${pt.id}">${esc(pt.title)}</button>` : ''}<ul>${what}</ul></div></div>`;
+}
+async function loadAudit(key) { try { audit[key] = await API.audit(key === '*' ? null : key); } catch (x) { audit[key] = []; fail(x); } render(); }
+function cHistory() {
+  const k = cur.project.id; if (!audit[k]) { setTimeout(() => loadAudit(k), 0); return `<div class="card"><p>${t('loading')}</p></div>`; }
+  return `<div class="card"><h2>${t('auT')}</h2><p class="sub">${t('auS')}</p>${audit[k].map(r => auRow(r)).join('') || `<p class="sub">${t('none')}</p>`}</div>`;
+}
+let auFilter = 'all';
+function historyView() {
+  if (!audit['*']) { setTimeout(() => loadAudit('*'), 0); return `<div class="card"><p>${t('loading')}</p></div>`; }
+  const rows = audit['*'].filter(r => auFilter === 'all' || (auFilter === 'money' ? ['expenses', 'payments', 'invoices', 'budget', 'targets', 'change_orders'].includes(r.tbl) : auFilter === 'del' ? r.action === 'delete' : r.tbl === auFilter));
+  const F = [['all', t('all')], ['money', t('g_money')], ['del', t('auDeleted')], ['time_entries', t('auHours')], ['team', t('auTeam')]];
+  return `<div class="secthead"><h1>${t('auT')}</h1></div><p class="sub">${t('auS2')}</p>
+  <div class="filters" role="group">${F.map(([v, l]) => `<button data-auf="${v}" class="${auFilter === v ? 'on' : ''}" aria-pressed="${auFilter === v}">${l}</button>`).join('')}</div>
+  <div class="card">${rows.map(r => auRow(r, true)).join('') || `<p class="sub">${t('none')}</p>`}</div>`;
+}
+
+/* ----- events ----- */
+app.addEventListener('click', async e => {
+  const n = e.target.closest && e.target.closest('[data-apx],[data-ckin],[data-ckout],[data-siteaddr],[data-sitehere],[data-usehist],[data-wktest],[data-auf]'); if (!n) return;
+  const d = n.dataset; if (n.disabled) return;
+  try {
+    if (d.auf) { auFilter = d.auf; return render(); }
+    if (d.apx) {
+      const [id, st] = d.apx.split(':'); const hit = pendingExp().find(x => x.e.id === id); if (!hit) return;
+      let note = '';
+      if (st === 'rejected') { note = prompt(t('apxWhy')) ; if (note === null) return; note = note.trim().slice(0, 500); }
+      Object.assign(hit.e, await API.update('expenses', id, { approval: st, approval_note: note })); render();
+      S.toast(t(st === 'approved' ? 'apxOk' : 'apxRej'));
+    }
+    if (d.ckin) {
+      const b = B.find(x => x.project.id === d.ckin); n.disabled = true; n.textContent = t('ckLocating');
+      const [pos] = await Promise.all([geo(), siteFor(b)]);
+      const row = await API.insert('time_entries', { project_id: b.project.id, user_id: me.user_id, clock_in: new Date().toISOString(), work_date: S.today(), in_lat: pos.lat ?? null, in_lng: pos.lng ?? null });
+      b.time_entries.push(row); render();
+      S.toast(row.in_dist == null ? t(pos.lat == null ? 'ckInNoGps' : 'ckInNoSite') : row.in_dist <= NEAR ? t('ckInOk') : t('ckInFar').replace('{d}', distTxt(row.in_dist)));
+    }
+    if (d.ckout) await clockOut(new Date().toISOString(), n);
+    if ('siteaddr' in d) { cur.project.site_lat = null; n.disabled = true; const ok = await siteFor(cur); render(); S.toast(t(ok ? 'siteSaved' : 'siteNoAddr')); }
+    if ('sitehere' in d) { n.disabled = true; const pos = await geo(); if (pos.lat == null) { n.disabled = false; return S.toast(t('ckNoGps')); } await API.setSite(cur.project.id, pos.lat, pos.lng); cur.project.site_lat = pos.lat; cur.project.site_lng = pos.lng; render(); S.toast(t('siteSaved')); }
+    if (d.usehist) { const [m, h, s] = d.usehist.split(':').map(Number); await setTargets({ est_mat: m, est_hours: h, est_sub: s }); render(); S.toast(t('saved') + ' ✓'); }
+    if ('wktest' in d) { n.disabled = true; const r = await API.weeklyTest(); S.toast(r.email === 'sent' ? t('wkSentMail').replace('{e}', (r.to || []).join(', ')) : t('wkSentPush')); n.disabled = false; }
+  } catch (x) { fail(x); render(); }
+});
+async function clockOut(iso, btn) {
+  const o = OPEN(); if (!o) return; if (btn) { btn.disabled = true; btn.textContent = t('ckLocating'); }
+  const pos = await geo();
+  Object.assign(o.x, await API.update('time_entries', o.x.id, { clock_out: iso, out_lat: pos.lat ?? null, out_lng: pos.lng ?? null }));
+  render(); S.toast(t('ckOutOk').replace('{h}', hfmt(o.x.hours)));
+}
+app.addEventListener('submit', async e => {
+  if (e.target.id !== 'ckfix') return; e.preventDefault();
+  const o = OPEN(); if (!o) return; const [hh, mm] = ($('#ck-out').value || '17:00').split(':').map(Number);
+  const out = new Date(o.x.clock_in); out.setHours(hh, mm, 0, 0); if (out <= new Date(o.x.clock_in)) out.setDate(out.getDate() + 1);
+  try { await clockOut(out.toISOString()); } catch (x) { fail(x); }
+});
+
+S.addText({ckT:'Entrar a la obra',ckS:'Marca tu entrada al llegar y tu salida al irte. Las horas se cuentan solas y se guarda dónde estabas.',ckIn:'Entrar a la obra',ckOut:'Salir de la obra',ckOn:'En la obra desde las {t}',ckOnS:'Llevas {h}. Al irte, toca Salir.',ckOnP:'En la obra: {p}, desde las {t}',ckTapOut:'Toca para marcar tu salida.',ckElse:'Tienes la entrada abierta en {p}.',ckGo:'Ir ahí',ckForgot:'¿Olvidaste salir? ¿A qué hora saliste?',ckLocating:'Buscando ubicación...',
+ckInOk:'Entrada registrada en la obra ✓',ckInFar:'Entrada registrada, pero estás a {d} de la obra.',ckInNoGps:'Entrada registrada sin ubicación (el teléfono no la dio).',ckInNoSite:'Entrada registrada. La obra todavía no tiene ubicación para comparar.',ckOutOk:'Salida registrada: {h}',ckNoGps:'El teléfono no dio la ubicación. Revisa el permiso de ubicación.',
+ckAtSite:'en la obra',ckAway:'a {d}',ckNoLoc:'sin ubicación',ckInL:'Entrada',ckOutL:'Salida',ckNow:'ahora',siteT:'Ubicación de la obra',siteOk:'Guardada. Se usa para revisar que las entradas sean en la obra.',siteNo:'Todavía no hay ubicación. Búscala por la dirección o párate en la obra y toca "Estoy en la obra".',siteAddr:'Buscar por dirección',siteHere:'Estoy en la obra',siteSaved:'Ubicación de la obra guardada',siteNoAddr:'No encontré esa dirección. Usa "Estoy en la obra" cuando estés ahí.',
+apxT:'Gastos por aprobar',apxS:'Gastos de más de {a} que registró alguien que no es admin. Apruébalos o recházalos.',apxSMgr:'Gastos de más de {a} esperando que un admin los apruebe.',apxYes:'Aprobar',apxNo:'Rechazar',apxWhy:'¿Por qué lo rechazas? (se le avisa a quien lo registró)',apxOk:'Gasto aprobado',apxRej:'Gasto rechazado; se le avisó a quien lo registró',apx_pending:'Por aprobar',apx_rejected:'Rechazado',apxPendingToast:'Guardado. Es más de {a}, así que un admin lo tiene que aprobar.',
+approveOver:'Gastos que necesitan aprobación: más de ($)',approveHint:'Si un gerente registra un gasto mayor, le llega un aviso a los admins para aprobarlo. Vacío = sin límite.',weeklyOn:'Mandar el resumen semanal los lunes a las 7 a. m.',weeklyHint:'Llega como notificación a los admins y por correo si el correo está conectado.',
+wkT:'Esta semana',wkS:'Lo mismo que llega el lunes: últimos 7 días.',wkSend:'Mandármelo ahora',wkSentMail:'Resumen enviado a {e}',wkSentPush:'Resumen enviado como notificación. Para que también llegue por correo falta conectar el correo (te ayudo).',
+pxT:'Para cotizar: lo que cuesta de verdad cada tipo de trabajo',pxS:'Sale de los proyectos terminados. Úsalo para revisar si lo que te pagan en un presupuesto nuevo alcanza.',pxJobs:'Trabajos',pxMargin:'Margen real',pxMat:'Materiales',pxHours:'Horas por $1,000',pxSub:'Subcontratos',pxOver:'Vs. estimado',pxAvg:'promedio',pxHint:'Materiales y subcontratos son % del contrato. "Vs. estimado" = cuánto más (o menos) costó de lo que estimaste.',pxNone:'Cuando termines proyectos, aquí vas a ver cuánto cuesta de verdad cada tipo de trabajo.',
+pxSug:'Según {n} trabajo(s) de {s} terminados, para este contrato:',pxSugAll:'Según {n} trabajo(s) terminados (todavía no hay de {s}), para este contrato:',pxUse:'Usar como estimado',
+auT:'Historial de cambios',auS:'Quién cambió qué en este proyecto y cuándo.',auS2:'Quién cambió qué y cuándo, en todos los proyectos. Solo lo ven los admins.',au_insert:'agregó',au_update:'cambió',au_delete:'borró',auSystem:'Sistema',auDeleted:'Borrados',history:'Historial',hv_history:'Historial',
+auProject:'Proyecto',auExpense:'Gasto',auPayment:'Pago',auInvoice:'Factura',auBudget:'Presupuesto',auTargets:'Estimado',auChange:'Cambio de obra',auDoc:'Documento',auHours:'Horas',auItem:'Línea del estimado',auMilestone:'Pago programado',auTeam:'Equipo',auSettings:'Ajustes',
+f_approval:'Aprobación',f_approval_note:'Motivo',f_est_mat:'Materiales estimados',f_est_hours:'Horas estimadas',f_est_sub:'Subcontratos estimados',f_labor_rate:'Costo por hora',f_hours:'Horas',f_work_date:'Fecha',f_clock_in:'Entrada',f_clock_out:'Salida',f_contract_amount:'Contrato',f_review_status:'Revisión',f_assigned_to:'Asignado a',f_crew:'Cuadrilla',f_role:'Rol',f_active:'Activo',f_tax_cat:'Categoría de impuestos',f_receipt:'Recibo',f_est_cost:'Tu costo'
+}, {ckT:'Clock in at the job',ckS:'Clock in when you arrive and out when you leave. Hours count themselves and your location is saved.',ckIn:'Clock in',ckOut:'Clock out',ckOn:'On site since {t}',ckOnS:'{h} so far. Tap Clock out when you leave.',ckOnP:'On site: {p}, since {t}',ckTapOut:'Tap to clock out.',ckElse:'You are still clocked in at {p}.',ckGo:'Go there',ckForgot:'Forgot to clock out? What time did you leave?',ckLocating:'Finding location...',
+ckInOk:'Clocked in at the job site ✓',ckInFar:'Clocked in, but you are {d} from the job site.',ckInNoGps:'Clocked in without location (the phone did not give it).',ckInNoSite:'Clocked in. The job has no location yet to compare.',ckOutOk:'Clocked out: {h}',ckNoGps:'The phone did not give a location. Check the location permission.',
+ckAtSite:'at the job',ckAway:'{d} away',ckNoLoc:'no location',ckInL:'In',ckOutL:'Out',ckNow:'now',siteT:'Job site location',siteOk:'Saved. Used to check that clock-ins happen at the job.',siteNo:'No location yet. Look it up by address, or stand at the job and tap "I am at the job".',siteAddr:'Find by address',siteHere:'I am at the job',siteSaved:'Job site location saved',siteNoAddr:'Could not find that address. Use "I am at the job" when you are there.',
+apxT:'Expenses to approve',apxS:'Expenses over {a} entered by someone who is not an admin. Approve or reject them.',apxSMgr:'Expenses over {a} waiting for an admin to approve them.',apxYes:'Approve',apxNo:'Reject',apxWhy:'Why are you rejecting it? (the person who entered it is notified)',apxOk:'Expense approved',apxRej:'Expense rejected; the person who entered it was notified',apx_pending:'To approve',apx_rejected:'Rejected',apxPendingToast:'Saved. It is over {a}, so an admin has to approve it.',
+approveOver:'Expenses that need approval: over ($)',approveHint:'If a manager enters a larger expense, the admins get an alert to approve it. Empty = no limit.',weeklyOn:'Send the weekly summary on Mondays at 7 a.m.',weeklyHint:'Admins get it as a notification, and by email once email is connected.',
+wkT:'This week',wkS:'The same as the Monday summary: last 7 days.',wkSend:'Send it to me now',wkSentMail:'Summary sent to {e}',wkSentPush:'Summary sent as a notification. To also get it by email, email still needs to be connected (I can help).',
+pxT:'For quoting: what each type of work really costs',pxS:'Taken from finished projects. Use it to check whether a new budget pays enough.',pxJobs:'Jobs',pxMargin:'Real margin',pxMat:'Materials',pxHours:'Hours per $1,000',pxSub:'Subcontracts',pxOver:'Vs. estimate',pxAvg:'average',pxHint:'Materials and subcontracts are % of the contract. "Vs. estimate" = how much more (or less) it cost than you estimated.',pxNone:'As you finish projects, this shows what each type of work really costs.',
+pxSug:'Based on {n} finished {s} job(s), for this contract:',pxSugAll:'Based on {n} finished job(s) (no {s} yet), for this contract:',pxUse:'Use as estimate',
+auT:'Change history',auS:'Who changed what on this project, and when.',auS2:'Who changed what and when, across all projects. Only admins see it.',au_insert:'added',au_update:'changed',au_delete:'deleted',auSystem:'System',auDeleted:'Deleted',history:'History',hv_history:'History',
+auProject:'Project',auExpense:'Expense',auPayment:'Payment',auInvoice:'Invoice',auBudget:'Budget',auTargets:'Estimate',auChange:'Change order',auDoc:'Document',auHours:'Hours',auItem:'Estimate line',auMilestone:'Scheduled payment',auTeam:'Team',auSettings:'Settings',
+f_approval:'Approval',f_approval_note:'Reason',f_est_mat:'Estimated materials',f_est_hours:'Estimated hours',f_est_sub:'Estimated subcontracts',f_labor_rate:'Cost per hour',f_hours:'Hours',f_work_date:'Date',f_clock_in:'Clock in',f_clock_out:'Clock out',f_contract_amount:'Contract',f_review_status:'Review',f_assigned_to:'Assigned to',f_crew:'Crew',f_role:'Role',f_active:'Active',f_tax_cat:'Tax category',f_receipt:'Receipt',f_est_cost:'Your cost'
 });
 
 /* ---------- start ---------- */
