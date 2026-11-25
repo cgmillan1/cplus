@@ -9,28 +9,27 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 
 const URL_ = Deno.env.get("SUPABASE_URL")!;
 const admin = createClient(URL_, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-const ENV = (Deno.env.get("DOCUSIGN_ENV") ?? "demo").toLowerCase() === "prod" ? "prod" : "demo";
-const OAUTH = ENV === "prod" ? "account.docusign.com" : "account-d.docusign.com";
-const KEY = Deno.env.get("DOCUSIGN_INTEGRATION_KEY") ?? "";
-const USER = Deno.env.get("DOCUSIGN_USER_ID") ?? "";
-// Accept the key pasted with real line breaks, with "\n", or squeezed onto one line
-const PEM = (() => {
-  const raw = (Deno.env.get("DOCUSIGN_PRIVATE_KEY") ?? "").replace(/\\n/g, "\n").trim();
+// Read the secrets on every request, so a secret saved while the function is warm is picked up at once
+const env = (k: string) => (Deno.env.get(k) ?? "").trim();
+const cfgNow = () => {
+  const ENV = env("DOCUSIGN_ENV").toLowerCase() === "prod" ? "prod" : "demo";
+  const raw = env("DOCUSIGN_PRIVATE_KEY").replace(/\\n/g, "\n");
   const m = raw.match(/-----BEGIN ([A-Z ]*PRIVATE KEY)-----([\s\S]*?)-----END \1-----/);
-  if (!m) return raw;
-  const body = m[2].replace(/\s+/g, "");
-  return `-----BEGIN ${m[1]}-----\n${body.match(/.{1,64}/g)!.join("\n")}\n-----END ${m[1]}-----\n`;
-})();
+  const PEM = m ? `-----BEGIN ${m[1]}-----\n${m[2].replace(/\s+/g, "").match(/.{1,64}/g)!.join("\n")}\n-----END ${m[1]}-----\n` : raw;
+  return { ENV, OAUTH: ENV === "prod" ? "account.docusign.com" : "account-d.docusign.com", KEY: env("DOCUSIGN_INTEGRATION_KEY"), USER: env("DOCUSIGN_USER_ID"), PEM };
+};
 const APP_URL = Deno.env.get("APP_URL") ?? "https://cgmillan1.github.io/cplus/admin.html";
 const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { ...cors, "content-type": "application/json" } });
 const b64u = (b: Buffer | string) => Buffer.from(b).toString("base64").replace(/=+$/, "").replace(/\+/g, "-").replace(/\//g, "_");
-const configured = () => !!(KEY && USER && PEM.includes("PRIVATE KEY"));
-const consentUrl = () => `https://${OAUTH}/oauth/auth?response_type=code&scope=signature%20impersonation&client_id=${KEY}&redirect_uri=${encodeURIComponent(APP_URL)}`;
+const missing = () => { const c = cfgNow(); return [!c.KEY && "DOCUSIGN_INTEGRATION_KEY", !c.USER && "DOCUSIGN_USER_ID", !c.PEM.includes("PRIVATE KEY") && "DOCUSIGN_PRIVATE_KEY"].filter(Boolean) as string[]; };
+const configured = () => missing().length === 0;
+const consentUrl = () => { const c = cfgNow(); return `https://${c.OAUTH}/oauth/auth?response_type=code&scope=signature%20impersonation&client_id=${c.KEY}&redirect_uri=${encodeURIComponent(APP_URL)}`; };
 
-let tok: { at: string; exp: number; base: string; acct: string } | null = null;
+let tok: { at: string; exp: number; base: string; acct: string; key: string } | null = null;
 async function ds() {
-  if (tok && tok.exp > Date.now() + 60_000) return tok;
+  const { OAUTH, KEY, USER, PEM } = cfgNow();
+  if (tok && tok.key === KEY + USER && tok.exp > Date.now() + 60_000) return tok;
   const now = Math.floor(Date.now() / 1000);
   const head = b64u(JSON.stringify({ alg: "RS256", typ: "JWT" }));
   const body = b64u(JSON.stringify({ iss: KEY, sub: USER, aud: OAUTH, iat: now, exp: now + 3600, scope: "signature impersonation" }));
@@ -43,7 +42,7 @@ async function ds() {
   const want = Deno.env.get("DOCUSIGN_ACCOUNT_ID");
   const acc = (ui.accounts || []).find((a: { account_id: string; is_default: boolean }) => want ? a.account_id === want : a.is_default) || (ui.accounts || [])[0];
   if (!acc) throw new Error("no_account");
-  tok = { at: j.access_token, exp: Date.now() + (j.expires_in ?? 3600) * 1000, base: `${acc.base_uri}/restapi/v2.1/accounts/${acc.account_id}`, acct: acc.account_name };
+  tok = { at: j.access_token, exp: Date.now() + (j.expires_in ?? 3600) * 1000, base: `${acc.base_uri}/restapi/v2.1/accounts/${acc.account_id}`, acct: acc.account_name, key: KEY + USER };
   return tok;
 }
 async function api(path: string, init: RequestInit = {}) {
@@ -99,9 +98,9 @@ Deno.serve(async (req) => {
 
   try {
     if (b.action === "status") {
-      if (!configured()) return json({ ok: false, state: "setup", env: ENV });
-      try { const t = await ds(); return json({ ok: true, state: "ready", env: ENV, account: t.acct }); }
-      catch (e) { const code = (e as { code?: string }).code; return json({ ok: false, state: code === "consent_required" ? "consent" : "error", consent: consentUrl(), env: ENV, error: String(e) }); }
+      if (!configured()) return json({ ok: false, state: "setup", env: cfgNow().ENV, missing: missing() });
+      try { const t = await ds(); return json({ ok: true, state: "ready", env: cfgNow().ENV, account: t.acct }); }
+      catch (e) { const code = (e as { code?: string }).code; return json({ ok: false, state: code === "consent_required" ? "consent" : "error", consent: consentUrl(), env: cfgNow().ENV, error: String(e) }); }
     }
     if (!configured()) return json({ error: "not_configured" }, 409);
     const { data: doc } = await admin.from("documents").select("id, project_id, kind, envelope_id, signer_name, sign_status").eq("id", b.document_id).single();
