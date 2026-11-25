@@ -54,6 +54,11 @@
       if (error) { let m = error.message; try { const j = await error.context.json(); m = j.error || m; } catch (_) {} throw new Error(m); }
       return data;
     },
+    async esign(action, payload = {}) {
+      const { data, error } = await sb.functions.invoke('esign', { body: { action, ...payload } });
+      if (error) { let m = error.message, j = {}; try { j = await error.context.json(); m = j.error || m; } catch (_) {} throw Object.assign(new Error(m), j); }
+      return data;
+    },
     async insert(table, row) { return ok(await sb.from(table).insert(row).select().single()); },
     async insertMany(table, rows) { return rows.length ? ok(await sb.from(table).insert(rows).select()) : []; },
     async update(table, id, patch) { return ok(await sb.from(table).update(patch).eq('id', id).select().single()); },
