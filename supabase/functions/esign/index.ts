@@ -13,16 +13,19 @@ const admin = createClient(URL_, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 const env = (k: string) => (Deno.env.get(k) ?? "").trim();
 const cfgNow = () => {
   const ENV = env("DOCUSIGN_ENV").toLowerCase() === "prod" ? "prod" : "demo";
-  const raw = env("DOCUSIGN_PRIVATE_KEY").replace(/\\n/g, "\n");
-  const m = raw.match(/-----BEGIN ([A-Z ]*PRIVATE KEY)-----([\s\S]*?)-----END \1-----/);
-  const PEM = m ? `-----BEGIN ${m[1]}-----\n${m[2].replace(/\s+/g, "").match(/.{1,64}/g)!.join("\n")}\n-----END ${m[1]}-----\n` : raw;
-  return { ENV, OAUTH: ENV === "prod" ? "account.docusign.com" : "account-d.docusign.com", KEY: env("DOCUSIGN_INTEGRATION_KEY"), USER: env("DOCUSIGN_USER_ID"), PEM };
+  const raw = (env("DOCUSIGN_PRIVATE_KEY") || env("DOCUSIGN_RSA_PRIVATE_KEY") || env("DOCUSIGN_PRIVATE")).replace(/\\n/g, "\n").replace(/^["']|["']$/g, "");
+  const m = raw.match(/-----BEGIN ([A-Z ]*PRIVATE KEY)-----([\s\S]*?)(?:-----END [A-Z ]*PRIVATE KEY-----|$)/);
+  const wrap = (kind: string, b64: string) => `-----BEGIN ${kind}-----\n${b64.match(/.{1,64}/g)!.join("\n")}\n-----END ${kind}-----\n`;
+  const bodyOnly = raw.replace(/\s+/g, "");
+  // Accept: full PEM, PEM squeezed on one line, or only the base64 body (DocuSign keys are PKCS#1 "RSA PRIVATE KEY")
+  const PEM = m && m[2].replace(/\s+/g, "").length > 100 ? wrap(m[1], m[2].replace(/\s+/g, "")) : /^[A-Za-z0-9+/=]{200,}$/.test(bodyOnly) ? wrap("RSA PRIVATE KEY", bodyOnly) : raw;
+  return { ENV, OAUTH: ENV === "prod" ? "account.docusign.com" : "account-d.docusign.com", KEY: env("DOCUSIGN_INTEGRATION_KEY"), USER: env("DOCUSIGN_USER_ID"), PEM, RAWLEN: raw.length };
 };
 const APP_URL = Deno.env.get("APP_URL") ?? "https://cgmillan1.github.io/cplus/admin.html";
 const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { ...cors, "content-type": "application/json" } });
 const b64u = (b: Buffer | string) => Buffer.from(b).toString("base64").replace(/=+$/, "").replace(/\+/g, "-").replace(/\//g, "_");
-const missing = () => { const c = cfgNow(); return [!c.KEY && "DOCUSIGN_INTEGRATION_KEY", !c.USER && "DOCUSIGN_USER_ID", !c.PEM.includes("PRIVATE KEY") && "DOCUSIGN_PRIVATE_KEY"].filter(Boolean) as string[]; };
+const missing = () => { const c = cfgNow(); return [!c.KEY && "DOCUSIGN_INTEGRATION_KEY", !c.USER && "DOCUSIGN_USER_ID", !(c.PEM.includes("PRIVATE KEY") && c.PEM.length > 600) && (c.RAWLEN ? `DOCUSIGN_PRIVATE_KEY (llegó incompleta: ${c.RAWLEN} caracteres)` : "DOCUSIGN_PRIVATE_KEY")].filter(Boolean) as string[]; };
 const configured = () => missing().length === 0;
 const consentUrl = () => { const c = cfgNow(); return `https://${c.OAUTH}/oauth/auth?response_type=code&scope=signature%20impersonation&client_id=${c.KEY}&redirect_uri=${encodeURIComponent(APP_URL)}`; };
 
