@@ -472,3 +472,6 @@ label.drop{display:inline-flex!important;align-items:center;gap:8px;cursor:point
 @media(max-width:600px){header.nolang-m .seg{display:none}}
 .trow{grid-template-columns:minmax(0,1fr) 170px auto auto;align-items:center;gap:8px}
 @media(max-width:600px){.trow{grid-template-columns:1fr 1fr}.trow>div:first-child,.trow>select,.trow>.pill{grid-column:1/-1}.trow>.pill{justify-self:start}.trow .btn2{white-space:normal}.trow>span:empty{display:none}}
+.okline{color:var(--ok);font-weight:700;margin:8px 0 4px}
+.pushask{display:flex;gap:12px;align-items:center;flex-wrap:wrap;border-color:var(--cu)}
+.pushask>div:first-child{flex:1 1 240px}.pushask .sub{margin:4px 0 0}

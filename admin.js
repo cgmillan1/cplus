@@ -58,7 +58,7 @@ const topbar = () => S.header(`<span id="savedot" class="savedot" aria-live="pol
 function homeContractor() {
   const today = S.today(), lim = new Date(Date.now() + 14 * 864e5).toISOString().slice(0, 10);
   const up = B.flatMap(b => b.steps.filter(s => !s.done && s.due_date && s.due_date <= lim).map(s => ({ ...s, pt: b.project.title, late: s.due_date < today }))).sort((a, b) => a.due_date.localeCompare(b.due_date));
-  return topbar() + `<main><div class="wrap"><div class="secthead"><h1>${t('myProjects')}</h1></div>
+  return topbar() + `<main><div class="wrap"><div class="secthead"><h1>${t('myProjects')}</h1></div>${pushPrompt()}
   <div class="plist">${B.length ? B.map(b => { const c = S.calc(b), u = unseen(b), nx = b.steps.slice().sort((x, y) => (x.sort || 0) - (y.sort || 0)).find(s => !s.done); return `<button class="pcard" data-open="${b.project.id}">${u ? `<span class="badge">${u}</span>` : ''}
     <span class="who2">${esc(b.project.client_name || '·')}</span><h3>${esc(b.project.title || t('project'))}</h3><span class="pill st-${stOf(b.project)}">${t('st_' + stOf(b.project))}</span>
     <div class="bar"><i style="width:${c.pct}%"></i></div><small class="sub">${c.pct}% ${t('done')}</small>
@@ -89,11 +89,35 @@ function teamCard() {
   <button class="primary" type="submit" style="margin-top:12px">${t('addMember')}</button></form></div>`;
 }
 
+/* ---------- push notifications ---------- */
+let pushSt = 'unknown', pushKeyV = null;
+const isIOSd = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const isStandalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+async function curSub() { try { const r = await navigator.serviceWorker.getRegistration(); return r ? await r.pushManager.getSubscription() : null; } catch (_) { return null; } }
+async function pushRefresh() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) pushSt = isIOSd() && !isStandalone() ? 'ios' : 'unsupported';
+  else if (Notification.permission === 'denied') pushSt = 'denied';
+  else { const sub = await curSub(); pushSt = sub ? 'on' : 'off'; if (sub) API.savePush(sub.toJSON(), L).catch(() => {}); }
+  if (pushSt === 'off' && !pushKeyV) pushKeyV = await API.pushKey().catch(() => null);
+}
+const pushLater = () => { try { return !!localStorage.getItem('cplus-pushlater'); } catch (_) { return false; } };
+function pushCard() {
+  const why = t(staff() ? 'pushWhyStaff' : 'pushWhyCrew');
+  const body = pushSt === 'on' ? `<p class="okline">✓ ${t('pushOn')}</p><p class="sub">${why}</p><div class="acts"><button class="btn2" data-pushtest>${t('pushTest')}</button><button class="btn2" data-pushoff>${t('pushOffBtn')}</button></div>`
+    : pushSt === 'off' ? `<p class="sub">${why}</p><div class="acts"><button class="primary" data-pushon>${t('pushOnBtn')}</button></div>`
+    : pushSt === 'ios' ? `<p class="sub">${t('pushIOS')}</p><div class="acts"><button class="btn2" data-ioshint>${t('pushHowIOS')}</button></div>`
+    : pushSt === 'denied' ? `<p class="sub">${t('pushDenied')}</p>` : `<p class="sub">${t('pushNo')}</p>`;
+  return `<div class="card"><h2>${t('pushT')}</h2>${body}<div class="acts" style="margin-top:8px"><button class="btn2" data-pwa-install hidden>${t('installApp')}</button></div></div>`;
+}
+function pushPrompt() {
+  if (pushSt !== 'off' || pushLater() || !pushKeyV) return '';
+  return `<div class="card pushask"><div><b>${t('pushAskT')}</b><p class="sub">${t(staff() ? 'pushWhyStaff' : 'pushWhyCrew')}</p></div><div class="acts"><button class="primary" data-pushon>${t('pushOnBtn')}</button><button class="btn2" data-pushlater>${t('notNow')}</button></div></div>`;
+}
 function settingsView() {
   const back = `<button class="btn2" data-hv="projects">${t('back')}</button>`;
   const company = isAdmin() ? `<div class="card ed"><h2>${t('settings')}</h2><div class="grid2" style="margin-top:12px"><label>${t('company')}${fld('settings', settings, 'company')}</label><label>${t('cname')}${fld('settings', settings, 'contact_name')}</label><label>${t('phone')}${fld('settings', settings, 'phone', 'tel')}</label><label>${t('email')}${fld('settings', settings, 'email', 'email')}</label><label>${t('sharePct')}${fld('settings', { ...settings, share_pct: pct() }, 'share_pct', 'number')}</label></div><p class="hint">${t('shareHint')}</p></div>` : '';
   return topbar() + `<main><div class="wrap"><div class="secthead"><h1>${t('settingsNav')}</h1>${back}</div>
-  ${company}${isAdmin() ? teamCard() : ''}${accountCard()}
+  ${pushCard()}${company}${isAdmin() ? teamCard() : ''}${accountCard()}
   <div class="card"><h2>${t('lang')}</h2><div style="margin-top:10px">${S.langSeg()}</div></div>
   <p style="text-align:center;margin:22px 0"><button class="btn2 danger" data-logout>${t('logout')}</button></p></div></main>`;
 }
@@ -114,6 +138,7 @@ function home() {
   ${creating ? newForm() : ''}
   ${B.length ? `<div class="filters" role="group" aria-label="${t('status')}">${['all', ...STATUSES].map(s => `<button data-pf="${s}" class="${pfilter === s ? 'on' : ''}" aria-pressed="${pfilter === s}">${s === 'all' ? t('all') : t('st_' + s)} <span class="cnt">${s === 'all' ? AP.length : count(s)}</span></button>`).join('')}</div>` : ''}
   ${B.length && contractors().length ? `<div class="filters" role="group" aria-label="${t('assignedTo')}">${[['all', t('everyone')], ...contractors().map(m => [m.user_id, m.name]), ['none', t('unassigned')]].map(([v, l]) => `<button data-af="${v}" class="${afilter === v ? 'on' : ''}" aria-pressed="${afilter === v}">${esc(l)} <span class="cnt">${AP.filter(b => v === 'all' || (v === 'none' ? !b.project.assigned_to : b.project.assigned_to === v)).length}</span></button>`).join('')}</div>` : ''}
+  ${pushPrompt()}
   ${showInstall() ? `<div class="card" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><img src="icon-180.png" alt="" width="48" height="48" style="border-radius:11px"><div style="flex:1 1 220px"><b>${t('installT')}</b><p class="sub" style="margin:2px 0 0">${t('installS')}</p></div><button class="btn2" data-hideinstall>${t('hide')}</button></div>` : ''}
   ${B.length ? `<div class="kpis">${kpi(t('contracts'), sum('tot'))}${kpi(t('collected'), sum('paid'))}${kpi(t('receivable'), sum('bal'))}${kpi(t('spent'), sum('spent'))}${kpi(t('profit'), sum('profit'), sum('profit') < 0 ? 'neg' : 'pos', t('profitSub'))}</div>
   ${showShare() ? `<div class="kpis">${(() => { const sh = cs.map(shareOf), tot = k => sh.reduce((x, y) => x + y[k], 0); return kpi(`${t('share')} ${pct()}%`, tot('s'), '', t('shareOf')) + kpi(t('shareEarned'), tot('earned'), 'pos', t('shareEarnedSub')) + kpi(t('sharePending'), tot('pending')) + kpi(t('profitAfter'), tot('after'), tot('after') < 0 ? 'neg' : ''); })()}</div>` : ''}` : ''}
@@ -408,7 +433,7 @@ app.addEventListener('submit', async e => {
   try {
     if (id === 'loginf') {
       lastEmail = $('#em').value.trim(); const pw = $('#pw').value; busy = true; err = ''; render();
-      try { await API.signIn(lastEmail, pw); await loadAll(); view = 'home'; const h = location.hash.slice(1); busy = false; if (h && B.some(b => b.project.id === h)) return openProject(h); }
+      try { await API.signIn(lastEmail, pw); await loadAll(); view = 'home'; pushRefresh().then(() => { if (view === 'home') render(); }); const h = location.hash.slice(1); busy = false; if (h && B.some(b => b.project.id === h)) return openProject(h); }
       catch (x) { if (x.noaccess) view = 'noaccess'; else { err = x.message; view = 'login'; } }
       busy = false; return render();
     }
@@ -480,7 +505,7 @@ app.addEventListener('click', async e => {
   const guard = !(d.lang || d.ctab || d.photo || d.rc || d.af || 'home' in d || 'print' in d || 'first' in d || 'tologin' in d || 'google' in d || 'hidecreds' in d);
   if (guard) { b.dataset.busy = '1'; b.disabled = true; }
   try {
-    if (d.lang) { S.setLang(d.lang); render(); }
+    if (d.lang) { S.setLang(d.lang); render(); if (pushSt === 'on') curSub().then(x => x && API.pushLang(x.endpoint, d.lang)).catch(() => {}); }
     else if ('first' in d) { err = ''; view = 'first'; render(); }
     else if ('google' in d) { err = ''; try { await API.signInGoogle(); } catch (x) { err = x.message; render(); } }
     else if ('tologin' in d) { err = ''; view = 'login'; render(); }
@@ -629,7 +654,7 @@ async function makeSample() {
 /* =====================================================================
    v5 · proyectos recibidos, herramientas de obra (como CompanyCam) y gastos para taxes
    ===================================================================== */
-S.addText({gLogin:'Entrar con Google',orEmail:'o con tu correo',settingsNav:'Ajustes',lang:'Idioma',g_sum:'Resumen',g_money:'Dinero',g_work:'Obra',g_client:'Cliente',qaExpense:'Gasto',qaPay:'Pago del cliente',
+S.addText({installS:'En Safari toca Compartir y luego "Agregar a pantalla de inicio". Se abre como app y te pueden llegar notificaciones.',pushT:'Notificaciones',pushOn:'Notificaciones activadas en este dispositivo.',pushOnBtn:'Activar notificaciones',pushOffBtn:'Desactivar en este dispositivo',pushTest:'Enviar una prueba',pushSent:'Prueba enviada. Debe llegar en unos segundos.',pushWhyStaff:'Te avisamos cuando llegue un proyecto para revisar, un gasto pase el 90% del presupuesto, un cliente mande mensaje, entre una solicitud de cotización o la cuadrilla llene la bitácora.',pushWhyCrew:'Te avisamos cuando te asignen un proyecto o una tarea.',pushIOS:'En iPhone primero instala la app: en Safari toca Compartir y luego "Agregar a pantalla de inicio". Ábrela desde el ícono y vuelve aquí para activar las notificaciones.',pushHowIOS:'Cómo instalarla',pushDenied:'Las notificaciones están bloqueadas para este sitio. Actívalas en los ajustes del navegador o del teléfono.',pushNo:'Este navegador no permite notificaciones.',pushAskT:'¿Te aviso en el celular?',notNow:'Ahora no',installApp:'Instalar app',gLogin:'Entrar con Google',orEmail:'o con tu correo',settingsNav:'Ajustes',lang:'Idioma',g_sum:'Resumen',g_money:'Dinero',g_work:'Obra',g_client:'Cliente',qaExpense:'Gasto',qaPay:'Pago del cliente',
 
   hv_projects: 'Proyectos', hv_review: 'Por revisar', hv_feed: 'Actividad', hv_taxes: 'Gastos y taxes',
   search: 'Buscar proyecto, cliente, dirección o empresa', recvProject: 'Recibir proyecto', scanReceipt: 'Escanear factura',
@@ -677,7 +702,7 @@ S.addText({gLogin:'Entrar con Google',orEmail:'o con tu correo',settingsNav:'Aju
   scanReview: 'Revisa los datos antes de guardar', scanLow: 'No se leyó todo con seguridad: revisa el total y la fecha.', scanItems: 'Artículos leídos', saveExpense: 'Guardar gasto',
   scanSaved: 'Gasto guardado con su factura', scanAgain: 'Escanear otra', readFail: 'No se pudo leer la factura. Llena los datos a mano.',
   nReview1: '1 proyecto por revisar', nReview: '{n} proyectos por revisar', budgetCat: 'Categoría del budget', vendor: 'Tienda o proveedor', descr: 'Qué se compró'
-}, {gLogin:'Sign in with Google',orEmail:'or with your email',settingsNav:'Settings',lang:'Language',g_sum:'Overview',g_money:'Money',g_work:'Job',g_client:'Client',qaExpense:'Expense',qaPay:'Client payment',
+}, {installS:'In Safari tap Share, then "Add to Home Screen". It opens like an app and can get notifications.',pushT:'Notifications',pushOn:'Notifications are on for this device.',pushOnBtn:'Turn on notifications',pushOffBtn:'Turn off on this device',pushTest:'Send a test',pushSent:'Test sent. It should arrive in a few seconds.',pushWhyStaff:'We let you know when a project arrives for review, an expense passes 90% of a budget, a client sends a message, a quote request comes in or the crew fills in the daily log.',pushWhyCrew:'We let you know when you are assigned a project or a task.',pushIOS:'On iPhone, install the app first: in Safari tap Share, then "Add to Home Screen". Open it from the icon and come back here to turn on notifications.',pushHowIOS:'How to install',pushDenied:'Notifications are blocked for this site. Turn them on in your browser or phone settings.',pushNo:'This browser does not support notifications.',pushAskT:'Want alerts on your phone?',notNow:'Not now',installApp:'Install app',gLogin:'Sign in with Google',orEmail:'or with your email',settingsNav:'Settings',lang:'Language',g_sum:'Overview',g_money:'Money',g_work:'Job',g_client:'Client',qaExpense:'Expense',qaPay:'Client payment',
   hv_projects: 'Projects', hv_review: 'To review', hv_feed: 'Activity', hv_taxes: 'Expenses and taxes',
   search: 'Search project, client, address or company', recvProject: 'Receive project', scanReceipt: 'Scan receipt',
   recvT: 'Receive a project from another company', recvS: 'For jobs that arrive with their budget already set. The project manager reviews and approves it before work starts.',
@@ -1233,6 +1258,18 @@ app.addEventListener('submit', async e => {
 app.addEventListener('click', async e => {
   const b = e.target.closest('button'); if (!b) return; const d = b.dataset;
   try {
+    if ('pushon' in d) {
+      if (!pushKeyV) pushKeyV = await API.pushKey().catch(() => null);
+      if (!pushKeyV || !window.PWAKit) { S.toast(t('pushNo')); return; }
+      const r = await PWAKit.subscribePush(pushKeyV, sub => API.savePush(sub, L));
+      if (!r.ok && r.reason === 'denied') S.toast(t('pushDenied'));
+      await pushRefresh(); render(); if (pushSt === 'on') S.toast(t('pushOn'));
+      return;
+    }
+    if ('pushoff' in d) { const sub = await curSub(); if (sub) { await API.removePush(sub.endpoint).catch(() => {}); await sub.unsubscribe(); } await pushRefresh(); render(); return; }
+    if ('pushtest' in d) { await API.pushTest(); S.toast(t('pushSent')); return; }
+    if ('pushlater' in d) { try { localStorage.setItem('cplus-pushlater', '1'); } catch (_) {} render(); return; }
+    if ('ioshint' in d) { window.PWAKit && PWAKit.showIOSHint(true); return; }
     if (d.hv) { if (view !== 'home') { view = 'home'; cur = null; try { history.replaceState(null, '', location.pathname); } catch (_) {} } hview = d.hv; recv = false; if (hview === 'taxes' && !taxRows) return loadTax(); render(); scrollTo(0, 0); }
     else if ('recv' in d) { if (hview !== 'review' && hview !== 'projects') hview = 'review'; recv = true; render(); $('#recvf')?.scrollIntoView({ block: 'start' }); $('#rv-company')?.focus(); }
     else if ('cancelrecv' in d) { recv = false; render(); }
@@ -1305,6 +1342,7 @@ $('#rcfile').addEventListener('change', async e => {
     const s = await API.session();
     if (!s) { view = 'login'; return render(); }
     await loadAll(); view = 'home';
+    pushRefresh().then(() => { if (view === 'home') render(); });
     const h = location.hash.slice(1); if (h && B.some(b => b.project.id === h)) return openProject(h);
     render();
   } catch (x) { if (x.noaccess) view = 'noaccess'; else { err = x.message; view = 'login'; } render(); }

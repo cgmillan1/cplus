@@ -17,6 +17,14 @@
       const to = new URL('admin.html', location.href).href;
       ok(await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: to, queryParams: { prompt: 'select_account' } } }));
     },
+    async pushKey() { return ok(await sb.rpc('push_public_key')); },
+    async pushTest() { ok(await sb.rpc('push_test')); },
+    async savePush(sub, lang) {
+      const s = ok(await sb.auth.getSession()).session;
+      ok(await sb.from('push_subscriptions').upsert({ user_id: s.user.id, endpoint: sub.endpoint, p256dh: sub.keys.p256dh, auth: sub.keys.auth, lang, user_agent: navigator.userAgent.slice(0, 300) }, { onConflict: 'endpoint' }));
+    },
+    async pushLang(endpoint, lang) { ok(await sb.from('push_subscriptions').update({ lang }).eq('endpoint', endpoint)); },
+    async removePush(endpoint) { ok(await sb.from('push_subscriptions').delete().eq('endpoint', endpoint)); },
     async signOut() { await sb.auth.signOut(); },
 
     async getSettings() {
