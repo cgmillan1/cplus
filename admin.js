@@ -1011,25 +1011,25 @@ function dashView() {
   return `<div class="secthead"><h1>${t('dashT')}</h1></div><p class="sub">${t('dashS')}</p>
   <div class="filters dper" role="group" aria-label="${t('dPeriod')}">${per.map(([k, l]) => `<button data-dper="${k}" class="${dper === k ? 'on' : ''}" aria-pressed="${dper === k}">${l}</button>`).join('')}</div>
   <div class="kpis dkpis">${tile(t('dCollected'), d.rev, '', t('dCollectedS'))}${tile(t('dSpent'), d.spent, '', `${d.nExp} ${t('dExpN')}`)}${tile(t('dNet'), d.net, d.net < 0 ? 'neg' : 'pos', t('dNetS'))}${tile(t('dOwed'), d.owed, '', t('dOwedS'))}${tile(t('dWon'), d.won.reduce((a, b) => a + S.calc(b).tot, 0), '', `${d.won.length} ${t(d.won.length === 1 ? 'dProj1' : 'dProjN')}`)}${tile(t('dActive'), String(d.active.length), '', t('dActiveS'))}</div>
-  ${approvalsCard()}
+  <div class="dgrid">${approvalsCard()}
   ${att.length ? `<div class="card alerts"><h2>${t('dAttention')}</h2>${att.join('')}</div>` : ''}
   ${weekCard()}
   ${esignCard()}
+  ${(() => { const A = d.projs.filter(x => !x.done), W = A.filter(x => x.j.has), E = W.reduce((a, x) => a + x.j.estProfit, 0), F = W.reduce((a, x) => a + x.j.fProfit, 0), n = st => W.filter(x => x.j.st === st).length, no = A.length - W.length;
+    return A.length ? `<div class="card jcsum"><div class="top2"><h2>${t('dJcT')}</h2><button class="lnk" data-hv="crew">${t('hv_crew')} →</button></div><p class="sub">${t('dJcS')}</p>
+    ${W.length ? `<div class="kpis dkpis">${tile(t('dJcE'), E)}${tile(t('dJcF'), F, F < E - 0.5 ? 'neg' : 'pos', (F - E >= 0 ? '+' : '') + money(F - E))}${tile(t('jc_over'), String(n('over')), n('over') ? 'neg' : '', t('dProjN'))}${tile(t('jc_watch'), String(n('watch')), '', t('dProjN'))}</div>` : ''}
+    ${no ? `<p class="hint">${t('dJcNoEst').replace('{n}', no)}</p>` : ''}</div>` : ''; })()}
   <div class="card"><div class="top2"><h2>${t('dCashT')}</h2><span class="legend"><span><i class="sw b1"></i>${t('dCollected')}</span><span><i class="sw b2"></i>${t('dSpent')}</span></span></div><p class="sub">${t('dCashS')}</p>
   <div class="chartwrap">${cashChart(d.months)}<div class="ctip" hidden></div></div>${tbl}</div>
   <div class="cols"><div class="card"><h2>${t('dByCat')}</h2><p class="sub">${t('dByCatS')}</p>${d.byCat.length ? hbars(d.byCat.slice(0, 7).map(x => [x.l, x.v])) : `<p class="sub">${t('none')}</p>`}</div>
   ${agingCard()}</div>
   <div class="cols"><div class="card"><h2>${t('dByType')}</h2><p class="sub">${t('dByTypeS')}</p>${mtable(d.byType, r => t('svc_' + r.k), t('service'))}</div>
   <div class="card"><h2>${t('dByCo')}</h2><p class="sub">${t('dByCoS2')}</p>${mtable(d.byCo, r => r.k, t('dBuilder'))}</div></div>
-  ${(() => { const A = d.projs.filter(x => !x.done), W = A.filter(x => x.j.has), E = W.reduce((a, x) => a + x.j.estProfit, 0), F = W.reduce((a, x) => a + x.j.fProfit, 0), n = st => W.filter(x => x.j.st === st).length, no = A.length - W.length;
-    return A.length ? `<div class="card"><div class="top2"><h2>${t('dJcT')}</h2><button class="lnk" data-hv="crew">${t('hv_crew')} →</button></div><p class="sub">${t('dJcS')}</p>
-    ${W.length ? `<div class="kpis dkpis">${tile(t('dJcE'), E)}${tile(t('dJcF'), F, F < E - 0.5 ? 'neg' : 'pos', (F - E >= 0 ? '+' : '') + money(F - E))}${tile(t('jc_over'), String(n('over')), n('over') ? 'neg' : '', t('dProjN'))}${tile(t('jc_watch'), String(n('watch')), '', t('dProjN'))}</div>` : ''}
-    ${no ? `<p class="hint">${t('dJcNoEst').replace('{n}', no)}</p>` : ''}</div>` : ''; })()}
   ${priceCard()}
   <div class="card"><h2>${t('dProjT')}</h2><p class="sub">${t('dProjS')}</p>
   ${d.projs.map(x => `<button class="dproj" data-open="${x.b.project.id}"><div class="dp1"><b>${esc(x.b.project.title)}</b><span class="pill ${x.done ? '' : 'st-' + stOf(x.b.project)}">${t('st_' + stOf(x.b.project))}</span>${x.j.has ? jpill(x.j) : ''}</div>
     <div class="dp2"><span>${t('contract')} <b>${money(x.c.tot)}</b></span><span>${t('dSpent')} <b>${money(x.c.spent)}</b></span><span>${t('dProfitEst')} <b class="${x.profit < 0 ? 'neg' : 'pos'}">${money(x.profit)} · ${Math.round(x.pct)}%</b></span></div>
-    <div class="meter ${x.used > 100 ? 'over' : x.used >= 90 ? 'warn' : ''}"><i style="width:${Math.min(100, x.used)}%"></i></div><small class="sub">${Math.round(x.used)}% ${t(x.j.has ? 'dOfEst' : 'dOfBudget')}${x.j.has && x.j.estH ? ` · ${hfmt(x.j.hrs)} / ${hfmt(x.j.estH)}` : ''}${x.c.bal > 0 ? ` · ${t('dOwedShort')} ${money(x.c.bal)}` : ''}</small></button>`).join('') || `<p class="sub">${t('none')}</p>`}</div>`;
+    <div class="meter ${x.used > 100 ? 'over' : x.used >= 90 ? 'warn' : ''}"><i style="width:${Math.min(100, x.used)}%"></i></div><small class="sub">${Math.round(x.used)}% ${t(x.j.has ? 'dOfEst' : 'dOfBudget')}${x.j.has && x.j.estH ? ` · ${hfmt(x.j.hrs)} / ${hfmt(x.j.estH)}` : ''}${x.c.bal > 0 ? ` · ${t('dOwedShort')} ${money(x.c.bal)}` : ''}</small></button>`).join('') || `<p class="sub">${t('none')}</p>`}</div></div>`;
 }
 
 function hnav() {
@@ -1778,7 +1778,7 @@ function cCost() {
     ${jbar(t('jcLab').replace('{r}', money(j.rate)), j.estLab, j.labAct, money)}
     ${j.estSub || j.subAct ? jbar(t('jcSub'), j.estSub, j.subAct, money) : ''}
     ${jbar(t('jcTotal'), j.estCost, j.actCost, money)}</div>`;
-  return j.has ? head + cmp + siteCard() + hoursCard() + est : head + est + cmp + siteCard() + hoursCard();
+  return j.has ? head + `<div class="jcol"><div>${cmp}</div><div>${siteCard()}${est}</div></div>` + hoursCard() : head + `<div class="jcol"><div>${est}</div><div>${cmp}${siteCard()}</div></div>` + hoursCard();
 }
 
 function hoursCard() {
@@ -1855,8 +1855,8 @@ function crewView() {
   const un = AP.filter(b => !b.project.assigned_to), mgrs = team.filter(m => m.active && m.role === 'manager' && m.user_id !== me.user_id);
   return `<div class="secthead"><h1>${t('crewT')}</h1></div><p class="sub">${t('crewS')}</p>
   <div class="legend2 top"><span><i class="sw p"></i>${t('jcProg')}</span><span><i class="sw c"></i>${t('jcCostUsed')}</span></div>
-  ${cs.length ? cs.map(x => card(x.m, x.bs)).join('') : `<div class="card"><p class="sub">${t('crewNone')}</p></div>`}
-  ${un.length ? `<div class="card crewcard"><div class="cch"><span class="av lg">?</span><div class="cci"><h2>${t('unassigned')}</h2><small class="sub">${un.length} ${t(un.length === 1 ? 'dProj1' : 'dProjN')}</small></div></div>${un.map(b => crewProj(b, jc(b))).join('')}</div>` : ''}
+  <div class="crewgrid">${cs.length ? cs.map(x => card(x.m, x.bs)).join('') : `<div class="card"><p class="sub">${t('crewNone')}</p></div>`}
+  ${un.length ? `<div class="card crewcard"><div class="cch"><span class="av lg">?</span><div class="cci"><h2>${t('unassigned')}</h2><small class="sub">${un.length} ${t(un.length === 1 ? 'dProj1' : 'dProjN')}</small></div></div>${un.map(b => crewProj(b, jc(b))).join('')}</div>` : ''}</div>
   ${mgrs.length ? `<h2 class="sech">${t('crewMgrs')}</h2>${mgrs.map(m => card(m, AP, false)).join('')}` : ''}`;
 }
 

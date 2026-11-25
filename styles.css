@@ -608,7 +608,7 @@ td.neg,.neg{color:#b23a26}
 .hrsf label{display:grid;gap:6px;font-weight:600;font-size:15px}.hrsf .wide{grid-column:1/-1}
 .hrsf input,.hrsf select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);min-height:46px;font-size:16px;color:var(--ink)}
 .hrsf .primary{grid-column:1/-1;justify-self:start}
-.hbars2{display:grid;gap:8px;margin:14px 0 4px}.hb{display:grid;grid-template-columns:minmax(90px,30%) minmax(0,1fr) auto;gap:10px;align-items:center;font-size:15px}.hb .meter{margin:0}.hb i{background:var(--s1)!important}.hb b{font-variant-numeric:tabular-nums}
+.hbars2{display:grid;gap:8px;margin:14px 0 4px}.hbars2 .hb{display:grid;grid-template-columns:minmax(90px,30%) minmax(0,1fr) auto;gap:10px;align-items:center;font-size:15px}.hbars2 .hb .meter{margin:0}.hbars2 .hb i{background:var(--s1)!important}.hbars2 .hb b{font-variant-numeric:tabular-nums}
 .hlist{margin-top:10px}.hrow{display:grid;grid-template-columns:86px minmax(0,1fr) 44px;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
 .hrow time{color:var(--cu2);font-weight:600;font-size:14px}.hrow small{display:block;color:var(--mute);font-size:14px}
 .tppl{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
@@ -681,3 +681,24 @@ td.neg,.neg{color:#b23a26}
  .hnav button,.hnav:has(> :nth-child(5)) button,.hnav:has(> :nth-child(5)) button:nth-child(n+4){flex:0 0 auto;grid-column:auto;padding:9px 13px}
  .hnav button:last-child{margin-inline-end:28px}
 }
+
+/* desktop: side menu, wider dashboard, two columns */
+.dgrid,.jcol,.crewgrid{display:block}
+@media(min-width:1100px){
+ .top .wrap{max-width:1380px}
+ main .wrap:has(> .hnav){max-width:1380px;display:grid;grid-template-columns:236px minmax(0,1fr);column-gap:32px;align-items:start}
+ main .wrap:has(> .hnav) > *{grid-column:2;min-width:0}
+ main .wrap:has(> .hnav) > .hnav{grid-column:1;grid-row:1 / span 40;align-self:start;position:sticky;top:86px;display:flex;flex-direction:column;gap:2px;overflow:visible;-webkit-mask-image:none;mask-image:none;padding:8px;margin:0 0 18px}
+ main .wrap:has(> .hnav) > .hnav button{flex:none;display:flex;align-items:center;text-align:start;padding:11px 14px;margin:0;font-size:16px}
+ main .wrap:has(> .hnav) > .hnav .badge{margin-inline-start:auto}
+ .dgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;align-items:start}
+ .dgrid > *{grid-column:1 / -1;margin:0!important}
+ .dgrid > .cols{display:contents}.dgrid > .cols > .card{margin:0}
+ .dgrid > .apx:has(+ .alerts),.dgrid > .apx + .alerts,.dgrid > .escard:has(+ .jcsum),.dgrid > .escard + .jcsum{grid-column:auto}
+ .dkpis{grid-template-columns:repeat(6,minmax(0,1fr))}.jcsum .dkpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .ed .wrap,.cbar .wrap,.subbar .wrap{max-width:1180px}
+ .jcol{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;align-items:start}.jcol .card{margin-bottom:18px}
+ .crewgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;align-items:start}.crewgrid .card{margin:0}
+ .plist{grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}
+}
+@media(min-width:1500px){.crewgrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
