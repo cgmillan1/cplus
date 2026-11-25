@@ -53,7 +53,7 @@ function first() {
 }
 let noEmail = '';
 function noAccess() { return `<div class="lock"><div class="box">${S.MARK('l')}<h1>${t('noAccessT')}</h1><p>${t('noAccessS')}</p>${noEmail ? `<p><b>${esc(noEmail)}</b></p>` : ''}<button class="btn2" data-logout>${t('logout')}</button></div></div>`; }
-const topbar = () => S.header(`<span id="savedot" class="savedot" aria-live="polite"></span><button class="ghost" data-logout style="min-height:40px;padding:6px 12px">${t('logout')}</button>`, `<span class="role">${esc(me ? (me.name || '') + ' · ' + t('role_' + me.role) : t('contractor'))}</span>`);
+const topbar = () => S.header(`<span id="savedot" class="savedot" aria-live="polite"></span><button class="ghost gear${view === 'home' && hview === 'settings' ? ' on' : ''}" data-hv="settings" aria-label="${t('settingsNav')}" title="${t('settingsNav')}"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span class="gt">${t('settingsNav')}</span></button>`, `<span class="role">${esc(me ? (me.name || '') + ' · ' + t('role_' + me.role) : t('contractor'))}</span>`, 'nolang-m');
 
 function homeContractor() {
   const today = S.today(), lim = new Date(Date.now() + 14 * 864e5).toISOString().slice(0, 10);
@@ -64,7 +64,7 @@ function homeContractor() {
     <div class="bar"><i style="width:${c.pct}%"></i></div><small class="sub">${c.pct}% ${t('done')}</small>
     <dl>${b.project.address ? `<dt>${t('projAddress')}</dt><dd>${esc(b.project.address)}</dd>` : ''}${nx ? `<dt>${t('nextStep')}</dt><dd>${esc(nx.title)}</dd>` : ''}</dl></button>`; }).join('') : `<div class="card"><p class="sub">${t('noAssigned')}</p></div>`}</div>
   ${(() => { const mt = B.flatMap(b => b.tasks.filter(x => !x.done && x.assigned_to === me.user_id).map(x => ({ ...x, pt: b.project.title, pid: b.project.id }))); return mt.length ? `<div class="card" style="margin-top:18px"><h2>${t('myTasks')}</h2>${mt.map(x => `<button class="alrow" data-open="${x.pid}"><span><b>${esc(x.title)}</b><small>${esc(x.pt)}${x.due_date ? ' · ' + fdate(x.due_date) : ''}</small></span></button>`).join('')}</div>` : ''; })()}
-  <div class="cols" style="margin-top:18px"><div class="card week"><h2>${t('thisWeek')}</h2>${up.length ? `<ul>${up.map(s => `<li><time style="${s.late ? 'color:#d0503a' : ''}">${fdate(s.due_date)}</time><div><b>${esc(s.title)}</b><small>${esc(s.pt)}</small></div></li>`).join('')}</ul>` : `<p class="sub">${t('noUpcoming')}</p>`}</div>${accountCard()}</div>
+  <div class="cols" style="margin-top:18px"><div class="card week"><h2>${t('thisWeek')}</h2>${up.length ? `<ul>${up.map(s => `<li><time style="${s.late ? 'color:#d0503a' : ''}">${fdate(s.due_date)}</time><div><b>${esc(s.title)}</b><small>${esc(s.pt)}</small></div></li>`).join('')}</ul>` : `<p class="sub">${t('noUpcoming')}</p>`}</div></div>
   <div class="card"><h2>${t('feedT')}</h2>${feedHtml(events(B, 20))}</div>
   </div></main>`;
 }
@@ -78,7 +78,7 @@ function teamCard() {
   const roles = ['contractor', 'manager', 'admin'];
   const lc = lastCreated, msg = lc ? t('credsMsg').replace('{n}', lc.name.split(' ')[0]).replace('{u}', loginUrl()).replace('{e}', lc.email).replace('{p}', lc.password) : '';
   return `<div class="card"><h2>${t('team')}</h2><p class="sub">${t('teamSub')}</p>
-  ${team.map(m => `<div class="row" style="grid-template-columns:minmax(0,1fr) 170px auto auto;align-items:center;gap:8px"><div><b>${esc(m.name)}</b>${m.user_id === me.user_id ? ` <small class="sub">(${t('you')})</small>` : ''}<br><small class="sub">${esc(m.email)}</small></div>
+  ${team.map(m => `<div class="row trow"><div><b>${esc(m.name)}</b>${m.user_id === me.user_id ? ` <small class="sub">(${t('you')})</small>` : ''}<br><small class="sub">${esc(m.email)}</small></div>
     ${m.user_id === me.user_id ? `<span class="pill">${t('role_' + m.role)}</span>` : `<select data-setrole="${m.user_id}" aria-label="${t('roleL')}">${roles.map(r => `<option value="${r}"${m.role === r ? ' selected' : ''}>${t('role_' + r)}</option>`).join('')}</select>`}
     <button class="btn2" data-resetpw="${m.user_id}">${t('resetPw')}</button>${m.user_id === me.user_id ? '<span></span>' : `<button class="btn2 danger" data-rmm="${m.user_id}">${t('removeM')}</button>`}</div>`).join('')}
   ${lc ? `<div class="card" style="border-color:var(--cu);margin-top:14px"><b>${t('sendCreds')}</b><pre style="white-space:pre-wrap;font:inherit;margin:8px 0">${esc(msg)}</pre><div class="acts"><button class="primary" data-copylink="${esc(msg)}">${t('copy')}</button><a class="btn2" href="https://wa.me/?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">WhatsApp</a><button class="btn2" data-hidecreds>${t('done2')}</button></div></div>` : ''}
@@ -89,7 +89,16 @@ function teamCard() {
   <button class="primary" type="submit" style="margin-top:12px">${t('addMember')}</button></form></div>`;
 }
 
+function settingsView() {
+  const back = `<button class="btn2" data-hv="projects">${t('back')}</button>`;
+  const company = isAdmin() ? `<div class="card ed"><h2>${t('settings')}</h2><div class="grid2" style="margin-top:12px"><label>${t('company')}${fld('settings', settings, 'company')}</label><label>${t('cname')}${fld('settings', settings, 'contact_name')}</label><label>${t('phone')}${fld('settings', settings, 'phone', 'tel')}</label><label>${t('email')}${fld('settings', settings, 'email', 'email')}</label><label>${t('sharePct')}${fld('settings', { ...settings, share_pct: pct() }, 'share_pct', 'number')}</label></div><p class="hint">${t('shareHint')}</p></div>` : '';
+  return topbar() + `<main><div class="wrap"><div class="secthead"><h1>${t('settingsNav')}</h1>${back}</div>
+  ${company}${isAdmin() ? teamCard() : ''}${accountCard()}
+  <div class="card"><h2>${t('lang')}</h2><div style="margin-top:10px">${S.langSeg()}</div></div>
+  <p style="text-align:center;margin:22px 0"><button class="btn2 danger" data-logout>${t('logout')}</button></p></div></main>`;
+}
 function home() {
+  if (hview === 'settings') return settingsView();
   if (!staff()) return homeContractor();
   if (hview === 'review') return topbar() + `<main><div class="wrap">${hnav()}${reviewList()}</div></main>`;
   if (hview === 'feed') return topbar() + `<main><div class="wrap">${hnav()}<div class="secthead"><h1>${t('feedT')}</h1></div><p class="sub">${t('feedS')}</p><div class="card">${feedHtml(events(B))}</div></div></main>`;
@@ -117,8 +126,7 @@ function home() {
     <dl><dt>${t('contract')}</dt><dd>${money(c.tot)}</dd><dt>${t('collected')}</dt><dd>${money(c.paid)}</dd><dt>${t('spent')}</dt><dd>${money(c.spent)} ${t('of')} ${money(c.bud)}</dd><dt>${t('profit')}</dt><dd style="color:${c.profit < 0 ? '#b23a26' : 'var(--ok)'}">${money(c.profit)}</dd>${showShare() ? `<dt>${t('share')} ${pct()}%</dt><dd><b>${money(shareOf(c).s)}</b></dd><dt>${t('shareEarned')}</dt><dd>${money(shareOf(c).earned)}</dd>` : ''}</dl></button>`; }).join('')}</div>
   ${B.length ? '' : `<div class="card" style="text-align:center"><p class="sub">${t('none')}</p><button class="btn2" data-sample>${t('sampleProject')}</button></div>`}
   <div class="cols" style="margin-top:18px"><div class="card week"><h2>${t('thisWeek')}</h2>${up.length ? `<ul>${up.map(s => `<li><time style="${s.late ? 'color:#d0503a' : ''}">${fdate(s.due_date)}</time><div><b>${esc(s.title)}</b><small>${esc(s.pt)}</small></div></li>`).join('')}</ul>` : `<p class="sub">${t('noUpcoming')}</p>`}</div>
-  ${isAdmin() ? `<div class="card ed"><h2>${t('settings')}</h2><div class="grid2" style="margin-top:12px"><label>${t('company')}${fld('settings', settings, 'company')}</label><label>${t('cname')}${fld('settings', settings, 'contact_name')}</label><label>${t('phone')}${fld('settings', settings, 'phone', 'tel')}</label><label>${t('email')}${fld('settings', settings, 'email', 'email')}</label><label>${t('sharePct')}${fld('settings', { ...settings, share_pct: pct() }, 'share_pct', 'number')}</label></div><p class="hint">${t('shareHint')}</p></div>` : accountCard()}</div>
-  ${isAdmin() ? teamCard() + `<div class="cols">${accountCard()}</div>` : ''}
+</div>
   ${B.length ? `<p style="text-align:center"><button class="btn2" data-sample>${t('sampleProject')}</button></p>` : ''}
   </div></main>`;
 }
@@ -164,17 +172,25 @@ function project() {
     : { progress: cProgress, photos: cPhotos, checks: cChecks, logs: cLogs, materials: cMats, messages: cMsgs, info: cInfo };
   const TN = { photos: 'photosTab', checks: 'checksTab', logs: 'logsTab', review: 'review' };
   if (!tabs[ctab]) ctab = Object.keys(tabs)[0];
-  if (!staff()) return topbar() + `<nav class="cbar"><div class="wrap"><button data-home>${t('back')}</button>${Object.keys(tabs).map(k => `<button data-ctab="${k}" class="${ctab === k ? 'on' : ''}"${ctab === k ? ' aria-current="page"' : ''}>${t(TN[k] || k)}${k === 'messages' && u ? `<span class="badge">${u}</span>` : ''}</button>`).join('')}</div></nav>
+  const GR = staff() ? [['g_sum', ['dash', 'review']], ['g_money', ['estimate', 'money', 'pays', 'changes']], ['g_work', ['progress', 'photos', 'checks', 'logs', 'materials']], ['g_client', ['project', 'docs', 'messages']]]
+    : [['g_work', ['progress', 'photos', 'checks', 'logs', 'materials']], ['messages', ['messages']], ['info', ['info']]];
+  const groups = GR.map(([g, ks]) => [g, ks.filter(k => tabs[k])]).filter(([, ks]) => ks.length);
+  const curG = groups.find(([, ks]) => ks.includes(ctab)) || groups[0];
+  const bdg = k => (k === 'review' && rvOf(p) === 'review' ? '<span class="badge">!</span>' : '') + (k === 'messages' && u ? `<span class="badge">${u}</span>` : '');
+  const tl = k => k === 'project' && staff() ? t('clientTab') : t(TN[k] || k);
+  const nav = `<nav class="cbar"><div class="wrap"><button data-home class="bk" aria-label="${t('back')}"><span aria-hidden="true">←</span><span class="bkt">${t('back').replace(/^←\s*/, '')}</span></button>${groups.map(([g, ks]) => `<button data-ctab="${ks[0]}" class="${curG[0] === g ? 'on' : ''}"${curG[0] === g ? ' aria-current="page"' : ''}>${t(g)}${ks.map(bdg).join('')}</button>`).join('')}</div></nav>
+  ${curG[1].length > 1 ? `<nav class="subbar" aria-label="${t(curG[0])}"><div class="wrap">${curG[1].map(k => `<button data-ctab="${k}" class="${ctab === k ? 'on' : ''}"${ctab === k ? ' aria-current="true"' : ''}>${tl(k)}${bdg(k)}</button>`).join('')}</div></nav>` : ''}`;
+  if (!staff()) return topbar() + nav + `
   <main class="ed"><div class="wrap"><div class="phead"><h1 class="titleinp" style="border:0">${esc(p.title || t('project'))}</h1><span class="pill st-${stOf(p)}">${t('st_' + stOf(p))}</span></div>
   <div class="pclient"><b>${esc(p.client_name || '·')}</b>${p.client_phone ? `<a href="tel:+${S.intl(p.client_phone)}">${esc(p.client_phone)}</a>` : ''}${p.address ? `<span>${esc(p.address)}</span>` : ''}</div>
   ${tabs[ctab]()}</div></main>`;
-  return topbar() + `<nav class="cbar"><div class="wrap"><button data-home>${t('back')}</button>${Object.keys(tabs).map(k => `<button data-ctab="${k}" class="${ctab === k ? 'on' : ''}"${ctab === k ? ' aria-current="page"' : ''}>${k === 'project' ? t('clientTab') : t(TN[k] || k)}${k === 'review' && rvOf(p) === 'review' ? '<span class="badge">!</span>' : ''}${k === 'messages' && u ? `<span class="badge">${u}</span>` : ''}</button>`).join('')}</div></nav>
+  return topbar() + nav + `
   <main class="ed"><div class="wrap"><div class="phead"><label class="sr" for="ptitle-top">${t('ptitle')}</label><input id="ptitle-top" class="titleinp" data-t="projects" data-id="${p.id}" data-f="title" value="${esc(p.title)}" placeholder="${t('ptitleEx')}" maxlength="200">
   <label class="stlab"><span class="sr">${t('status')}</span><select class="stsel2 st-${stOf(p)}" data-t="projects" data-id="${p.id}" data-f="status">${STATUSES.map(s => `<option value="${s}"${stOf(p) === s ? ' selected' : ''}>${t('st_' + s)}</option>`).join('')}</select></label></div>
   <div class="pclient"><b>${esc(p.client_name || '·')}</b>${p.client_phone ? `<a href="tel:+${S.intl(p.client_phone)}">${esc(p.client_phone)}</a>` : ''}${p.client_email ? `<a href="mailto:${esc(p.client_email)}">${esc(p.client_email)}</a>` : ''}${p.address ? `<span>${esc(p.address)}</span>` : ''}<button class="btn2 editbtn" data-ctab="project" data-focus="client_name"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16zM14 6l4 4"/></svg>${t('editClient')}</button></div>
   ${rvOf(p) !== 'approved' && ctab !== 'review' ? `<button class="card rvbanner rv-${rvOf(p)}" data-ctab="review"><b>${t('rv_' + rvOf(p))}${p.source_company ? ' · ' + esc(p.source_company) : ''}</b><span>${t('reviewBtn')} →</span></button>` : ''}
-  ${ctab === 'dash' || ctab === 'project' ? crewCard(p) : ''}
-  ${rvOf(p) === 'approved' && (ctab === 'dash' || ctab === 'project') ? shareBar(p) : ''}${tabs[ctab]()}</div></main>`;
+  ${ctab === 'project' ? crewCard(p) : ''}
+  ${rvOf(p) === 'approved' && ctab === 'project' ? shareBar(p) : ''}${tabs[ctab]()}</div></main>`;
 }
 function buyForm() {
   return `<div class="card"><div class="secthead" style="margin:0"><h2 style="margin-inline-end:auto">${t('logBuy')}</h2><button class="primary cam" type="button" data-scan="${cur.project.id}">${camIco}${t('scanReceipt')}</button></div><form class="form" id="buyf" style="margin-top:12px">
@@ -206,7 +222,7 @@ function cDash() {
   const banner = stOf(cur.project) === 'estimate_accepted' && !cur.documents.some(x => x.kind === 'contract' && x.status !== 'void') ? `<div class="card" style="border-color:var(--cu);display:flex;gap:12px;align-items:center;flex-wrap:wrap"><b style="flex:1 1 260px">${t('contractBanner')}</b><button class="primary" data-ctab="docs">${t('goDocs')}</button></div>` : '';
   return banner + budgetHealth(c) + `<div class="kpis">${kpi(t('contract'), c.tot)}${kpi(t('collected'), c.paid)}${kpi(t('receivable'), c.bal)}${kpi(t('budget'), c.bud)}${kpi(t('spent'), c.spent, '', (c.bud ? Math.round(c.spent / c.bud * 100) : 0) + '% ' + t('of') + ' ' + t('budget').toLowerCase())}${kpi(t('left'), c.left, c.left < 0 ? 'neg' : '')}${kpi(t('profit'), c.profit, c.profit < 0 ? 'neg' : 'pos', t('profitSub'))}</div>
   ${showShare() ? `<div class="kpis">${(() => { const sh = shareOf(c); return kpi(`${t('share')} ${pct()}%`, sh.s, '', t('shareOf')) + kpi(t('shareEarned'), sh.earned, 'pos', t('shareEarnedSub')) + kpi(t('sharePending'), sh.pending) + kpi(t('profitAfter'), sh.after, sh.after < 0 ? 'neg' : ''); })()}</div>` : ''}
-  <div class="cols">${buyForm()}${payForm()}</div>
+  <div class="qacts"><button class="primary cam" data-scan="${cur.project.id}">${camIco}${t('scanReceipt')}</button><button class="btn2" data-ctab="money">+ ${t('qaExpense')}</button><button class="btn2" data-ctab="pays">+ ${t('qaPay')}</button></div>
   <div class="cols"><div class="card"><h2>${t('byCat')}</h2>${catBars(c)}</div><div class="card"><h2>${t('recent')}</h2>${expSorted().slice(0, 6).map(e => `<div class="mat"><div><b>${esc(e.description)}</b><small>${fdate(e.spent_on)} · ${esc(e.vendor)} · ${esc(catName(e.budget_id))}</small></div><span class="n">${money(e.amount)}</span></div>`).join('') || `<p class="sub">${t('none')}</p>`}</div></div>`;
 }
 const expSorted = () => cur.expenses.slice().sort((a, b) => String(b.spent_on).localeCompare(String(a.spent_on)));
@@ -613,7 +629,7 @@ async function makeSample() {
 /* =====================================================================
    v5 · proyectos recibidos, herramientas de obra (como CompanyCam) y gastos para taxes
    ===================================================================== */
-S.addText({gLogin:'Entrar con Google',orEmail:'o con tu correo',
+S.addText({gLogin:'Entrar con Google',orEmail:'o con tu correo',settingsNav:'Ajustes',lang:'Idioma',g_sum:'Resumen',g_money:'Dinero',g_work:'Obra',g_client:'Cliente',qaExpense:'Gasto',qaPay:'Pago del cliente',
 
   hv_projects: 'Proyectos', hv_review: 'Por revisar', hv_feed: 'Actividad', hv_taxes: 'Gastos y taxes',
   search: 'Buscar proyecto, cliente, dirección o empresa', recvProject: 'Recibir proyecto', scanReceipt: 'Escanear factura',
@@ -661,7 +677,7 @@ S.addText({gLogin:'Entrar con Google',orEmail:'o con tu correo',
   scanReview: 'Revisa los datos antes de guardar', scanLow: 'No se leyó todo con seguridad: revisa el total y la fecha.', scanItems: 'Artículos leídos', saveExpense: 'Guardar gasto',
   scanSaved: 'Gasto guardado con su factura', scanAgain: 'Escanear otra', readFail: 'No se pudo leer la factura. Llena los datos a mano.',
   nReview1: '1 proyecto por revisar', nReview: '{n} proyectos por revisar', budgetCat: 'Categoría del budget', vendor: 'Tienda o proveedor', descr: 'Qué se compró'
-}, {gLogin:'Sign in with Google',orEmail:'or with your email',
+}, {gLogin:'Sign in with Google',orEmail:'or with your email',settingsNav:'Settings',lang:'Language',g_sum:'Overview',g_money:'Money',g_work:'Job',g_client:'Client',qaExpense:'Expense',qaPay:'Client payment',
   hv_projects: 'Projects', hv_review: 'To review', hv_feed: 'Activity', hv_taxes: 'Expenses and taxes',
   search: 'Search project, client, address or company', recvProject: 'Receive project', scanReceipt: 'Scan receipt',
   recvT: 'Receive a project from another company', recvS: 'For jobs that arrive with their budget already set. The project manager reviews and approves it before work starts.',
@@ -1217,7 +1233,7 @@ app.addEventListener('submit', async e => {
 app.addEventListener('click', async e => {
   const b = e.target.closest('button'); if (!b) return; const d = b.dataset;
   try {
-    if (d.hv) { hview = d.hv; recv = false; if (hview === 'taxes' && !taxRows) return loadTax(); render(); scrollTo(0, 0); }
+    if (d.hv) { if (view !== 'home') { view = 'home'; cur = null; try { history.replaceState(null, '', location.pathname); } catch (_) {} } hview = d.hv; recv = false; if (hview === 'taxes' && !taxRows) return loadTax(); render(); scrollTo(0, 0); }
     else if ('recv' in d) { if (hview !== 'review' && hview !== 'projects') hview = 'review'; recv = true; render(); $('#recvf')?.scrollIntoView({ block: 'start' }); $('#rv-company')?.focus(); }
     else if ('cancelrecv' in d) { recv = false; render(); }
     else if (d.openrv) { ctab = 'review'; openProject(d.openrv); }
