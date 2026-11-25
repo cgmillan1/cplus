@@ -412,7 +412,7 @@ app.addEventListener('change', async e => {
   if (d.setrole) { try { const r = await API.setRole(d.setrole, n.value); Object.assign(team.find(m => m.user_id === d.setrole), r); S.toast(t('saved') + ' ✓'); } catch (x) { fail(x); } return render(); }
   if (!d.f) return;
   let v = n.type === 'checkbox' ? n.checked : n.value;
-  if (n.type === 'number') v = v === '' ? 0 : +v;
+  if (n.type === 'number') v = v === '' ? (d.f === 'est_cost' ? null : 0) : +v;
   if (n.type === 'date' && !v) v = null;
   if ((d.f === 'budget_id' || d.f === 'assigned_to') && !v) v = null;
   if (d.t === 'projects' && (d.f === 'client_phone' || d.f === 'client_phone2') && v) { if (!S.phoneOk(v)) { S.toast(t('errPhone')); n.setAttribute('aria-invalid', 'true'); return n.focus(); } v = S.fmtPhone(v); n.value = v; n.removeAttribute('aria-invalid'); }
@@ -654,7 +654,7 @@ async function makeSample() {
 /* =====================================================================
    v5 · proyectos recibidos, herramientas de obra (como CompanyCam) y gastos para taxes
    ===================================================================== */
-S.addText({installS:'En Safari toca Compartir y luego "Agregar a pantalla de inicio". Se abre como app y te pueden llegar notificaciones.',pushT:'Notificaciones',pushOn:'Notificaciones activadas en este dispositivo.',pushOnBtn:'Activar notificaciones',pushOffBtn:'Desactivar en este dispositivo',pushTest:'Enviar una prueba',pushSent:'Prueba enviada. Debe llegar en unos segundos.',pushWhyStaff:'Te avisamos cuando llegue un proyecto para revisar, un gasto pase el 90% del presupuesto, un cliente mande mensaje, entre una solicitud de cotización o la cuadrilla llene la bitácora.',pushWhyCrew:'Te avisamos cuando te asignen un proyecto o una tarea.',pushIOS:'En iPhone primero instala la app: en Safari toca Compartir y luego "Agregar a pantalla de inicio". Ábrela desde el ícono y vuelve aquí para activar las notificaciones.',pushHowIOS:'Cómo instalarla',pushDenied:'Las notificaciones están bloqueadas para este sitio. Actívalas en los ajustes del navegador o del teléfono.',pushNo:'Este navegador no permite notificaciones.',pushAskT:'¿Te aviso en el celular?',notNow:'Ahora no',installApp:'Instalar app',gLogin:'Entrar con Google',orEmail:'o con tu correo',settingsNav:'Ajustes',lang:'Idioma',g_sum:'Resumen',g_money:'Dinero',g_work:'Obra',g_client:'Cliente',qaExpense:'Gasto',qaPay:'Pago del cliente',
+S.addText({rvaT:"Análisis del presupuesto",rvaS:"Revisa números y alcance antes de aprobar. No adivina precios del mercado: compara lo que te pagan contra lo que tú calculas que te va a costar.",rvaEst:"Tu costo estimado",rvaProfit:"Ganancia estimada",rvaMargin:"margen",rvaLine:"Línea",rvaRecv:"Te pagan",rvaOur:"Tu costo",rvaOurPh:"¿Cuánto te cuesta?",rvaLeft:"Te queda",rvaNoLines:"El proyecto no tiene líneas de presupuesto.",rvaSum:"Las líneas suman {a} y el contrato es {b}. Diferencia: {c}.",rvaLoss:"{l}: te cuesta {m} más de lo que te pagan.",rvaThin:"{l}: solo te queda {p}% en esta línea.",rvaNoEst:"Falta tu costo en {n} línea(s). Mientras tanto se cuenta lo que te pagan, así que la ganancia puede ser menor.",rvaZero:"{l}: la línea está en $0.",rvaDup:"{l} aparece dos veces.",rvaMissing:"No veo línea para: {l}. Puede estar dentro de otra línea; confírmalo.",rvaHist:"{l}: en {n} proyectos terminados gastaste en promedio {p}% más de lo que te pagaron.",rvaHistOn:"También compara con lo que de verdad gastaste en proyectos terminados.",rvaHistOff:"Cuando termines más proyectos, aquí también verás cuánto gastaste de verdad en cada tipo de línea.",rvaClean:"No encontré problemas en los números.",rvqT:"Preguntas para la empresa",rvqIntro:"Hola, antes de aprobar el proyecto tenemos estas preguntas:",rvqSum:"Las líneas del presupuesto no suman el total del contrato (diferencia de {c}). ¿Qué cubre esa diferencia?",rvqMissing:"¿Dónde está incluido {l}?",rvaConfirm:"El margen es de {p}% y hay {n} alerta(s) en rojo. ¿Aprobar de todos modos?",rvaFlag1:"alerta",rvaFlags:"alertas",sc_demo:"Demolición",sc_disposal:"Basura o dumpster",sc_permits:"Permisos",sc_plumbing:"Plomería",sc_electrical:"Electricidad",sc_framing:"Framing",sc_drywall:"Drywall",sc_paint:"Pintura",sc_flooring:"Pisos",sc_tile:"Azulejo",sc_insulation:"Aislante",sc_hvac:"Calefacción y aire (HVAC)",sc_concrete:"Concreto o zapatas",sc_cabinets:"Gabinetes",sc_counters:"Cubiertas",sc_contingency:"Contingencia",sc_cleanup:"Limpieza",installS:'En Safari toca Compartir y luego "Agregar a pantalla de inicio". Se abre como app y te pueden llegar notificaciones.',pushT:'Notificaciones',pushOn:'Notificaciones activadas en este dispositivo.',pushOnBtn:'Activar notificaciones',pushOffBtn:'Desactivar en este dispositivo',pushTest:'Enviar una prueba',pushSent:'Prueba enviada. Debe llegar en unos segundos.',pushWhyStaff:'Te avisamos cuando llegue un proyecto para revisar, un gasto pase el 90% del presupuesto, un cliente mande mensaje, entre una solicitud de cotización o la cuadrilla llene la bitácora.',pushWhyCrew:'Te avisamos cuando te asignen un proyecto o una tarea.',pushIOS:'En iPhone primero instala la app: en Safari toca Compartir y luego "Agregar a pantalla de inicio". Ábrela desde el ícono y vuelve aquí para activar las notificaciones.',pushHowIOS:'Cómo instalarla',pushDenied:'Las notificaciones están bloqueadas para este sitio. Actívalas en los ajustes del navegador o del teléfono.',pushNo:'Este navegador no permite notificaciones.',pushAskT:'¿Te aviso en el celular?',notNow:'Ahora no',installApp:'Instalar app',gLogin:'Entrar con Google',orEmail:'o con tu correo',settingsNav:'Ajustes',lang:'Idioma',g_sum:'Resumen',g_money:'Dinero',g_work:'Obra',g_client:'Cliente',qaExpense:'Gasto',qaPay:'Pago del cliente',
 
   hv_projects: 'Proyectos', hv_review: 'Por revisar', hv_feed: 'Actividad', hv_taxes: 'Gastos y taxes',
   search: 'Buscar proyecto, cliente, dirección o empresa', recvProject: 'Recibir proyecto', scanReceipt: 'Escanear factura',
@@ -702,7 +702,7 @@ S.addText({installS:'En Safari toca Compartir y luego "Agregar a pantalla de ini
   scanReview: 'Revisa los datos antes de guardar', scanLow: 'No se leyó todo con seguridad: revisa el total y la fecha.', scanItems: 'Artículos leídos', saveExpense: 'Guardar gasto',
   scanSaved: 'Gasto guardado con su factura', scanAgain: 'Escanear otra', readFail: 'No se pudo leer la factura. Llena los datos a mano.',
   nReview1: '1 proyecto por revisar', nReview: '{n} proyectos por revisar', budgetCat: 'Categoría del budget', vendor: 'Tienda o proveedor', descr: 'Qué se compró'
-}, {installS:'In Safari tap Share, then "Add to Home Screen". It opens like an app and can get notifications.',pushT:'Notifications',pushOn:'Notifications are on for this device.',pushOnBtn:'Turn on notifications',pushOffBtn:'Turn off on this device',pushTest:'Send a test',pushSent:'Test sent. It should arrive in a few seconds.',pushWhyStaff:'We let you know when a project arrives for review, an expense passes 90% of a budget, a client sends a message, a quote request comes in or the crew fills in the daily log.',pushWhyCrew:'We let you know when you are assigned a project or a task.',pushIOS:'On iPhone, install the app first: in Safari tap Share, then "Add to Home Screen". Open it from the icon and come back here to turn on notifications.',pushHowIOS:'How to install',pushDenied:'Notifications are blocked for this site. Turn them on in your browser or phone settings.',pushNo:'This browser does not support notifications.',pushAskT:'Want alerts on your phone?',notNow:'Not now',installApp:'Install app',gLogin:'Sign in with Google',orEmail:'or with your email',settingsNav:'Settings',lang:'Language',g_sum:'Overview',g_money:'Money',g_work:'Job',g_client:'Client',qaExpense:'Expense',qaPay:'Client payment',
+}, {rvaT:"Budget check",rvaS:"Checks the numbers and scope before you approve. It does not guess market prices: it compares what you are paid with what you expect it to cost you.",rvaEst:"Your estimated cost",rvaProfit:"Estimated profit",rvaMargin:"margin",rvaLine:"Line",rvaRecv:"They pay",rvaOur:"Your cost",rvaOurPh:"What does it cost you?",rvaLeft:"You keep",rvaNoLines:"The project has no budget lines.",rvaSum:"The lines add up to {a} and the contract is {b}. Difference: {c}.",rvaLoss:"{l}: costs you {m} more than you are paid.",rvaThin:"{l}: you only keep {p}% on this line.",rvaNoEst:"Your cost is missing on {n} line(s). Until you add it, the amount paid is used, so profit may be lower.",rvaZero:"{l}: the line is $0.",rvaDup:"{l} appears twice.",rvaMissing:"No line for: {l}. It may be inside another line; confirm it.",rvaHist:"{l}: on {n} finished projects you spent {p}% more than you were paid, on average.",rvaHistOn:"It also compares with what you really spent on finished projects.",rvaHistOff:"As you finish more projects, this will also show what you really spent on each kind of line.",rvaClean:"No problems found in the numbers.",rvqT:"Questions for the company",rvqIntro:"Hi, before we approve the project we have these questions:",rvqSum:"The budget lines do not add up to the contract total (difference of {c}). What does that difference cover?",rvqMissing:"Where is {l} included?",rvaConfirm:"The margin is {p}% and there are {n} red alert(s). Approve anyway?",rvaFlag1:"alert",rvaFlags:"alerts",sc_demo:"Demolition",sc_disposal:"Dumpster or haul-off",sc_permits:"Permits",sc_plumbing:"Plumbing",sc_electrical:"Electrical",sc_framing:"Framing",sc_drywall:"Drywall",sc_paint:"Paint",sc_flooring:"Flooring",sc_tile:"Tile",sc_insulation:"Insulation",sc_hvac:"HVAC",sc_concrete:"Concrete or footings",sc_cabinets:"Cabinets",sc_counters:"Countertops",sc_contingency:"Contingency",sc_cleanup:"Cleanup",installS:'In Safari tap Share, then "Add to Home Screen". It opens like an app and can get notifications.',pushT:'Notifications',pushOn:'Notifications are on for this device.',pushOnBtn:'Turn on notifications',pushOffBtn:'Turn off on this device',pushTest:'Send a test',pushSent:'Test sent. It should arrive in a few seconds.',pushWhyStaff:'We let you know when a project arrives for review, an expense passes 90% of a budget, a client sends a message, a quote request comes in or the crew fills in the daily log.',pushWhyCrew:'We let you know when you are assigned a project or a task.',pushIOS:'On iPhone, install the app first: in Safari tap Share, then "Add to Home Screen". Open it from the icon and come back here to turn on notifications.',pushHowIOS:'How to install',pushDenied:'Notifications are blocked for this site. Turn them on in your browser or phone settings.',pushNo:'This browser does not support notifications.',pushAskT:'Want alerts on your phone?',notNow:'Not now',installApp:'Install app',gLogin:'Sign in with Google',orEmail:'or with your email',settingsNav:'Settings',lang:'Language',g_sum:'Overview',g_money:'Money',g_work:'Job',g_client:'Client',qaExpense:'Expense',qaPay:'Client payment',
   hv_projects: 'Projects', hv_review: 'To review', hv_feed: 'Activity', hv_taxes: 'Expenses and taxes',
   search: 'Search project, client, address or company', recvProject: 'Receive project', scanReceipt: 'Scan receipt',
   recvT: 'Receive a project from another company', recvS: 'For jobs that arrive with their budget already set. The project manager reviews and approves it before work starts.',
@@ -807,7 +807,7 @@ function reviewList() {
   const rej = B.filter(b => rvOf(b.project) === 'rejected' && matchQ(b));
   const row = b => { const p = b.project, bud = b.budget.reduce((a, x) => a + (+x.amount || 0), 0);
     return `<button class="pcard" data-openrv="${p.id}"><span class="who2">${esc(p.source_company || p.client_name || '·')}${p.source_ref ? ' · #' + esc(p.source_ref) : ''}</span><h3>${esc(p.title || t('project'))}</h3>
-    <span class="pill rv-${rvOf(p)}">${t('rv_' + rvOf(p))}</span><dl><dt>${t('contractAmt')}</dt><dd><b>${money(p.contract_amount)}</b></dd><dt>${t('catsTotal')}</dt><dd>${money(bud)}</dd>${p.received_on ? `<dt>${t('receivedOn')}</dt><dd>${fdate(p.received_on)}</dd>` : ''}${p.address ? `<dt>${t('projAddress')}</dt><dd>${esc(p.address)}</dd>` : ''}</dl></button>`; };
+    <span class="pill rv-${rvOf(p)}">${t('rv_' + rvOf(p))}</span>${(() => { const a = rvAnalysis(b, p), n = a.flags.filter(x => x.lvl !== 'info').length; return ` <span class="pill lvl-${a.lvl}">${Math.round(a.pct)}% ${t('rvaMargin')}</span>${n ? ` <span class="pill">${n} ${t(n === 1 ? 'rvaFlag1' : 'rvaFlags')}</span>` : ''}`; })()}<dl><dt>${t('contractAmt')}</dt><dd><b>${money(p.contract_amount)}</b></dd><dt>${t('catsTotal')}</dt><dd>${money(bud)}</dd>${p.received_on ? `<dt>${t('receivedOn')}</dt><dd>${fdate(p.received_on)}</dd>` : ''}${p.address ? `<dt>${t('projAddress')}</dt><dd>${esc(p.address)}</dd>` : ''}</dl></button>`; };
   return `<div class="secthead"><h1>${t('pendingReview')}</h1><button class="primary" data-recv>${t('recvProject')}</button></div>${recv ? recvForm() : ''}
   <div class="plist">${list.map(row).join('') || `<div class="card"><p class="sub">${t('noReview')}</p></div>`}</div>
   ${rej.length ? `<h2 style="margin-top:22px">${t('rv_rejected')}</h2><div class="plist">${rej.map(row).join('')}</div>` : ''}`;
@@ -853,16 +853,82 @@ function feedHtml(evs, showProj = true) {
 }
 
 /* ---------- revisión del proyecto recibido ---------- */
+
+/* ---------- budget review: checks we can stand behind (no invented market prices) ---------- */
+const norm = x => String(x || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+const SCOPE = {
+  demo: ['demol', 'retiro', 'tear out', 'teardown'], disposal: ['dumpster', 'basura', 'escombro', 'disposal', 'haul', 'waste', 'desecho'],
+  permits: ['permiso', 'permit', 'inspecc', 'inspection'], plumbing: ['plomer', 'plumb'], electrical: ['electric'],
+  framing: ['framing', 'estructura', 'frame'], drywall: ['drywall', 'tablaroca', 'sheetrock'], paint: ['pintura', 'paint'],
+  flooring: ['piso', 'floor', 'lvp', 'alfombra', 'carpet'], tile: ['azulejo', 'tile', 'loseta'], insulation: ['aislante', 'insulat'],
+  hvac: ['hvac', 'calefac', 'ducto', 'duct', 'furnace'], concrete: ['concreto', 'concrete', 'footing', 'zapata', 'cimiento'],
+  cabinets: ['gabinete', 'cabinet'], counters: ['cubierta', 'countertop', 'cuarzo', 'granito', 'quartz', 'granite'],
+  contingency: ['contingen', 'imprevist'], cleanup: ['limpieza', 'clean']
+};
+const EXPECT = {
+  basement: ['framing', 'electrical', 'plumbing', 'insulation', 'drywall', 'paint', 'flooring', 'hvac', 'permits', 'disposal', 'contingency'],
+  remodel: ['demo', 'disposal', 'plumbing', 'electrical', 'tile', 'paint', 'permits', 'contingency'],
+  kitchen: ['demo', 'disposal', 'cabinets', 'counters', 'plumbing', 'electrical', 'paint', 'permits', 'contingency'],
+  deck: ['concrete', 'permits', 'contingency'], pergola: ['concrete', 'permits', 'contingency'],
+  tile: ['demo', 'tile', 'disposal'], flooring: ['demo', 'flooring', 'disposal'], repair: ['contingency'], other: ['permits', 'contingency']
+};
+const groupOf = cat => { const c = norm(cat); return Object.keys(SCOPE).find(k => SCOPE[k].some(w => c.includes(w))) || null; };
+function rvAnalysis(bdl, p) {
+  const lines = bdl.budget, contract = +p.contract_amount || 0;
+  const recv = lines.reduce((a, x) => a + (+x.amount || 0), 0);
+  const withEst = lines.filter(x => x.est_cost !== null && x.est_cost !== undefined && x.est_cost !== '');
+  const est = withEst.reduce((a, x) => a + (+x.est_cost || 0), 0) + lines.filter(x => !withEst.includes(x)).reduce((a, x) => a + (+x.amount || 0), 0);
+  const profit = contract - est, pct = contract ? profit / contract * 100 : 0;
+  const flags = [], qs = [];
+  const f = (lvl, txt) => flags.push({ lvl, txt });
+  if (!lines.length) f('red', t('rvaNoLines'));
+  if (lines.length && Math.abs(contract - recv) > .5) { f('amber', t('rvaSum').replace('{a}', money(recv)).replace('{b}', money(contract)).replace('{c}', money(contract - recv))); qs.push(t('rvqSum').replace('{c}', money(Math.abs(contract - recv)))); }
+  withEst.forEach(x => { const m = +x.amount - +x.est_cost;
+    if (m < 0) f('red', t('rvaLoss').replace('{l}', x.category || '·').replace('{m}', money(-m)));
+    else if (+x.amount > 0 && m / +x.amount < .1) f('amber', t('rvaThin').replace('{l}', x.category || '·').replace('{p}', Math.round(m / +x.amount * 100))); });
+  const noEst = lines.length - withEst.length;
+  if (noEst) f('info', t('rvaNoEst').replace('{n}', noEst));
+  lines.filter(x => !(+x.amount > 0)).forEach(x => f('amber', t('rvaZero').replace('{l}', x.category || '·')));
+  const seen = {}; lines.forEach(x => { const k = norm(x.category).trim(); if (k && seen[k]) f('amber', t('rvaDup').replace('{l}', x.category)); seen[k] = 1; });
+  const have = new Set(lines.map(x => groupOf(x.category)).filter(Boolean));
+  const miss = (EXPECT[p.service] || EXPECT.other).filter(g => !have.has(g));
+  if (miss.length) { f('info', t('rvaMissing').replace('{l}', miss.map(g => t('sc_' + g)).join(', '))); miss.forEach(g => qs.push(t('rvqMissing').replace('{l}', t('sc_' + g).toLowerCase()))); }
+  // C Plus history: finished projects, real spending vs what the builder paid per line
+  const hist = {};
+  B.filter(o => o.project.id !== p.id && rvOf(o.project) === 'approved' && stOf(o.project) === 'done').forEach(o => { const c = S.calc(o);
+    o.budget.forEach(x => { const g = groupOf(x.category); if (!g || !(+x.amount > 0)) return; (hist[g] = hist[g] || []).push(c.byCat(x.id) / +x.amount); }); });
+  const histNotes = [];
+  lines.forEach(x => { const g = groupOf(x.category), h = g && hist[g]; if (!h || h.length < 2) return;
+    const avg = h.reduce((a, y) => a + y, 0) / h.length;
+    if (avg > 1.05) { f('amber', t('rvaHist').replace('{l}', x.category).replace('{n}', h.length).replace('{p}', Math.round((avg - 1) * 100))); }
+    histNotes.push(x.category); });
+  const lvl = profit < 0 || pct < 10 ? 'red' : pct < 20 ? 'amber' : 'green';
+  return { contract, recv, est, profit, pct, lvl, flags, qs, noEst, histN: Object.values(hist).reduce((a, h) => Math.max(a, h.length), 0) };
+}
+function rvAnalysisCard(a) {
+  const ico = { red: '●', amber: '●', info: '○' };
+  const order = { red: 0, amber: 1, info: 2 };
+  const qtxt = a.qs.length ? t('rvqIntro') + '\n' + a.qs.map((q, i) => `${i + 1}. ${q}`).join('\n') : '';
+  return `<div class="card rva"><h2>${t('rvaT')}</h2><p class="sub">${t('rvaS')}</p>
+  <div class="rvamt lvl-${a.lvl}"><div><small>${t('contractAmt')}</small><b>${money(a.contract)}</b></div><div><small>${t('rvaEst')}</small><b>${money(a.est)}</b></div><div><small>${t('rvaProfit')}</small><b>${money(a.profit)}</b><em>${Math.round(a.pct)}% ${t('rvaMargin')}</em></div></div>
+  ${a.flags.length ? `<ul class="rvflags">${a.flags.sort((x, y) => order[x.lvl] - order[y.lvl]).map(x => `<li class="f-${x.lvl}"><span aria-hidden="true">${ico[x.lvl]}</span>${esc(x.txt)}</li>`).join('')}</ul>` : `<p class="okline">✓ ${t('rvaClean')}</p>`}
+  <p class="hint">${a.histN >= 2 ? t('rvaHistOn') : t('rvaHistOff')}</p>
+  ${qtxt ? `<details class="rvq"><summary>${t('rvqT')} (${a.qs.length})</summary><pre>${esc(qtxt)}</pre><button class="btn2" data-copylink="${esc(qtxt)}">${t('copy')}</button></details>` : ''}</div>`;
+}
+
 function cReview() {
   const p = cur.project, st = rvOf(p), c = S.calc(cur), bud = cur.budget.reduce((a, x) => a + (+x.amount || 0), 0), diff = (+p.contract_amount || 0) - bud;
   return `<div class="card rvcard rv-${st}"><div class="top2"><h2>${t('review')}</h2><span class="pill rv-${st}">${t('rv_' + st)}</span></div>
   <p class="sub">${st === 'review' ? t('reviewIntro') : `${t(st === 'approved' ? 'approvedBy' : 'rejectedBy')} ${esc(p.reviewed_by || '')} · ${fdate(p.reviewed_at)}`}</p>
   <div class="grid2" style="margin-top:12px"><label>${t('srcCompany')}${fld('projects', p, 'source_company')}</label><label>${t('srcRef')}${fld('projects', p, 'source_ref')}</label>
-  <label>${t('receivedOn')}${fld('projects', p, 'received_on', 'date')}</label><label>${t('contractAmt')}${fld('projects', p, 'contract_amount', 'number')}</label></div>
+  <label>${t('receivedOn')}${fld('projects', p, 'received_on', 'date')}</label><label>${t('contractAmt')}${fld('projects', p, 'contract_amount', 'number')}</label>
+  <label>${t('service')}${sel('projects', { ...p, service: p.service || 'other' }, 'service', S.SERVICES.map(s => [s, t('svc_' + s)]))}</label></div>
   <div class="linkbox" style="margin-top:10px">${p.budget_file ? `<button class="btn2" data-rcv="${esc(p.budget_file)}">${t('viewFile')}</button>` : ''}<button class="btn2" data-upbud>${t('upFile')}</button></div></div>
   <div class="card"><h2>${t('budgetLines')}</h2><p class="sub">${t('catsTotal')}: <b>${money(bud)}</b> · ${t('contractAmt')}: <b>${money(p.contract_amount)}</b>${Math.abs(diff) > .5 ? ` · <span style="color:#b23a26;font-weight:600">${t('unassignedAmt')}: ${money(diff)}</span>` : ''}</p>
-  ${Math.abs(diff) > .5 && bud > 0 ? `<p class="hint" style="color:#b23a26">${t('diffWarn')}</p>` : ''}
-  ${sorted('budget').map(b => `<div class="row r-bud">${fld('budget', b, 'category', 'text', 'ct')}${fld('budget', b, 'amount', 'number', 'am')}<span class="spent">${money(c.byCat(b.id))}</span>${del('budget', b.id)}</div>`).join('')}<button class="add" data-add="budget">${t('addCat')}</button></div>
+  <div class="rvhead" aria-hidden="true"><span>${t('rvaLine')}</span><span>${t('rvaRecv')}</span><span>${t('rvaOur')}</span><span>${t('rvaLeft')}</span><span></span></div>
+  ${sorted('budget').map(b => { const has = b.est_cost !== null && b.est_cost !== undefined && b.est_cost !== '', m = has ? +b.amount - +b.est_cost : null;
+    return `<div class="row r-rv">${fld('budget', b, 'category', 'text', 'ct')}<label class="cell"><small>${t('rvaRecv')}</small>${fld('budget', b, 'amount', 'number', 'am')}</label><label class="cell"><small>${t('rvaOur')}</small><input class="ec" type="number" step="any" inputmode="decimal" min="0" data-t="budget" data-id="${b.id}" data-f="est_cost" value="${esc(b.est_cost ?? '')}" placeholder="${t('rvaOurPh')}" aria-label="${t('rvaOur')}"></label><span class="mg ${m === null ? '' : m < 0 ? 'neg' : (+b.amount && m / +b.amount < .1) ? 'warn' : 'pos'}"><small>${t('rvaLeft')}</small>${m === null ? '·' : money(m)}</span>${del('budget', b.id)}</div>`; }).join('')}<button class="add" data-add="budget">${t('addCat')}</button></div>
+  ${rvAnalysisCard(rvAnalysis(cur, p))}
   <div class="card"><h2>${t('reviewNote')}</h2><ul class="rvchecks">${['rvCheck1', 'rvCheck2', 'rvCheck3', 'rvCheck4'].map(k => `<li>${t(k)}</li>`).join('')}</ul>
   ${tx('projects', p, 'review_note', 3)}
   <div class="acts" style="margin-top:12px">${st !== 'approved' ? `<button class="primary" data-rvset="approved">${t('approve')}</button>` : ''}${st !== 'rejected' ? `<button class="btn2 danger" data-rvset="rejected">${t('reject')}</button>` : ''}${st !== 'review' ? `<button class="btn2" data-rvset="review">${t('reopen')}</button>` : ''}</div></div>`;
@@ -1276,6 +1342,8 @@ app.addEventListener('click', async e => {
     else if (d.openrv) { ctab = 'review'; openProject(d.openrv); }
     else if ('scan' in d) scanner(d.scan === 'general' ? '' : (d.scan || (cur && view === 'project' ? cur.project.id : '')));
     else if (d.rvset) {
+      if (d.rvset === 'approved') { const a = rvAnalysis(cur, cur.project), reds = a.flags.filter(x => x.lvl === 'red').length;
+        if ((reds || a.lvl === 'red') && !confirm(t('rvaConfirm').replace('{p}', Math.round(a.pct)).replace('{n}', reds))) return; }
       const patch = { review_status: d.rvset, reviewed_by: myName(), reviewed_at: new Date().toISOString() };
       if (d.rvset === 'approved' && stOf(cur.project) === 'estimate_sent') patch.status = 'estimate_accepted';
       Object.assign(cur.project, await API.update('projects', cur.project.id, patch)); render(); S.toast(t('rv_' + d.rvset));
