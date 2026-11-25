@@ -13,7 +13,14 @@ const ENV = (Deno.env.get("DOCUSIGN_ENV") ?? "demo").toLowerCase() === "prod" ? 
 const OAUTH = ENV === "prod" ? "account.docusign.com" : "account-d.docusign.com";
 const KEY = Deno.env.get("DOCUSIGN_INTEGRATION_KEY") ?? "";
 const USER = Deno.env.get("DOCUSIGN_USER_ID") ?? "";
-const PEM = (Deno.env.get("DOCUSIGN_PRIVATE_KEY") ?? "").replace(/\\n/g, "\n");
+// Accept the key pasted with real line breaks, with "\n", or squeezed onto one line
+const PEM = (() => {
+  const raw = (Deno.env.get("DOCUSIGN_PRIVATE_KEY") ?? "").replace(/\\n/g, "\n").trim();
+  const m = raw.match(/-----BEGIN ([A-Z ]*PRIVATE KEY)-----([\s\S]*?)-----END \1-----/);
+  if (!m) return raw;
+  const body = m[2].replace(/\s+/g, "");
+  return `-----BEGIN ${m[1]}-----\n${body.match(/.{1,64}/g)!.join("\n")}\n-----END ${m[1]}-----\n`;
+})();
 const APP_URL = Deno.env.get("APP_URL") ?? "https://cgmillan1.github.io/cplus/admin.html";
 const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { ...cors, "content-type": "application/json" } });
