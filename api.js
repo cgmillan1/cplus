@@ -5,7 +5,7 @@
   const ready = !!(cfg.url && cfg.key && window.supabase);
   const sb = ready ? window.supabase.createClient(cfg.url, cfg.key, { auth: { flowType: 'pkce' } }) : null;
   const ok = ({ data, error }) => { if (error) throw new Error(error.message || String(error)); return data; };
-  const CHILD = ['items', 'materials', 'steps', 'updates', 'payments', 'invoices', 'milestones', 'change_orders', 'budget', 'expenses', 'comments', 'documents', 'photos', 'checklists', 'checklist_items', 'tasks', 'daily_logs'];
+  const CHILD = ['items', 'materials', 'steps', 'updates', 'payments', 'invoices', 'milestones', 'change_orders', 'budget', 'expenses', 'comments', 'documents', 'photos', 'checklists', 'checklist_items', 'tasks', 'daily_logs', 'targets', 'time_entries', 'team_msgs'];
 
   window.API = {
     ready,
@@ -63,6 +63,8 @@
     async insertMany(table, rows) { return rows.length ? ok(await sb.from(table).insert(rows).select()) : []; },
     async update(table, id, patch) { return ok(await sb.from(table).update(patch).eq('id', id).select().single()); },
     async remove(table, id) { ok(await sb.from(table).delete().eq('id', id)); },
+    async msgsRead(pid) { ok(await sb.rpc('msgs_read', { pid })); },
+    async listMsgs() { return ok(await sb.from('team_msgs').select('*').order('created_at')); },
     async markSeen(projectId) { ok(await sb.from('comments').update({ seen: true }).eq('project_id', projectId).eq('author', 'client').eq('seen', false)); },
 
     async upload(bucket, path, blob) { ok(await sb.storage.from(bucket).upload(path, blob, { contentType: blob.type || 'image/jpeg', upsert: false })); return path; },

@@ -58,8 +58,8 @@ const topbar = () => S.header(`<span id="savedot" class="savedot" aria-live="pol
 function homeContractor() {
   const today = S.today(), lim = new Date(Date.now() + 14 * 864e5).toISOString().slice(0, 10);
   const up = B.flatMap(b => b.steps.filter(s => !s.done && s.due_date && s.due_date <= lim).map(s => ({ ...s, pt: b.project.title, late: s.due_date < today }))).sort((a, b) => a.due_date.localeCompare(b.due_date));
-  return topbar() + `<main><div class="wrap"><div class="secthead"><h1>${t('myProjects')}</h1></div>${pushPrompt()}
-  <div class="plist">${B.length ? B.map(b => { const c = S.calc(b), u = unseen(b), nx = b.steps.slice().sort((x, y) => (x.sort || 0) - (y.sort || 0)).find(s => !s.done); return `<button class="pcard" data-open="${b.project.id}">${u ? `<span class="badge">${u}</span>` : ''}
+  return topbar() + `<main><div class="wrap"><div class="secthead"><h1>${t('myProjects')}</h1></div>${pushPrompt()}${crewHomeExtra()}
+  <div class="plist">${B.length ? B.map(b => { const c = S.calc(b), u = unseen(b) + msgUnread(b), nx = b.steps.slice().sort((x, y) => (x.sort || 0) - (y.sort || 0)).find(s => !s.done); return `<button class="pcard" data-open="${b.project.id}">${u ? `<span class="badge">${u}</span>` : ''}
     <span class="who2">${esc(b.project.client_name || '·')}</span><h3>${esc(b.project.title || t('project'))}</h3><span class="pill st-${stOf(b.project)}">${t('st_' + stOf(b.project))}</span>
     <div class="bar"><i style="width:${c.pct}%"></i></div><small class="sub">${c.pct}% ${t('done')}</small>
     <dl>${b.project.address ? `<dt>${t('projAddress')}</dt><dd>${esc(b.project.address)}</dd>` : ''}${nx ? `<dt>${t('nextStep')}</dt><dd>${esc(nx.title)}</dd>` : ''}</dl></button>`; }).join('') : `<div class="card"><p class="sub">${t('noAssigned')}</p></div>`}</div>
@@ -116,7 +116,7 @@ function pushPrompt() {
 function settingsView() {
   if (isAdmin() && !esignSt) setTimeout(loadEsign, 0);
   const back = `<button class="btn2" data-hv="projects">${t('back')}</button>`;
-  const company = isAdmin() ? `<div class="card ed"><h2>${t('settings')}</h2><div class="grid2" style="margin-top:12px"><label>${t('company')}${fld('settings', settings, 'company')}</label><label>${t('cname')}${fld('settings', settings, 'contact_name')}</label><label>${t('phone')}${fld('settings', settings, 'phone', 'tel')}</label><label>${t('email')}${fld('settings', settings, 'email', 'email')}</label><label>${t('sharePct')}${fld('settings', { ...settings, share_pct: pct() }, 'share_pct', 'number')}</label></div><p class="hint">${t('shareHint')}</p></div>` : '';
+  const company = isAdmin() ? `<div class="card ed"><h2>${t('settings')}</h2><div class="grid2" style="margin-top:12px"><label>${t('company')}${fld('settings', settings, 'company')}</label><label>${t('cname')}${fld('settings', settings, 'contact_name')}</label><label>${t('phone')}${fld('settings', settings, 'phone', 'tel')}</label><label>${t('email')}${fld('settings', settings, 'email', 'email')}</label><label>${t('sharePct')}${fld('settings', { ...settings, share_pct: pct() }, 'share_pct', 'number')}</label><label>${t('laborRate')}${fld('settings', { ...settings, labor_rate: coRate() }, 'labor_rate', 'number')}</label></div><p class="hint">${t('shareHint')}</p><p class="hint">${t('laborHint')}</p></div>` : '';
   return topbar() + `<main><div class="wrap"><div class="secthead"><h1>${t('settingsNav')}</h1>${back}</div>
   ${pushCard()}${isAdmin() ? esignSettings() : ''}${company}${isAdmin() ? teamCard() : ''}${accountCard()}
   <div class="card"><h2>${t('lang')}</h2><div style="margin-top:10px">${S.langSeg()}</div></div>
@@ -129,6 +129,8 @@ function home() {
   if (hview === 'dash') return topbar() + `<main><div class="wrap">${hnav()}${dashView()}</div></main>`;
   if (hview === 'feed') return topbar() + `<main><div class="wrap">${hnav()}<div class="secthead"><h1>${t('feedT')}</h1></div><p class="sub">${t('feedS')}</p><div class="card">${feedHtml(events(B))}</div></div></main>`;
   if (hview === 'taxes') return topbar() + `<main><div class="wrap">${hnav()}${taxView()}</div></main>`;
+  if (hview === 'crew') return topbar() + `<main><div class="wrap">${hnav()}${crewView()}</div></main>`;
+  if (hview === 'inbox') return topbar() + `<main><div class="wrap">${hnav()}${inboxView()}</div></main>`;
   const shown = B.filter(b => rvOf(b.project) === 'approved' && matchQ(b) && (pfilter === 'all' || stOf(b.project) === pfilter) && (afilter === 'all' || (afilter === 'none' ? !b.project.assigned_to : b.project.assigned_to === afilter)));
   const cs = shown.map(b => S.calc(b)), sum = k => cs.reduce((a, c) => a + (c[k] || 0), 0);
   const AP = B.filter(b => rvOf(b.project) === 'approved'), count = s => AP.filter(b => stOf(b.project) === s).length;
@@ -195,15 +197,15 @@ function leadsCard() {
 }
 function project() {
   const u = unseen(cur), p = cur.project;
-  const tabs = staff() ? Object.assign({ dash: cDash }, isRecv(p) ? { review: cReview } : {}, { project: cProj, estimate: cEst, money: cMoney, pays: cPays, invoices: cInvoices, changes: cChanges, photos: cPhotos, checks: cChecks, logs: cLogs, progress: cProgress, materials: cMats, docs: cDocs, messages: cMsgs })
-    : { progress: cProgress, photos: cPhotos, checks: cChecks, logs: cLogs, materials: cMats, messages: cMsgs, info: cInfo };
-  const TN = { invoices: 'invoicesTab', photos: 'photosTab', checks: 'checksTab', logs: 'logsTab', review: 'review' };
+  const tabs = staff() ? Object.assign({ dash: cDash, cost: cCost }, isRecv(p) ? { review: cReview } : {}, { team: cTeam, project: cProj, estimate: cEst, money: cMoney, pays: cPays, invoices: cInvoices, changes: cChanges, photos: cPhotos, checks: cChecks, logs: cLogs, progress: cProgress, materials: cMats, docs: cDocs, messages: cMsgs })
+    : { progress: cProgress, photos: cPhotos, checks: cChecks, logs: cLogs, materials: cMats, hours: cHours, team: cTeam, messages: cMsgs, info: cInfo };
+  const TN = { invoices: 'invoicesTab', photos: 'photosTab', checks: 'checksTab', logs: 'logsTab', review: 'review', cost: 'costTab', team: 'teamTab', hours: 'hoursTab' };
   if (!tabs[ctab]) ctab = Object.keys(tabs)[0];
-  const GR = staff() ? [['g_sum', ['dash', 'review']], ['g_money', ['estimate', 'money', 'pays', 'invoices', 'changes']], ['g_work', ['progress', 'photos', 'checks', 'logs', 'materials']], ['g_client', ['project', 'docs', 'messages']]]
-    : [['g_work', ['progress', 'photos', 'checks', 'logs', 'materials']], ['messages', ['messages']], ['info', ['info']]];
+  const GR = staff() ? [['g_sum', ['dash', 'cost', 'review']], ['g_money', ['estimate', 'money', 'pays', 'invoices', 'changes']], ['g_work', ['progress', 'photos', 'checks', 'logs', 'materials']], ['g_team', ['team']], ['g_client', ['project', 'docs', 'messages']]]
+    : [['g_work', ['progress', 'photos', 'checks', 'logs', 'materials', 'hours']], ['g_team', ['team']], ['g_client', ['messages']], ['info', ['info']]];
   const groups = GR.map(([g, ks]) => [g, ks.filter(k => tabs[k])]).filter(([, ks]) => ks.length);
   const curG = groups.find(([, ks]) => ks.includes(ctab)) || groups[0];
-  const bdg = k => (k === 'review' && rvOf(p) === 'review' ? '<span class="badge">!</span>' : '') + (k === 'messages' && u ? `<span class="badge">${u}</span>` : '');
+  const bdg = k => (k === 'review' && rvOf(p) === 'review' ? '<span class="badge">!</span>' : '') + (k === 'messages' && u ? `<span class="badge">${u}</span>` : '') + (k === 'team' && msgUnread(cur) ? `<span class="badge">${msgUnread(cur)}</span>` : '') + (k === 'cost' && staff() && jc(cur).st === 'over' ? '<span class="badge">!</span>' : '');
   const tl = k => k === 'project' && staff() ? t('clientTab') : t(TN[k] || k);
   const nav = `<nav class="cbar"><div class="wrap"><button data-home class="bk" aria-label="${t('back')}"><span aria-hidden="true">←</span><span class="bkt">${t('back').replace(/^←\s*/, '')}</span></button>${groups.map(([g, ks]) => `<button data-ctab="${ks[0]}" class="${curG[0] === g ? 'on' : ''}"${curG[0] === g ? ' aria-current="page"' : ''}>${t(g)}${ks.map(bdg).join('')}</button>`).join('')}</div></nav>
   ${curG[1].length > 1 ? `<nav class="subbar" aria-label="${t(curG[0])}"><div class="wrap">${curG[1].map(k => `<button data-ctab="${k}" class="${ctab === k ? 'on' : ''}"${ctab === k ? ' aria-current="true"' : ''}>${tl(k)}${bdg(k)}</button>`).join('')}</div></nav>` : ''}`;
@@ -249,8 +251,10 @@ function cDash() {
   const banner = stOf(cur.project) === 'estimate_accepted' && !cur.documents.some(x => x.kind === 'contract' && x.status !== 'void') ? `<div class="card" style="border-color:var(--cu);display:flex;gap:12px;align-items:center;flex-wrap:wrap"><b style="flex:1 1 260px">${t('contractBanner')}</b><button class="primary" data-ctab="docs">${t('goDocs')}</button></div>` : '';
   return banner + budgetHealth(c) + `<div class="kpis">${kpi(t('contract'), c.tot)}${kpi(t('collected'), c.paid)}${kpi(t('receivable'), c.bal)}${kpi(t('budget'), c.bud)}${kpi(t('spent'), c.spent, '', (c.bud ? Math.round(c.spent / c.bud * 100) : 0) + '% ' + t('of') + ' ' + t('budget').toLowerCase())}${kpi(t('left'), c.left, c.left < 0 ? 'neg' : '')}${kpi(t('profit'), c.profit, c.profit < 0 ? 'neg' : 'pos', t('profitSub'))}</div>
   ${showShare() ? `<div class="kpis">${(() => { const sh = shareOf(c); return kpi(`${t('share')} ${pct()}%`, sh.s, '', t('shareOf')) + kpi(t('shareEarned'), sh.earned, 'pos', t('shareEarnedSub')) + kpi(t('sharePending'), sh.pending) + kpi(t('profitAfter'), sh.after, sh.after < 0 ? 'neg' : ''); })()}</div>` : ''}
-  <div class="qacts"><button class="primary cam" data-scan="${cur.project.id}">${camIco}${t('scanReceipt')}</button><button class="btn2" data-ctab="money">+ ${t('qaExpense')}</button><button class="btn2" data-ctab="pays">+ ${t('qaPay')}</button></div>
-  <div class="cols"><div class="card"><h2>${t('byCat')}</h2>${catBars(c)}</div><div class="card"><h2>${t('recent')}</h2>${expSorted().slice(0, 6).map(e => `<div class="mat"><div><b>${esc(e.description)}</b><small>${fdate(e.spent_on)} · ${esc(e.vendor)} · ${esc(catName(e.budget_id))}</small></div><span class="n">${money(e.amount)}</span></div>`).join('') || `<p class="sub">${t('none')}</p>`}</div></div>`;
+  ${jcMini(jc(cur))}
+  <div class="qacts"><button class="primary cam" data-scan="${cur.project.id}">${camIco}${t('scanReceipt')}</button><button class="btn2" data-ctab="team">${t('msgBtn')}</button><button class="btn2" data-ctab="money">+ ${t('qaExpense')}</button><button class="btn2" data-ctab="pays">+ ${t('qaPay')}</button></div>
+  <div class="cols"><div class="card"><h2>${t('byCat')}</h2>${catBars(c)}</div><div class="card"><h2>${t('recent')}</h2>${expSorted().slice(0, 6).map(e => `<div class="mat"><div><b>${esc(e.description)}</b><small>${fdate(e.spent_on)} · ${esc(e.vendor)} · ${esc(catName(e.budget_id))}</small></div><span class="n">${money(e.amount)}</span></div>`).join('') || `<p class="sub">${t('none')}</p>`}</div></div>
+  ${allCard()}`;
 }
 const expSorted = () => cur.expenses.slice().sort((a, b) => String(b.spent_on).localeCompare(String(a.spent_on)));
 function cMoney() {
@@ -373,6 +377,7 @@ function render() {
   if (key) { const n = document.querySelector(key); if (n) n.focus({ preventScroll: true }); }
   const ch = $('#chat'); if (ch) ch.scrollTop = ch.scrollHeight;
   const on = document.querySelector('.cbar button.on'); if (on && on.scrollIntoView) on.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  v8After();
 }
 
 /* ---------- data ---------- */
@@ -400,6 +405,7 @@ async function save(tb, id, f, v) {
   setDot(t('saving'));
   try {
     const row = rowOf(tb, id);
+    if (tb === 'targets' && !row) { const r = await API.insert('targets', { project_id: cur.project.id, [f]: v }); cur.targets.push(r); setDot(t('saved') + ' ✓'); return true; }
     const patch = { [f]: v };
     if (tb === 'materials' && f === 'purchased' && v && !row.purchased_on) patch.purchased_on = S.today();
     const res = tb === 'settings' ? await API.saveSettings(patch) : await API.update(tb, id, patch);
@@ -415,7 +421,7 @@ app.addEventListener('change', async e => {
   if (d.setrole) { try { const r = await API.setRole(d.setrole, n.value); Object.assign(team.find(m => m.user_id === d.setrole), r); S.toast(t('saved') + ' ✓'); } catch (x) { fail(x); } return render(); }
   if (!d.f) return;
   let v = n.type === 'checkbox' ? n.checked : n.value;
-  if (n.type === 'number') v = v === '' ? (d.f === 'est_cost' ? null : 0) : +v;
+  if (n.type === 'number') v = v === '' ? (d.f === 'est_cost' || d.f === 'labor_rate' ? null : 0) : +v;
   if (n.type === 'date' && !v) v = null;
   if ((d.f === 'budget_id' || d.f === 'assigned_to') && !v) v = null;
   if (d.t === 'projects' && (d.f === 'client_phone' || d.f === 'client_phone2') && v) { if (!S.phoneOk(v)) { S.toast(t('errPhone')); n.setAttribute('aria-invalid', 'true'); return n.focus(); } v = S.fmtPhone(v); n.value = v; n.removeAttribute('aria-invalid'); }
@@ -955,8 +961,8 @@ function dashData() {
   pays.forEach(p => { const x = mk[String(p.paid_on || '').slice(0, 7)]; if (x) x.rev += +p.amount || 0; });
   exps.forEach(e => { const x = mk[String(e.spent_on || '').slice(0, 7)]; if (x) x.exp += +e.amount || 0; });
   const byCat = TAXCATS.map(([k]) => ({ k, l: t('tc_' + k), v: ePer.filter(e => (e.tax_cat || 'materials') === k).reduce((a, e) => a + (+e.amount || 0), 0) })).filter(x => x.v > 0).sort((a, b) => b.v - a.v);
-  const projs = AP.map(b => { const c = S.calc(b), est = b.budget.reduce((a, x) => a + (x.est_cost != null && x.est_cost !== '' ? +x.est_cost : +x.amount || 0), 0), cost = Math.max(c.spent, est), profit = c.tot - cost;
-    return { b, c, cost, profit, pct: c.tot ? profit / c.tot * 100 : 0, used: c.bud ? c.spent / c.bud * 100 : 0, done: stOf(b.project) === 'done' }; }).sort((a, b) => a.done - b.done || b.c.tot - a.c.tot);
+  const projs = AP.map(b => { const c = S.calc(b), j = jc(b), est = b.budget.reduce((a, x) => a + (x.est_cost != null && x.est_cost !== '' ? +x.est_cost : +x.amount || 0), 0), cost = j.has ? j.fCost : Math.max(c.spent, est), profit = c.tot - cost;
+    return { b, c, j, cost, profit, pct: c.tot ? profit / c.tot * 100 : 0, used: j.has ? j.usedPct : c.bud ? c.spent / c.bud * 100 : 0, done: stOf(b.project) === 'done' }; }).sort((a, b) => a.done - b.done || b.c.tot - a.c.tot);
   const group = keyOf => { const g = {}; projs.forEach(x => { const k = keyOf(x.b.project); const r = g[k] = g[k] || { k, n: 0, tot: 0, profit: 0, owed: 0, paid: 0 }; r.n++; r.tot += x.c.tot; r.profit += x.profit; r.owed += Math.max(0, x.c.bal); r.paid += x.c.paid; });
     return Object.values(g).map(r => ({ ...r, pct: r.tot ? r.profit / r.tot * 100 : 0 })).sort((a, b) => b.tot - a.tot); };
   const byType = group(p => p.service || 'other'), byCo = group(p => p.source_company || t('directClient'));
@@ -996,6 +1002,7 @@ function dashView() {
   d.overCats.slice(0, 4).forEach(o => att.push(`<button class="alrow" data-open="${o.b.project.id}"><span><b>${esc(o.b.project.title)} · ${esc(o.x.category)}</b><small class="neg">${t('overBy')} ${money(o.over)}</small></span><span aria-hidden="true">→</span></button>`));
   if (d.late.length) att.push(`<div class="alrow"><span><b>${d.late.length} ${t('dLate')}</b><small>${d.late.slice(0, 3).map(x => esc(x.s.title) + ' · ' + esc(x.b.project.title)).join(' / ')}</small></span></div>`);
   { const li = B.flatMap(b => invOf(b).filter(i => invState(i) === 'late')); if (li.length) att.push(`<div class="alrow"><span><b>${li.length} ${t(li.length === 1 ? 'dLateInv1' : 'dLateInvN')}</b><small class="neg">${money(li.reduce((a, i) => a + (+i.amount || 0), 0))}</small></span></div>`); }
+  d.projs.filter(x => !x.done && x.j.st === 'over').slice(0, 4).forEach(x => att.push(`<button class="alrow" data-open="${x.b.project.id}" data-ctabgo="cost"><span><b>${esc(x.b.project.title)} · ${t('jc_over').toLowerCase()}</b><small class="neg">${t('jcProfitF')} ${money(x.j.fProfit)} · ${t('jcProfitE').toLowerCase()} ${money(x.j.estProfit)}</small></span><span aria-hidden="true">→</span></button>`));
   if (d.noRc) att.push(`<button class="alrow" data-hv="taxes"><span><b>${d.noRc} ${t('dNoRc')}</b><small>${t('dNoRcS')}</small></span><span aria-hidden="true">→</span></button>`);
   const tbl = `<details class="dtable"><summary>${t('dTable')}</summary><table><thead><tr><th>${t('month')}</th><th>${t('dCollected')}</th><th>${t('dSpent')}</th><th>${t('dNet')}</th></tr></thead><tbody>${d.months.map(m => `<tr><td>${mshort(m.m)} ${m.y}</td><td>${money(m.rev)}</td><td>${money(m.exp)}</td><td class="${m.rev - m.exp < 0 ? 'neg' : ''}">${money(m.rev - m.exp)}</td></tr>`).join('')}</tbody></table></details>`;
   return `<div class="secthead"><h1>${t('dashT')}</h1></div><p class="sub">${t('dashS')}</p>
@@ -1009,15 +1016,19 @@ function dashView() {
   ${agingCard()}</div>
   <div class="cols"><div class="card"><h2>${t('dByType')}</h2><p class="sub">${t('dByTypeS')}</p>${mtable(d.byType, r => t('svc_' + r.k), t('service'))}</div>
   <div class="card"><h2>${t('dByCo')}</h2><p class="sub">${t('dByCoS2')}</p>${mtable(d.byCo, r => r.k, t('dBuilder'))}</div></div>
+  ${(() => { const A = d.projs.filter(x => !x.done), W = A.filter(x => x.j.has), E = W.reduce((a, x) => a + x.j.estProfit, 0), F = W.reduce((a, x) => a + x.j.fProfit, 0), n = st => W.filter(x => x.j.st === st).length, no = A.length - W.length;
+    return A.length ? `<div class="card"><div class="top2"><h2>${t('dJcT')}</h2><button class="lnk" data-hv="crew">${t('hv_crew')} →</button></div><p class="sub">${t('dJcS')}</p>
+    ${W.length ? `<div class="kpis dkpis">${tile(t('dJcE'), E)}${tile(t('dJcF'), F, F < E - 0.5 ? 'neg' : 'pos', (F - E >= 0 ? '+' : '') + money(F - E))}${tile(t('jc_over'), String(n('over')), n('over') ? 'neg' : '', t('dProjN'))}${tile(t('jc_watch'), String(n('watch')), '', t('dProjN'))}</div>` : ''}
+    ${no ? `<p class="hint">${t('dJcNoEst').replace('{n}', no)}</p>` : ''}</div>` : ''; })()}
   <div class="card"><h2>${t('dProjT')}</h2><p class="sub">${t('dProjS')}</p>
-  ${d.projs.map(x => `<button class="dproj" data-open="${x.b.project.id}"><div class="dp1"><b>${esc(x.b.project.title)}</b><span class="pill ${x.done ? '' : 'st-' + stOf(x.b.project)}">${t('st_' + stOf(x.b.project))}</span></div>
+  ${d.projs.map(x => `<button class="dproj" data-open="${x.b.project.id}"><div class="dp1"><b>${esc(x.b.project.title)}</b><span class="pill ${x.done ? '' : 'st-' + stOf(x.b.project)}">${t('st_' + stOf(x.b.project))}</span>${x.j.has ? jpill(x.j) : ''}</div>
     <div class="dp2"><span>${t('contract')} <b>${money(x.c.tot)}</b></span><span>${t('dSpent')} <b>${money(x.c.spent)}</b></span><span>${t('dProfitEst')} <b class="${x.profit < 0 ? 'neg' : 'pos'}">${money(x.profit)} · ${Math.round(x.pct)}%</b></span></div>
-    <div class="meter ${x.used > 100 ? 'over' : x.used >= 90 ? 'warn' : ''}"><i style="width:${Math.min(100, x.used)}%"></i></div><small class="sub">${Math.round(x.used)}% ${t('dOfBudget')}${x.c.bal > 0 ? ` · ${t('dOwedShort')} ${money(x.c.bal)}` : ''}</small></button>`).join('') || `<p class="sub">${t('none')}</p>`}</div>`;
+    <div class="meter ${x.used > 100 ? 'over' : x.used >= 90 ? 'warn' : ''}"><i style="width:${Math.min(100, x.used)}%"></i></div><small class="sub">${Math.round(x.used)}% ${t(x.j.has ? 'dOfEst' : 'dOfBudget')}${x.j.has && x.j.estH ? ` · ${hfmt(x.j.hrs)} / ${hfmt(x.j.estH)}` : ''}${x.c.bal > 0 ? ` · ${t('dOwedShort')} ${money(x.c.bal)}` : ''}</small></button>`).join('') || `<p class="sub">${t('none')}</p>`}</div>`;
 }
 
 function hnav() {
   const nr = B.filter(b => rvOf(b.project) === 'review').length;
-  return `<div class="hnav" role="tablist">${[...(isAdmin() ? [['dash', t('hv_dash')]] : []), ['projects', t('hv_projects')], ['review', t('hv_review'), nr], ['feed', t('hv_feed')], ['taxes', t('hv_taxes')]].map(([k, l, n]) => `<button role="tab" data-hv="${k}" aria-selected="${hview === k}" class="${hview === k ? 'on' : ''}">${l}${n ? ` <span class="badge">${n}</span>` : ''}</button>`).join('')}</div>`;
+  return `<div class="hnav" role="tablist">${[...(isAdmin() ? [['dash', t('hv_dash')]] : []), ['projects', t('hv_projects')], ['crew', t('hv_crew'), B.filter(b => rvOf(b.project) === 'approved' && stOf(b.project) !== 'done' && jc(b).st === 'over').length], ['inbox', t('hv_inbox'), allUnread()], ['review', t('hv_review'), nr], ['feed', t('hv_feed')], ['taxes', t('hv_taxes')]].map(([k, l, n]) => `<button role="tab" data-hv="${k}" aria-selected="${hview === k}" class="${hview === k ? 'on' : ''}">${l}${n ? ` <span class="badge">${n}</span>` : ''}</button>`).join('')}</div>`;
 }
 function homeTools() {
   return `<div class="htools"><label class="search"><span class="sr">${t('search')}</span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input id="hq" type="search" value="${esc(q)}" placeholder="${t('search')}" autocomplete="off"></label>
@@ -1705,6 +1716,271 @@ const tipAt = e => { const h = e.target.closest && e.target.closest('[data-tip]'
   tip.style.left = Math.max(4, Math.min(r.width - tw - 4, hr.left - r.left + hr.width / 2 - tw / 2)) + 'px'; tip.style.top = '4px'; };
 document.addEventListener('pointermove', tipAt); document.addEventListener('pointerdown', tipAt);
 document.addEventListener('pointerleave', e => { if (e.target.classList && e.target.classList.contains('chartwrap')) { const t2 = e.target.querySelector('.ctip'); if (t2) t2.hidden = true; } }, true);
+
+/* ---------- v8: costo vs estimado, horas, mensajes del equipo, vista por contratista ---------- */
+const LABOR_TC = ['wages', 'subcontract'];
+const nnum = v => v === null || v === undefined || v === '' ? null : +v;
+const LOC = () => S.L === 'en' ? 'en-US' : 'es-MX';
+const hfmt = v => (Math.round((+v || 0) * 10) / 10).toLocaleString(LOC()) + ' h';
+const sumBy = (xs, f) => xs.reduce((a, x) => a + (+f(x) || 0), 0);
+const ftime = d => { const x = new Date(d); return x.toLocaleDateString(LOC(), { month: 'short', day: 'numeric' }) + ' ' + x.toLocaleTimeString(LOC(), { hour: 'numeric', minute: '2-digit' }); };
+const coRate = () => nnum(settings.labor_rate) ?? 35;
+const initial = n => esc((n || '?').trim().charAt(0).toUpperCase() || '?');
+
+/* job cost: what was estimated against what really went out */
+function jc(b) {
+  const tg = (b.targets || [])[0] || null, c = S.calc(b), ex = b.expenses || [], te = b.time_entries || [];
+  const rate = nnum(tg && tg.labor_rate) ?? coRate();
+  const logH = sumBy(b.daily_logs || [], l => l.hours), hrs = te.length ? sumBy(te, x => x.hours) : logH;
+  const matAct = sumBy(ex.filter(e => !LABOR_TC.includes(e.tax_cat)), e => e.amount), subAct = sumBy(ex.filter(e => LABOR_TC.includes(e.tax_cat)), e => e.amount);
+  const estMat = tg ? +tg.est_mat || 0 : 0, estH = tg ? +tg.est_hours || 0 : 0, estSub = tg ? +tg.est_sub || 0 : 0;
+  const has = estMat + estH + estSub > 0, done = stOf(b.project) === 'done', rev = c.sub;
+  const estLab = estH * rate, labAct = hrs * rate, estCost = estMat + estLab + estSub, actCost = matAct + labAct + subAct;
+  const fo = (e, a) => done ? a : Math.max(e, a), fCost = has ? fo(estMat, matAct) + fo(estLab, labAct) + fo(estSub, subAct) : actCost;
+  const usedPct = estCost ? actCost / estCost * 100 : 0, hPct = estH ? hrs / estH * 100 : 0, prog = c.pct, burn = Math.max(usedPct, hPct);
+  const st = !has ? 'none' : actCost > estCost + 0.5 || (estH > 0 && hrs > estH) ? 'over'
+    : !done && (burn >= 85 || (b.steps.length > 0 && burn >= 40 && burn - prog >= 20)) ? 'watch' : 'ok';
+  return { tg, c, rate, hrs, hSrc: te.length ? 'time' : logH ? 'logs' : 'none', estMat, estH, estSub, estLab, matAct, subAct, labAct, estCost, actCost, fCost, rev, estProfit: rev - estCost, fProfit: rev - fCost, usedPct, hPct, prog, st, has, done };
+}
+const jpill = j => `<span class="pill jc jc-${j.st}">${t('jc_' + j.st)}</span>`;
+const mgn = (p, r) => r ? Math.round(p / r * 100) + '%' : '·';
+function jbar(label, est, act, fmt, sub = '') {
+  const over = est > 0 && act > est + 0.005, w = est > 0 ? Math.min(100, act / est * 100) : (act > 0 ? 100 : 0), d = act - est;
+  return `<div class="jr"><div class="jl"><b>${label}</b>${est > 0 ? `<span class="jd ${over ? 'neg' : 'pos'}">${over ? '+' + fmt(d) + ' ' + t('jcOver') : fmt(-d) + ' ' + t('jcLeft')}</span>` : act > 0 ? `<span class="jd">${t('jcNoEst')}</span>` : ''}</div>
+  <div class="meter ${over ? 'over' : w >= 85 ? 'warn' : ''}"><i style="width:${w}%"></i></div>
+  <div class="jn"><span>${t('jcEst')} <b>${est > 0 ? fmt(est) : '·'}</b></span><span>${t('jcReal')} <b>${fmt(act)}</b></span>${est > 0 ? `<span><b>${Math.round(act / est * 100)}%</b></span>` : ''}</div>${sub ? `<small class="sub">${sub}</small>` : ''}</div>`;
+}
+const dual = j => `<div class="dual" aria-hidden="true"><div class="meter thin prog"><i style="width:${j.prog}%"></i></div><div class="meter thin ${j.st === 'over' ? 'over' : j.st === 'watch' ? 'warn' : 'cost'}"><i style="width:${Math.min(100, j.usedPct)}%"></i></div></div>`;
+
+function cCost() {
+  const j = jc(cur), tg = j.tg || {};
+  const reviewEst = cur.budget.reduce((a, x) => a + (x.est_cost != null && x.est_cost !== '' ? +x.est_cost : 0), 0);
+  const tfld = (f, ph = '') => `<input type="number" step="any" inputmode="decimal" min="0" data-t="targets" data-id="${tg.id || ''}" data-f="${f}" value="${esc(tg[f] ?? '')}" placeholder="${esc(ph)}" aria-label="${esc(t('jf_' + f))}">`;
+  const head = `<div class="card jchead jc-${j.st}"><div class="top2"><h2>${t('jcT')}</h2>${jpill(j)}</div>
+    ${j.has ? `<div class="jbig"><div><small>${t(j.done ? 'jcProfitFinal' : 'jcProfitF')}</small><b class="${j.fProfit < 0 ? 'neg' : 'pos'}">${money(j.fProfit)}</b><em>${mgn(j.fProfit, j.rev)} ${t('rvaMargin')}</em></div><div><small>${t('jcProfitE')}</small><b>${money(j.estProfit)}</b><em>${mgn(j.estProfit, j.rev)} ${t('rvaMargin')}</em></div><div><small>${t('jcProg')}</small><b>${j.prog}%</b><em>${t('jcUsed').replace('{p}', Math.round(j.usedPct))}</em></div></div>
+    ${dual(j)}<div class="legend2"><span><i class="sw p"></i>${t('jcProg')}</span><span><i class="sw c"></i>${t('jcCostUsed')}</span></div><p class="sub jwhy">${t('jcWhy_' + j.st)}</p>`
+    : `<p class="sub">${t('jcNoneS')}</p>`}</div>`;
+  const est = `<div class="card ed"><h2>${t('jcEstT')}</h2><p class="sub">${t('jcEstS')}</p><div class="grid2 jgrid">
+    <label>${t('jf_est_mat')}${tfld('est_mat', reviewEst ? String(Math.round(reviewEst)) : '0')}</label>
+    <label>${t('jf_est_hours')}${tfld('est_hours', '0')}</label>
+    <label>${t('jf_labor_rate')}${tfld('labor_rate', String(coRate()))}<small class="hint">${t('jcRateHint').replace('{r}', money(coRate()))}</small></label>
+    <label>${t('jf_est_sub')}${tfld('est_sub', '0')}<small class="hint">${t('jcSubHint')}</small></label></div>
+    ${reviewEst ? `<p class="hint">${t('jcReviewEst').replace('{a}', money(reviewEst))}</p>` : ''}</div>`;
+  const cmp = `<div class="card"><h2>${t('jcCmpT')}</h2><p class="sub">${t('jcContract')} <b>${money(j.rev)}</b></p>
+    ${jbar(t('jcMat'), j.estMat, j.matAct, money)}
+    ${jbar(t('jcHours'), j.estH, j.hrs, hfmt, j.hSrc === 'logs' ? t('jcFromLogs') : '')}
+    ${jbar(t('jcLab').replace('{r}', money(j.rate)), j.estLab, j.labAct, money)}
+    ${j.estSub || j.subAct ? jbar(t('jcSub'), j.estSub, j.subAct, money) : ''}
+    ${jbar(t('jcTotal'), j.estCost, j.actCost, money)}</div>`;
+  return j.has ? head + cmp + hoursCard() + est : head + est + cmp + hoursCard();
+}
+
+function hoursCard() {
+  const te = (cur.time_entries || []).slice().sort((a, b) => String(b.work_date).localeCompare(String(a.work_date)) || String(b.created_at).localeCompare(String(a.created_at)));
+  const mine = !staff(), rows = mine ? te.filter(x => x.user_id === me.user_id) : te;
+  const by = {}; rows.forEach(x => { const r = by[x.user_id] = by[x.user_id] || { u: x.user_id, h: 0 }; r.h += +x.hours || 0; });
+  const ppl = Object.values(by).sort((a, b) => b.h - a.h), mx = Math.max(1, ...ppl.map(x => x.h));
+  const people = staff() ? team.filter(m => m.active) : [], p = cur.project;
+  const def = people.some(m => m.user_id === p.assigned_to) ? p.assigned_to : me.user_id;
+  return `<div class="card"><div class="top2"><h2>${t(mine ? 'hrsMine' : 'hrsT')}</h2>${rows.length ? `<b>${hfmt(sumBy(rows, x => x.hours))}</b>` : ''}</div><p class="sub">${t(mine ? 'hrsMineS' : 'hrsS')}</p>
+  <form id="hrsf" class="hrsf">${staff() ? `<label>${t('hrsWho')}<select id="hr-who">${people.map(m => `<option value="${m.user_id}"${m.user_id === def ? ' selected' : ''}>${esc(m.name)}</option>`).join('')}</select></label>` : ''}
+  <label>${t('date')}<input id="hr-date" type="date" value="${S.today()}" max="${S.today()}"></label>
+  <label>${t('hrsH')}<input id="hr-h" type="number" step="0.25" min="0.25" max="24" inputmode="decimal" placeholder="8"></label>
+  <label class="wide">${t('hrsNote')}<input id="hr-note" maxlength="500" placeholder="${t('hrsNotePh')}"></label>
+  <button class="primary" type="submit">${t('hrsAdd')}</button></form>
+  ${!mine && ppl.length ? `<div class="hbars2">${ppl.map(x => `<div class="hb"><span>${esc(nameOf(x.u) || '·')}</span><div class="meter"><i style="width:${x.h / mx * 100}%"></i></div><b>${hfmt(x.h)}</b></div>`).join('')}</div>` : ''}
+  ${rows.length ? `<div class="hlist">${rows.slice(0, 12).map(x => `<div class="hrow"><time>${fdate(x.work_date)}</time><div><b>${hfmt(x.hours)}</b>${mine ? '' : ` · ${esc(nameOf(x.user_id) || '·')}`}${x.note ? `<small>${esc(x.note)}</small>` : ''}</div>${staff() || x.user_id === me.user_id ? del('time_entries', x.id) : ''}</div>`).join('')}</div>${rows.length > 12 ? `<p class="sub">+${rows.length - 12}</p>` : ''}` : `<p class="sub">${t('hrsNone')}</p>`}</div>`;
+}
+const cHours = () => hoursCard();
+
+/* team messages (internal, never shown to the client) */
+let tmTo = '', dmFor = null;
+const isUnread = m => m.from_user !== me.user_id && !(m.read_by || []).includes(me.user_id) && (!m.to_user || m.to_user === me.user_id);
+const msgUnread = b => (b.team_msgs || []).filter(isUnread).length;
+const allUnread = () => B.reduce((a, b) => a + msgUnread(b), 0);
+const byTime = xs => xs.slice().sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)));
+const projPeople = b => { const p = b.project, ids = new Set([p.assigned_to, ...(p.crew || []), ...team.filter(m => m.role === 'admin' || m.role === 'manager').map(m => m.user_id)].filter(Boolean)); return team.filter(m => m.active && ids.has(m.user_id)); };
+function cTeam() {
+  const ms = byTime(cur.team_msgs || []), ppl = projPeople(cur).filter(m => m.user_id !== me.user_id);
+  if (tmTo && !ppl.some(m => m.user_id === tmTo)) tmTo = '';
+  return `<div class="card"><h2>${t('teamT')}</h2><p class="sub">${t('teamS')}</p>
+  ${ppl.length ? `<div class="tppl" role="group" aria-label="${t('to')}">${ppl.map(m => `<button class="tp${tmTo === m.user_id ? ' on' : ''}" data-tmto="${m.user_id}" aria-pressed="${tmTo === m.user_id}"><span class="av">${initial(m.name)}</span><span><b>${esc(m.name)}</b><small>${t('role_' + m.role)}</small></span></button>`).join('')}</div>` : ''}
+  <div class="chat tchat" id="chat">${ms.map(m => `<div class="bub ${m.from_user === me.user_id ? 'me' : ''}${m.to_user ? ' dm' : ''}"><small>${esc(nameOf(m.from_user) || '·')} → ${m.to_user ? esc(m.to_user === me.user_id ? t('you') : nameOf(m.to_user) || '·') : t('everyone')} · ${ftime(m.created_at)}</small><p>${esc(m.body)}</p></div>`).join('') || `<p class="sub">${t('teamNone')}</p>`}</div>
+  <form class="tsend" id="tmf"><label class="tto">${t('to')}<select id="tm-to"><option value="">${t('teamAll')}</option>${ppl.map(m => `<option value="${m.user_id}"${tmTo === m.user_id ? ' selected' : ''}>${esc(m.name)}</option>`).join('')}</select></label>
+  <div class="sendrow"><textarea id="tm-body" rows="2" maxlength="2000" placeholder="${t('writeMsg')}" aria-label="${t('writeMsg')}"></textarea><button class="primary" type="submit">${t('send')}</button></div></form></div>`;
+}
+
+/* last thing someone did on a project */
+function lastAct(b, uid) {
+  const nm = nameOf(uid), ds = [
+    ...(b.photos || []).filter(x => !uid || x.by_user === uid).map(x => x.taken_at || x.created_at),
+    ...(b.time_entries || []).filter(x => !uid || x.user_id === uid).map(x => x.created_at),
+    ...(b.daily_logs || []).filter(x => !uid || (nm && x.by_name === nm)).map(x => x.created_at),
+    ...(b.team_msgs || []).filter(x => !uid || x.from_user === uid).map(x => x.created_at)].filter(Boolean).sort();
+  return ds.length ? ds[ds.length - 1] : null;
+}
+const agoTxt = d => { if (!d) return t('noAct'); const n = Math.floor((Date.now() - new Date(d)) / 864e5); return n <= 0 ? t('today') : n === 1 ? t('yesterday') : t('daysAgo').replace('{n}', n); };
+function crewProj(b, j, uid) {
+  const id = b.project.id, la = lastAct(b, uid), stale = !la || Date.now() - new Date(la) > 3 * 864e5;
+  return `<div class="cprow"><button class="cpmain" data-open="${id}" data-ctabgo="cost"><div class="cp1"><b>${esc(b.project.title || t('project'))}</b>${jpill(j)}</div>
+  <div class="cp2"><span>${t('jcProg')} <b>${j.prog}%</b></span><span>${t('jcCostUsed')} <b>${j.has ? Math.round(j.usedPct) + '%' : '·'}</b></span><span>${t('jcHours')} <b>${hfmt(j.hrs)}${j.estH ? ' / ' + hfmt(j.estH) : ''}</b></span><span>${t('jcProfitF')} <b class="${j.fProfit < 0 ? 'neg' : ''}">${money(j.fProfit)}</b></span></div>
+  ${dual(j)}<small class="sub${stale ? ' stale' : ''}">${t('lastAct')}: ${agoTxt(la)}</small></button>
+  <div class="cpacts"><button class="btn2" data-open="${id}" data-ctabgo="team">${t('teamTab')}${msgUnread(b) ? ` <span class="badge">${msgUnread(b)}</span>` : ''}</button><button class="btn2" data-open="${id}" data-ctabgo="photos">${t('photosTab')}</button><button class="btn2" data-open="${id}" data-ctabgo="logs">${t('logsTab')}</button><button class="btn2" data-open="${id}" data-ctabgo="money">${t('rcT')}</button></div></div>`;
+}
+const dmForm = (m, bs) => bs.length ? `<form class="dmf" data-dmform="${m.user_id}"><label>${t('dmProj')}<select name="pid">${bs.map(b => `<option value="${b.project.id}">${esc(b.project.title || t('project'))}</option>`).join('')}</select></label>
+  <textarea name="body" id="dm-body" rows="3" maxlength="2000" placeholder="${esc(t('dmPh').replace('{n}', (m.name || '').split(' ')[0]))}" aria-label="${t('writeMsg')}"></textarea>
+  <div class="acts"><button class="btn2" type="button" data-dmfor="">${t('cancel')}</button><button class="primary" type="submit">${t('send')}</button></div></form>` : `<p class="hint">${t('crewNeedProj')}</p>`;
+function crewView() {
+  const AP = B.filter(b => rvOf(b.project) === 'approved' && stOf(b.project) !== 'done');
+  const wk = new Date(Date.now() - 6 * 864e5).toISOString().slice(0, 10);
+  const card = (m, bs, rows = true) => {
+    const hw = sumBy(B.flatMap(b => (b.time_entries || []).filter(x => x.user_id === m.user_id && x.work_date >= wk)), x => x.hours);
+    const unr = B.reduce((a, b) => a + (b.team_msgs || []).filter(x => x.from_user === m.user_id && isUnread(x)).length, 0);
+    const js = bs.map(b => ({ b, j: jc(b) })).sort((x, y) => ({ over: 0, watch: 1, ok: 2, none: 3 })[x.j.st] - ({ over: 0, watch: 1, ok: 2, none: 3 })[y.j.st]);
+    const nOver = js.filter(x => x.j.st === 'over').length, nWatch = js.filter(x => x.j.st === 'watch').length;
+    return `<div class="card crewcard"><div class="cch"><span class="av lg">${initial(m.name)}</span><div class="cci"><h2>${esc(m.name)}${unr ? ` <span class="badge" title="${t('unread')}">${unr}</span>` : ''}</h2>
+    <small class="sub">${t('role_' + m.role)}${rows ? ` · ${bs.length} ${t(bs.length === 1 ? 'dProj1' : 'dProjN')} · ${hfmt(hw)} ${t('thisWk')}` : ''}</small>
+    ${rows && (nOver || nWatch) ? `<div class="ccflags">${nOver ? `<span class="pill jc jc-over">${t('ccOver').replace('{n}', nOver)}</span>` : ''}${nWatch ? `<span class="pill jc jc-watch">${t('ccWatch').replace('{n}', nWatch)}</span>` : ''}</div>` : ''}</div>
+    <button class="primary" data-dmfor="${dmFor === m.user_id ? '' : m.user_id}" aria-expanded="${dmFor === m.user_id}">${t('msgBtn')}</button></div>
+    ${dmFor === m.user_id ? dmForm(m, bs) : ''}
+    ${rows ? js.map(({ b, j }) => crewProj(b, j, m.user_id)).join('') || `<p class="sub">${t('crewNoProj')}</p>` : ''}</div>`;
+  };
+  const cs = contractors().map(m => ({ m, bs: AP.filter(b => b.project.assigned_to === m.user_id || (b.project.crew || []).includes(m.user_id)) }));
+  const un = AP.filter(b => !b.project.assigned_to), mgrs = team.filter(m => m.active && m.role === 'manager' && m.user_id !== me.user_id);
+  return `<div class="secthead"><h1>${t('crewT')}</h1></div><p class="sub">${t('crewS')}</p>
+  <div class="legend2 top"><span><i class="sw p"></i>${t('jcProg')}</span><span><i class="sw c"></i>${t('jcCostUsed')}</span></div>
+  ${cs.length ? cs.map(x => card(x.m, x.bs)).join('') : `<div class="card"><p class="sub">${t('crewNone')}</p></div>`}
+  ${un.length ? `<div class="card crewcard"><div class="cch"><span class="av lg">?</span><div class="cci"><h2>${t('unassigned')}</h2><small class="sub">${un.length} ${t(un.length === 1 ? 'dProj1' : 'dProjN')}</small></div></div>${un.map(b => crewProj(b, jc(b))).join('')}</div>` : ''}
+  ${mgrs.length ? `<h2 class="sech">${t('crewMgrs')}</h2>${mgrs.map(m => card(m, AP, false)).join('')}` : ''}`;
+}
+
+function inboxRows(max = 50) {
+  return B.map(b => { const ms = byTime(b.team_msgs || []); return { b, last: ms[ms.length - 1], n: msgUnread(b) }; }).filter(x => x.last)
+    .sort((a, b) => (b.n > 0) - (a.n > 0) || String(b.last.created_at).localeCompare(String(a.last.created_at))).slice(0, max)
+    .map(x => `<button class="alrow inrow${x.n ? ' new' : ''}" data-open="${x.b.project.id}" data-ctabgo="team"><span><b>${esc(x.b.project.title || t('project'))}${x.n ? ` <span class="badge">${x.n}</span>` : ''}</b><small>${esc(nameOf(x.last.from_user) || '·')}: ${esc(x.last.body.slice(0, 110))}</small></span><time>${ftime(x.last.created_at)}</time></button>`).join('');
+}
+function inboxView() {
+  const rows = inboxRows();
+  return `<div class="secthead"><h1>${t('inboxT')}</h1></div><p class="sub">${t('inboxS')}</p><div class="card">${rows || `<p class="sub">${t('teamNone')}</p>`}</div>`;
+}
+
+/* project overview additions */
+function jcMini(j) {
+  return `<button class="card jcmini jc-${j.st}" data-ctab="cost"><span class="top2"><b class="h2">${t('jcT')}</b>${jpill(j)}</span>
+  ${j.has ? `${dual(j)}<span class="cp2"><span>${t('jcProg')} <b>${j.prog}%</b></span><span>${t('jcCostUsed')} <b>${Math.round(j.usedPct)}%</b></span><span>${t('jcHours')} <b>${hfmt(j.hrs)}${j.estH ? ' / ' + hfmt(j.estH) : ''}</b></span><span>${t('jcProfitF')} <b class="${j.fProfit < 0 ? 'neg' : 'pos'}">${money(j.fProfit)}</b></span></span>` : `<span class="sub">${t('jcNoneS')}</span>`}
+  <span class="more">${t(j.has ? 'jcOpen' : 'jcSet')} →</span></button>`;
+}
+function allCard() {
+  const phs = allPhotos(cur), ph = phs.slice().sort((a, b) => String(b.taken_at || b.created_at).localeCompare(String(a.taken_at || a.created_at))).slice(0, 8);
+  const docs = cur.documents.filter(x => x.status !== 'void').sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
+  const rc = expSorted().filter(e => e.receipt), lg = (cur.daily_logs || []).slice().sort((a, b) => String(b.log_date).localeCompare(String(a.log_date)))[0];
+  const tm = byTime(cur.team_msgs || []).pop();
+  const sec = (title, n, tab, body) => `<section><div class="top2"><h3>${title}${n !== '' ? ` <small>${n}</small>` : ''}</h3><button class="lnk" data-ctab="${tab}">${t('seeAll')} →</button></div>${body}</section>`;
+  return `<div class="card allc"><h2>${t('allT')}</h2><div class="allg">
+  ${sec(t('photosTab'), phs.length, 'photos', ph.length ? `<div class="thumbs">${ph.map(x => `<button class="th" data-pv="${esc(x.id)}" aria-label="${t('open')}"><img src="${esc(API.photoUrl(x.path))}" alt="${esc(x.caption || '')}" loading="lazy"></button>`).join('')}</div>` : `<p class="sub">${t('noPhotos')}</p>`)}
+  ${sec(t('docs'), docs.length, 'docs', docs.length ? docs.slice(0, 4).map(x => `<div class="mini"><span>${t('doc_' + x.kind)}</span><span class="pill">${x.sign_status ? t('es_' + x.sign_status) : t('ds_' + x.status)}</span></div>`).join('') : `<p class="sub">${t('none')}</p>`)}
+  ${sec(t('rcT'), '', 'money', `<p class="sub">${t('rcOf').replace('{a}', rc.length).replace('{b}', cur.expenses.length)}</p>${rc.slice(0, 4).map(e => `<div class="mini"><span>${esc(e.vendor || e.description || '·')} · ${money(e.amount)}</span><button class="lnk" data-rcv="${esc(e.receipt)}">${t('viewReceipt')}</button></div>`).join('')}`)}
+  ${sec(t('lastLog'), '', 'logs', lg ? `<p class="mini2"><b>${fdate(lg.log_date)}${lg.by_name ? ' · ' + esc(lg.by_name) : ''}${+lg.hours ? ' · ' + hfmt(lg.hours) : ''}</b><span>${esc((lg.work_done || '').slice(0, 160))}</span>${lg.issues ? `<span class="neg">${esc(lg.issues.slice(0, 120))}</span>` : ''}</p>` : `<p class="sub">${t('none')}</p>`)}
+  ${sec(t('lastMsg'), msgUnread(cur) ? `<span class="badge">${msgUnread(cur)}</span>` : '', 'team', tm ? `<p class="mini2"><b>${esc(nameOf(tm.from_user) || '·')} · ${ftime(tm.created_at)}</b><span>${esc(tm.body.slice(0, 160))}</span></p>` : `<p class="sub">${t('teamNone')}</p>`)}
+  </div></div>`;
+}
+
+/* contractor home: unread team messages */
+function crewHomeExtra() {
+  const n = allUnread(), wk = new Date(Date.now() - 6 * 864e5).toISOString().slice(0, 10);
+  const hw = sumBy(B.flatMap(b => (b.time_entries || []).filter(x => x.user_id === me.user_id && x.work_date >= wk)), x => x.hours);
+  const rows = inboxRows(4);
+  return `${rows ? `<div class="card"><div class="top2"><h2>${t('teamT')}${n ? ` <span class="badge">${n}</span>` : ''}</h2></div>${rows}</div>` : ''}
+  <div class="kpis"><div class="kpi"><small>${t('hrsMine')}</small><b>${hfmt(hw)}</b><em>${t('thisWk')}</em></div></div>`;
+}
+
+/* mark as read once the chat is on screen */
+let readBusy = false;
+function v8After() {
+  if (view !== 'project' || ctab !== 'team' || !cur || readBusy || !msgUnread(cur)) return;
+  readBusy = true; const b = cur;
+  (b.team_msgs || []).forEach(m => { if (isUnread(m)) m.read_by = [...(m.read_by || []), me.user_id]; });
+  Promise.resolve(API.msgsRead ? API.msgsRead(b.project.id) : null).catch(() => {}).finally(() => { readBusy = false; });
+  setTimeout(render, 0);
+}
+
+app.addEventListener('submit', async e => {
+  const f = e.target, id = f.id, dm = f.dataset ? f.dataset.dmform : undefined;
+  if (id !== 'hrsf' && id !== 'tmf' && dm === undefined) return; e.preventDefault();
+  const sb = f.querySelector('[type=submit]'); if (f.dataset.busy) return; f.dataset.busy = '1'; if (sb) sb.disabled = true;
+  try {
+    if (id === 'hrsf') {
+      const h = +$('#hr-h').value; if (!(h > 0 && h <= 24)) { S.toast(t('hrsBad')); return $('#hr-h').focus(); }
+      const row = await API.insert('time_entries', { project_id: cur.project.id, user_id: staff() ? $('#hr-who').value : me.user_id, work_date: $('#hr-date').value || S.today(), hours: h, note: $('#hr-note').value.trim() });
+      cur.time_entries.push(row); render(); S.toast(t('hrsOk').replace('{h}', hfmt(h)));
+    } else if (id === 'tmf') {
+      const body = $('#tm-body').value.trim(); if (!body) return $('#tm-body').focus();
+      const to = $('#tm-to').value || null;
+      const row = await API.insert('team_msgs', { project_id: cur.project.id, from_user: me.user_id, to_user: to, body });
+      cur.team_msgs.push(row); tmTo = to || ''; render(); $('#tm-body')?.focus();
+    } else {
+      const fd = new FormData(f), pid = fd.get('pid'), body = String(fd.get('body') || '').trim(); if (!body) return $('#dm-body')?.focus();
+      const row = await API.insert('team_msgs', { project_id: pid, from_user: me.user_id, to_user: dm, body });
+      const b = B.find(x => x.project.id === pid); if (b) b.team_msgs.push(row);
+      dmFor = null; render(); S.toast(t('dmSent').replace('{n}', nameOf(dm)));
+    }
+  } catch (x) { fail(x); } finally { delete f.dataset.busy; if (sb && sb.isConnected) sb.disabled = false; }
+});
+const syncTo = () => { const s = $('#tm-to'); if (s) s.value = tmTo; document.querySelectorAll('[data-tmto]').forEach(b => { const on = b.dataset.tmto === tmTo; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); }); };
+app.addEventListener('click', e => {
+  const n = e.target.closest && e.target.closest('[data-tmto],[data-dmfor]'); if (!n) return;
+  if (n.dataset.tmto !== undefined) { tmTo = tmTo === n.dataset.tmto ? '' : n.dataset.tmto; syncTo(); $('#tm-body')?.focus(); }
+  else { dmFor = n.dataset.dmfor || null; render(); if (dmFor) $('#dm-body')?.focus(); }
+});
+app.addEventListener('change', e => { if (e.target.id === 'tm-to') { tmTo = e.target.value; syncTo(); } });
+
+/* new team messages arrive without reloading */
+setInterval(async () => {
+  if (document.visibilityState !== 'visible' || !me || !API.listMsgs || (view !== 'home' && view !== 'project')) return;
+  try {
+    const ms = await API.listMsgs(), by = {}; ms.forEach(m => (by[m.project_id] = by[m.project_id] || []).push(m));
+    let changed = false;
+    B.forEach(b => { const nx = by[b.project.id] || [], old = b.team_msgs || [];
+      if (nx.length !== old.length || nx.some(m => { const o = old.find(x => x.id === m.id); return !o || (o.read_by || []).length !== (m.read_by || []).length; })) { b.team_msgs = nx; changed = true; } });
+    if (!changed) return;
+    const a = document.activeElement, typing = (a && /INPUT|TEXTAREA|SELECT/.test(a.tagName)) || [...document.querySelectorAll('textarea')].some(x => x.value.trim());
+    if (!typing) render();
+  } catch (_) {}
+}, 30000);
+
+S.addText({costTab:'Costo vs estimado',teamTab:'Equipo',g_team:'Equipo',hoursTab:'Horas',hv_crew:'Por contratista',hv_inbox:'Mensajes',
+jc_none:'Sin estimado',jc_ok:'Va bien',jc_watch:'Vigilar',jc_over:'Sobre el estimado',jcT:'Costo vs estimado',jcProfitF:'Ganancia proyectada',jcProfitFinal:'Ganancia final',jcProfitE:'Ganancia estimada al inicio',jcProg:'Avance',jcUsed:'{p}% del costo estimado usado',
+jcWhy_ok:'El gasto y las horas van de acuerdo con el avance de la obra.',jcWhy_watch:'El presupuesto se está usando más rápido de lo que avanza la obra. Pregúntale al equipo qué está pasando.',jcWhy_over:'Ya se pasó del costo o de las horas estimadas. Cada dólar de más sale de la ganancia.',jcWhy_none:'',
+jcNoneS:'Pon el costo estimado de materiales y las horas de mano de obra para comparar contra lo real.',jcSet:'Poner el estimado',jcOpen:'Ver costo vs estimado',jcEstT:'Estimado del proyecto',jcEstS:'Lo que calculas que te va a costar. Se guarda solo.',
+jf_est_mat:'Materiales y gastos ($)',jf_est_hours:'Horas de mano de obra',jf_labor_rate:'Costo por hora ($)',jf_est_sub:'Subcontratos y nómina ($)',jcRateHint:'Vacío = el de la empresa ({r}/h)',jcSubHint:'Lo que registras como gasto con categoría Subcontratistas o Sueldos de empleados. Si a la cuadrilla ya la pagas así, deja las horas fuera del costo (costo por hora en 0) para no contarla dos veces.',jcReviewEst:'En la revisión del presupuesto calculaste un costo total de {a}.',
+jcCmpT:'Estimado vs real',jcContract:'Contrato',jcMat:'Materiales y gastos',jcHours:'Horas',jcLab:'Mano de obra ({r}/h)',jcSub:'Subcontratos y nómina',jcTotal:'Costo total',jcEst:'Estimado',jcReal:'Real',jcOver:'de más',jcLeft:'disponible',jcNoEst:'sin estimado',
+jcFromLogs:'Tomado de la bitácora diaria (todavía no hay horas registradas por persona).',jcCostUsed:'Costo usado',
+hrsT:'Horas trabajadas',hrsS:'Cada quien registra sus horas desde su celular. Aquí ves el total por persona.',hrsMine:'Mis horas',hrsMineS:'Registra las horas que trabajaste en este proyecto.',hrsWho:'Quién',hrsH:'Horas',hrsNote:'Qué se hizo (opcional)',hrsNotePh:'Ej. drywall en la cocina',hrsAdd:'Registrar horas',hrsNone:'Todavía no hay horas registradas.',hrsBad:'Pon entre 0.25 y 24 horas.',hrsOk:'{h} registradas',
+teamT:'Mensajes del equipo',teamS:'Solo los ve el equipo de C Plus, nunca el cliente. Toca a una persona para escribirle solo a ella.',teamNone:'Todavía no hay mensajes.',teamAll:'Todos en el proyecto',to:'Para',you:'ti',msgBtn:'Mensaje',
+crewT:'Proyectos por contratista',crewS:'Cómo va cada quien. Barra azul = avance de la obra; barra naranja = costo usado. Si la naranja va más adelante, se está gastando más rápido de lo que avanza.',thisWk:'esta semana',crewNoProj:'Sin proyectos activos.',crewNone:'Todavía no hay contratistas en el equipo. Agrégalos en Ajustes.',crewNeedProj:'Asígnale un proyecto para poder escribirle.',crewMgrs:'Gerentes de proyecto',
+dmProj:'Sobre el proyecto',dmPh:'Escríbele a {n}...',dmSent:'Mensaje enviado a {n}',lastAct:'Última actividad',noAct:'sin actividad',today:'hoy',yesterday:'ayer',daysAgo:'hace {n} días',ccOver:'{n} sobre el estimado',ccWatch:'{n} para vigilar',
+inboxT:'Mensajes del equipo',inboxS:'Conversaciones con contratistas y gerentes, por proyecto. Lo nuevo sale primero.',allT:'Todo del proyecto',seeAll:'Ver todo',rcT:'Recibos',rcOf:'{a} de {b} gastos tienen recibo',lastLog:'Última bitácora',lastMsg:'Último mensaje del equipo',
+laborRate:'Costo por hora de mano de obra ($)',laborHint:'El costo por hora convierte las horas registradas en dinero. Cada proyecto puede tener el suyo.',
+dJcT:'Estimado vs real',dJcS:'Proyectos activos con estimado: la ganancia que esperabas contra la que va a quedar si siguen así.',dJcE:'Ganancia estimada',dJcF:'Ganancia proyectada',dJcNoEst:'{n} proyecto(s) activo(s) sin estimado. Ponlo en Costo vs estimado de cada proyecto.',dOfEst:'del costo estimado usado',
+dProjS:'Ganancia proyectada = contrato menos el costo estimado (o lo gastado, si ya es mayor).',
+pushWhyCrew:'Te avisamos cuando te asignen un proyecto o una tarea, o te escriban del equipo.',pushWhyStaff:'Te avisamos cuando llegue un proyecto para revisar, un gasto pase el 90% del presupuesto, alguien del equipo o un cliente mande mensaje, entre una solicitud de cotización o la cuadrilla llene la bitácora.'
+}, {costTab:'Cost vs estimate',teamTab:'Team',g_team:'Team',hoursTab:'Hours',hv_crew:'By contractor',hv_inbox:'Messages',
+jc_none:'No estimate',jc_ok:'On track',jc_watch:'Watch',jc_over:'Over estimate',jcT:'Cost vs estimate',jcProfitF:'Projected profit',jcProfitFinal:'Final profit',jcProfitE:'Profit estimated at start',jcProg:'Progress',jcUsed:'{p}% of estimated cost used',
+jcWhy_ok:'Spending and hours are in line with the progress of the job.',jcWhy_watch:'The budget is being used faster than the job is moving. Ask the team what is going on.',jcWhy_over:'It is already past the estimated cost or hours. Every extra dollar comes out of profit.',jcWhy_none:'',
+jcNoneS:'Enter the estimated material cost and labor hours to compare them with the real numbers.',jcSet:'Set the estimate',jcOpen:'See cost vs estimate',jcEstT:'Project estimate',jcEstS:'What you expect it to cost you. Saves automatically.',
+jf_est_mat:'Materials and expenses ($)',jf_est_hours:'Labor hours',jf_labor_rate:'Cost per hour ($)',jf_est_sub:'Subcontracts and payroll ($)',jcRateHint:'Empty = company rate ({r}/h)',jcSubHint:'What you record as expenses in the Subcontractors or Employee wages category. If you already pay the crew that way, keep hours out of the cost (cost per hour 0) so it is not counted twice.',jcReviewEst:'In the budget review you estimated a total cost of {a}.',
+jcCmpT:'Estimate vs actual',jcContract:'Contract',jcMat:'Materials and expenses',jcHours:'Hours',jcLab:'Labor ({r}/h)',jcSub:'Subcontracts and payroll',jcTotal:'Total cost',jcEst:'Estimate',jcReal:'Actual',jcOver:'over',jcLeft:'left',jcNoEst:'no estimate',
+jcFromLogs:'Taken from the daily log (no hours logged per person yet).',jcCostUsed:'Cost used',
+hrsT:'Hours worked',hrsS:'Everyone logs their hours from their phone. Here you see the total per person.',hrsMine:'My hours',hrsMineS:'Log the hours you worked on this project.',hrsWho:'Who',hrsH:'Hours',hrsNote:'What was done (optional)',hrsNotePh:'E.g. kitchen drywall',hrsAdd:'Log hours',hrsNone:'No hours logged yet.',hrsBad:'Enter between 0.25 and 24 hours.',hrsOk:'{h} logged',
+teamT:'Team messages',teamS:'Only the C Plus team sees these, never the client. Tap a person to write only to them.',teamNone:'No messages yet.',teamAll:'Everyone on the project',to:'To',you:'you',msgBtn:'Message',
+crewT:'Projects by contractor',crewS:'How everyone is doing. Blue bar = job progress; orange bar = cost used. If the orange one is ahead, money is going out faster than the work moves.',thisWk:'this week',crewNoProj:'No active projects.',crewNone:'No contractors on the team yet. Add them in Settings.',crewNeedProj:'Assign them a project to message them.',crewMgrs:'Project managers',
+dmProj:'About the project',dmPh:'Write to {n}...',dmSent:'Message sent to {n}',lastAct:'Last activity',noAct:'no activity',today:'today',yesterday:'yesterday',daysAgo:'{n} days ago',ccOver:'{n} over estimate',ccWatch:'{n} to watch',
+inboxT:'Team messages',inboxS:'Conversations with contractors and managers, by project. New ones first.',allT:'Everything on this project',seeAll:'See all',rcT:'Receipts',rcOf:'{a} of {b} expenses have a receipt',lastLog:'Latest daily log',lastMsg:'Latest team message',
+laborRate:'Labor cost per hour ($)',laborHint:'The cost per hour turns logged hours into money. Each project can have its own.',
+dJcT:'Estimate vs actual',dJcS:'Active projects with an estimate: the profit you expected versus where it is heading.',dJcE:'Estimated profit',dJcF:'Projected profit',dJcNoEst:'{n} active project(s) without an estimate. Add it in Cost vs estimate on each project.',dOfEst:'of estimated cost used',
+dProjS:'Projected profit = contract minus the estimated cost (or what was spent, if higher).',
+pushWhyCrew:'We let you know when you are assigned a project or a task, or someone on the team writes to you.',pushWhyStaff:'We let you know when a project arrives for review, an expense passes 90% of a budget, a teammate or client sends a message, a quote request comes in or the crew fills in the daily log.'
+});
 
 /* ---------- start ---------- */
 (async function boot() {

@@ -1,0 +1,2 @@
+-- v8: estimates per project (staff only), hours worked, internal team messages (applied via Supabase MCP 2026-11-25)
+-- settings.labor_rate; tables targets (est_mat, est_hours, labor_rate, est_sub), time_entries, team_msgs; rpc msgs_read(pid); trigger notify_team_msgs -> private.notify
