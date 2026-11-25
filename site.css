@@ -100,8 +100,6 @@ nav a:hover::after{transform:scaleX(1)}
 .introVid #intro{transition:opacity .8s .5s,visibility 0s 1.3s}
 .introVid.anim #intro{opacity:0;visibility:hidden}
 .hero .heroShade{transition:opacity 1.4s var(--ease)}
-.hero.building .heroShade{opacity:.25}
-.done .hero.building .heroShade{opacity:1}
 .heroBar{position:absolute;left:0;right:0;bottom:0;height:3px;background:#ffffff1f;z-index:3;opacity:0;transition:opacity .5s}
 .heroBar i{display:block;height:100%;background:var(--or);transform-origin:left;transform:scaleX(0);box-shadow:0 0 12px var(--or)}
 .hero.building .heroBar{opacity:1}

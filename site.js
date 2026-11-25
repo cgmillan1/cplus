@@ -118,7 +118,7 @@
   /* ---------- intro + nav ---------- */
   const root = document.documentElement;
   if (!reduce) root.classList.add('anim');
-  setTimeout(() => { if (!root.classList.contains('introVid')) root.classList.add('done'); }, reduce ? 0 : 1100);
+  setTimeout(() => root.classList.add('done'), reduce ? 0 : 1100);
   const nav = $('.nav'); let lastY = 0;
   addEventListener('scroll', () => {
     const y = scrollY;
@@ -137,7 +137,6 @@
     if (!box || !heroEl) return;
     const T = PAGE === 'es' ? { skip: 'Saltar', replay: 'Ver cómo se construye' } : { skip: 'Skip', replay: 'Watch it build' };
     const saveData = navigator.connection && navigator.connection.saveData;
-    let seen = false; try { seen = sessionStorage.getItem('cplus-build-intro') === '1'; } catch (_) {}
     const vid = document.createElement('video');
     vid.className = 'heroVid'; vid.muted = true; vid.playsInline = true; vid.preload = 'auto';
     vid.setAttribute('muted', ''); vid.setAttribute('playsinline', ''); vid.setAttribute('aria-hidden', 'true');
@@ -146,14 +145,13 @@
     const skip = document.createElement('button'); skip.type = 'button'; skip.className = 'heroSkip'; skip.textContent = T.skip;
     const again = document.createElement('button'); again.type = 'button'; again.className = 'heroAgain';
     again.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg><span>${T.replay}</span>`;
-    box.appendChild(vid); heroEl.append(bar, skip, again);
+    box.appendChild(vid); heroEl.append(again);
 
     let raf = 0;
     const tick = () => { if (vid.duration) bar.firstChild.style.transform = `scaleX(${vid.currentTime / vid.duration})`; raf = requestAnimationFrame(tick); };
     const finish = () => {
       cancelAnimationFrame(raf);
       heroEl.classList.remove('building'); heroEl.classList.add('built');
-      root.classList.add('done');
       setTimeout(() => { vid.pause(); }, 1200);
     };
     const play = () => {
@@ -165,19 +163,14 @@
       if (go && go.catch) go.catch(finish);
       raf = requestAnimationFrame(tick);
     };
-    /* the headline lands just as the pergola takes shape */
-    vid.addEventListener('timeupdate', () => { if (vid.currentTime > 5.2) root.classList.add('done'); });
     vid.addEventListener('ended', finish);
     vid.addEventListener('error', finish);
-    skip.addEventListener('click', finish);
     again.addEventListener('click', play);
 
-    if (reduce || saveData || seen) { heroEl.classList.add('built'); return; }
-    try { sessionStorage.setItem('cplus-build-intro', '1'); } catch (_) {}
-    root.classList.add('introVid');
+    /* background video: the page is usable the whole time, like the Sonec site */
+    if (reduce || saveData) { heroEl.classList.add('built'); return; }
     vid.src = src;
-    /* start under the logo, so the first thing seen after it is the bare lot */
-    setTimeout(play, 700);
+    setTimeout(play, 300);
     setTimeout(() => { if (!vid.currentTime) finish(); }, 4000);
   })();
 
