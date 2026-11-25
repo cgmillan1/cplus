@@ -91,6 +91,8 @@ const S = window.CPLUS = {
   uid: () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2))
 };
 const t = S.t;
+Object.assign(T.es, { photosTab: 'Fotos', pk_before: 'Antes', pk_progress: 'Durante', pk_after: 'Después' }); Object.assign(T.en, { photosTab: 'Photos', pk_before: 'Before', pk_progress: 'During', pk_after: 'After' });
+S.addText = (es, en) => { Object.assign(T.es, es); Object.assign(T.en, en); };
 
 /* phones: keep digits, show (801) 555-0134 for US numbers */
 S.fmtPhone = v => { const d = String(v || '').replace(/\D/g, '').replace(/^1(?=\d{10}$)/, ''); return d.length === 10 ? `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}` : String(v || '').trim(); };
@@ -120,7 +122,10 @@ S.calc = function (b) {
   const ok = (b.change_orders || []).filter(c => c.status === 'approved');
   const subM = b.items.filter(i => i.kind !== 'lab').reduce((a, i) => a + lt(i), 0) + ok.filter(c => c.kind !== 'lab').reduce((a, c) => a + (+c.amount || 0), 0);
   const subL = b.items.filter(i => i.kind === 'lab').reduce((a, i) => a + lt(i), 0) + ok.filter(c => c.kind === 'lab').reduce((a, c) => a + (+c.amount || 0), 0);
-  const sub = subM + subL, tax = subM * (+p.tax_rate || 0) / 100, tot = sub + tax;
+  let sub = subM + subL, tax = subM * (+p.tax_rate || 0) / 100, tot = sub + tax;
+  /* proyectos recibidos de otra empresa: el contrato es el monto del budget recibido (+ cambios aprobados) */
+  const recv = +p.contract_amount || 0;
+  if (recv > 0 && !b.items.length) { sub = recv + ok.reduce((a, c) => a + (+c.amount || 0), 0); tax = 0; tot = sub; }
   const paid = b.payments.reduce((a, x) => a + (+x.amount || 0), 0);
   const sd = b.steps.filter(s => s.done).length, mb = b.materials.filter(m => m.purchased).length;
   const r = { lt, subM, subL, sub, tax, tot, paid, bal: tot - paid, sd, mb, pct: b.steps.length ? Math.round(sd / b.steps.length * 100) : 0, coOk: ok };

@@ -61,7 +61,7 @@ function steps() {
   <div class="card"><h2>${t('next')}</h2><p class="sub">${n.length}</p><ol class="tl todo">${n.map((s, i) => li(s, i + 1)).join('') || `<p class="sub">${t('none')}</p>`}</ol></div></div>`;
 }
 function docs() { return `<div class="card"><h2>${t('docs')}</h2><p class="sub">${t('docsClient')}</p>${b.documents.map(x => `<div class="co"><div class="top2"><b>${t('doc_' + x.kind)}${x.file ? ' ✓' : ''}</b><b class="amt">${money(x.total)}</b></div><small class="sub">${fdate(x.created_at)} · ${t('ds_' + x.status)}${x.signed_by ? ' · ' + esc(x.signed_by) : ''}</small><div class="acts">${x.file ? `<a class="primary" style="text-decoration:none;display:inline-flex;align-items:center" href="${esc(API.docUrl(x.file))}" target="_blank" rel="noopener">${t('dlSigned')}</a>` : ''}${x.snapshot && x.snapshot.items ? `<button class="btn2" data-dl="${x.id}">${x.file ? t('dlOriginal') : t('download')}</button>` : ''}</div></div>`).join('')}</div>`; }
-function updates() { return `<div class="card"><h2>${t('updates')}</h2><p class="sub">${t('updSub')}</p>${b.updates.map(u => `<div class="upd" style="margin-bottom:22px"><small>${fdate(u.created_at)}</small>${u.body ? `<p>${esc(u.body)}</p>` : ''}${S.photos(u.photos)}</div>`).join('') || `<p class="sub">${t('none')}</p>`}</div>`; }
+function updates() { const ph = b.photos || []; return (ph.length ? `<div class="card"><h2>${t('photosTab')}</h2>${['before', 'progress', 'after'].map(k => { const xs = ph.filter(x => x.kind === k || (k === 'progress' && x.kind === 'issue')); return xs.length ? `<h3 style="margin-top:14px">${t('pk_' + k)}</h3>${S.photos(xs.map(x => x.path))}` : ''; }).join('')}</div>` : '') + `<div class="card"><h2>${t('updates')}</h2><p class="sub">${t('updSub')}</p>${b.updates.map(u => `<div class="upd" style="margin-bottom:22px"><small>${fdate(u.created_at)}</small>${u.body ? `<p>${esc(u.body)}</p>` : ''}${S.photos(u.photos)}</div>`).join('') || `<p class="sub">${t('none')}</p>`}</div>`; }
 function messages() {
   const who = contact.name || 'C Plus';
   return `<div class="card"><h2>${t('messages')}</h2><p class="sub">${t('msgSub')}</p><div class="chat" id="chat">${b.comments.map(m => `<div class="bub ${m.author === 'client' ? 'me' : ''}"><small>${esc(m.author === 'client' ? (m.name || t('you')) : (m.name || who))} · ${fdate(m.created_at)}</small><p>${esc(m.body)}</p></div>`).join('')}</div>
@@ -80,7 +80,7 @@ async function load() {
   try {
     const d = await API.clientProject(tok);
     if (!d) { state = 'missing'; return render(); }
-    contact = d.contact || {}; b = { project: d.project, items: d.items, materials: d.materials, steps: d.steps, updates: d.updates, payments: d.payments, milestones: d.milestones, change_orders: d.change_orders, comments: d.comments, documents: d.documents || [] };
+    contact = d.contact || {}; b = { project: d.project, items: d.items, materials: d.materials, steps: d.steps, updates: d.updates, photos: d.photos || [], payments: d.payments, milestones: d.milestones, change_orders: d.change_orders, comments: d.comments, documents: d.documents || [] };
     state = 'ok';
   } catch (e) { console.error(e); if (state !== 'ok') state = 'error'; }
   render();

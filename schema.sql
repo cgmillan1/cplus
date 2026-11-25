@@ -463,3 +463,5 @@ insert into setup_code (code) select upper(encode(extensions.gen_random_bytes(4)
 
 -- ---------- versión 4: fotos en la cotización y aviso por correo ----------
 -- (ya aplicado en Supabase: ver la migración "lead_photos_and_alerts")
+-- ---------- versión 5: proyectos recibidos, obra y taxes ----------
+-- ver supabase/v5_field_and_taxes.sql (aplicado como "v5_field_and_taxes")

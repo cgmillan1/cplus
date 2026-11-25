@@ -5,7 +5,7 @@
   const ready = !!(cfg.url && cfg.key && window.supabase);
   const sb = ready ? window.supabase.createClient(cfg.url, cfg.key) : null;
   const ok = ({ data, error }) => { if (error) throw new Error(error.message || String(error)); return data; };
-  const CHILD = ['items', 'materials', 'steps', 'updates', 'payments', 'milestones', 'change_orders', 'budget', 'expenses', 'comments', 'documents'];
+  const CHILD = ['items', 'materials', 'steps', 'updates', 'payments', 'milestones', 'change_orders', 'budget', 'expenses', 'comments', 'documents', 'photos', 'checklists', 'checklist_items', 'tasks', 'daily_logs'];
 
   window.API = {
     ready,
@@ -32,6 +32,15 @@
         rows.forEach(r => out[r.project_id] && out[r.project_id][t].push(r));
       }));
       return projects.map(p => out[p.id]);
+    },
+    /* gastos de un año, de proyectos y generales de la empresa, para taxes */
+    async expensesYear(y) { return ok(await sb.from('expenses').select('*').gte('spent_on', y + '-01-01').lte('spent_on', y + '-12-31').order('spent_on', { ascending: false })); },
+    async templates() { return ok(await sb.from('templates').select('*').order('created_at')); },
+    async receiptUrls(paths) { if (!paths.length) return {}; const r = ok(await sb.storage.from('receipts').createSignedUrls(paths, 3600)); return Object.fromEntries(r.filter(x => x.signedUrl).map(x => [x.path, x.signedUrl])); },
+    async receiptAI(image, media) {
+      const { data, error } = await sb.functions.invoke('receipt', { body: { image, media } });
+      if (error) { let m = error.message; try { const j = await error.context.json(); m = j.error || m; } catch (_) {} throw new Error(m); }
+      return data;
     },
     async insert(table, row) { return ok(await sb.from(table).insert(row).select().single()); },
     async insertMany(table, rows) { return rows.length ? ok(await sb.from(table).insert(rows).select()) : []; },
