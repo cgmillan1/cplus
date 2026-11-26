@@ -53,7 +53,7 @@ function first() {
 }
 let noEmail = '';
 function noAccess() { return `<div class="lock"><div class="box">${S.MARK('l')}<h1>${t('noAccessT')}</h1><p>${t('noAccessS')}</p>${noEmail ? `<p><b>${esc(noEmail)}</b></p>` : ''}<button class="btn2" data-logout>${t('logout')}</button></div></div>`; }
-const topbar = () => S.header(`<span id="savedot" class="savedot" aria-live="polite"></span><button class="ghost gear${view === 'home' && hview === 'settings' ? ' on' : ''}" data-hv="settings" aria-label="${t('settingsNav')}" title="${t('settingsNav')}"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span class="gt">${t('settingsNav')}</span></button>`, `<span class="role">${esc(me ? (me.name || '') + ' · ' + t('role_' + me.role) : t('contractor'))}</span>`, 'nolang-m');
+const topbar = () => S.header(`<span id="netst" class="netst" hidden aria-live="polite"></span><span id="savedot" class="savedot" aria-live="polite"></span><button class="ghost gear${view === 'home' && hview === 'settings' ? ' on' : ''}" data-hv="settings" aria-label="${t('settingsNav')}" title="${t('settingsNav')}"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span class="gt">${t('settingsNav')}</span></button>`, `<span class="role">${esc(me ? (me.name || '') + ' · ' + t('role_' + me.role) : t('contractor'))}</span>`, 'nolang-m');
 
 function homeContractor() {
   const today = S.today(), lim = new Date(Date.now() + 14 * 864e5).toISOString().slice(0, 10);
@@ -380,6 +380,7 @@ function render() {
   const ch = $('#chat'); if (ch) ch.scrollTop = ch.scrollHeight;
   const on = document.querySelector('.cbar button.on'); if (on && on.scrollIntoView) on.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   const hon = document.querySelector('.hnav button.on'); if (hon && hon.parentNode.scrollWidth > hon.parentNode.clientWidth) hon.parentNode.scrollLeft = hon.offsetLeft - 8;
+  paintNet();
   v8After();
 }
 
@@ -1215,7 +1216,7 @@ function cPhotos() {
   const shown = all.filter(x => (pkind === 'all' || x.kind === pkind) && (!ptag || (x.tags || []).includes(ptag)));
   const days = {}; shown.forEach(x => { const d = toLocal(x.taken_at || x.created_at); (days[d] = days[d] || []).push(x); });
   return `<div class="card"><div class="secthead" style="margin:0"><h2 style="margin-inline-end:auto">${t('photosTab')}</h2><button class="btn2" data-report>${t('photoReport')}</button></div>
-  <form id="phf" class="phup"><label class="primary bigcam">${camIco}<span>${t('takePhotos')}</span><input id="phfile" type="file" accept="image/*" multiple></label>
+  <form id="phf" class="phup"><div class="camrow"><label class="primary bigcam">${camIco}<span>${t('takePhotos')}</span><input id="phfile" type="file" accept="image/*" multiple></label><label class="btn2 bigcam vidbtn">${vidIco}<span>${t('takeVideo')}</span><input id="vdfile" type="file" accept="video/*"></label></div>
   <div class="grid2" style="margin-top:12px"><label>${t('kind')}<select id="ph-kind" ${inp}>${PKINDS.map(k => `<option value="${k}"${k === 'progress' ? ' selected' : ''}>${t('pk_' + k)}</option>`).join('')}</select></label>
   <label>${t('tagsL')}<input id="ph-tags" list="taglist" placeholder="${t('tagsPh')}" ${inp}><datalist id="taglist">${tags.map(x => `<option value="${esc(x)}">`).join('')}</datalist></label></div>
   <label>${t('captionL')}<input id="ph-cap" maxlength="1000" ${inp}></label>
@@ -1223,7 +1224,7 @@ function cPhotos() {
   <p id="phmsg" class="sub" aria-live="polite"></p></form></div>
   <div class="card"><div class="filters">${['all', ...PKINDS].map(k => `<button data-pk="${k}" class="${pkind === k ? 'on' : ''}" aria-pressed="${pkind === k}">${k === 'all' ? t('allKinds') : t('pk_' + k)} <span class="cnt">${k === 'all' ? all.length : all.filter(x => x.kind === k).length}</span></button>`).join('')}</div>
   ${tags.length ? `<div class="filters">${tags.map(x => `<button data-ptag="${esc(x)}" class="${ptag === x ? 'on' : ''}">#${esc(x)}</button>`).join('')}</div>` : ''}
-  ${Object.keys(days).length ? Object.entries(days).map(([d, xs]) => `<h3 class="dayh">${fdate(d)} <small>${xs.length}</small></h3><div class="pgrid">${xs.map(x => `<button class="pcell" data-pv="${esc(x.id)}"><img src="${esc(API.photoUrl(x.path))}" alt="${esc(x.caption || '')}" loading="lazy"><span class="pk pk-${x.kind}">${t('pk_' + x.kind)}</span>${x.src === 'photos' && !x.shared ? '<span class="lock2" title="privada">🔒</span>' : ''}${x.caption ? `<small>${esc(x.caption)}</small>` : ''}</button>`).join('')}</div>`).join('') : `<p class="sub">${t('noPhotos')}</p>`}</div>`;
+  ${Object.keys(days).length ? Object.entries(days).map(([d, xs]) => `<h3 class="dayh">${fdate(d)} <small>${xs.length}</small></h3><div class="pgrid">${xs.map(x => x.media === 'video' ? vcell(x) : `<button class="pcell" data-pv="${esc(x.id)}">${pend(x)}<img src="${esc(API.photoUrl(x.path))}" alt="${esc(x.caption || '')}" loading="lazy"><span class="pk pk-${x.kind}">${t('pk_' + x.kind)}</span>${x.src === 'photos' && !x.shared ? '<span class="lock2" title="privada">🔒</span>' : ''}${x.caption ? `<small>${esc(x.caption)}</small>` : ''}</button>`).join('')}</div>`).join('') : `<p class="sub">${t('noPhotos')}</p>`}</div>`;
 }
 
 async function geo() {
@@ -1342,7 +1343,7 @@ async function photoReport() {
   }
   const logs = cur.daily_logs.slice().sort((a, b) => String(b.log_date).localeCompare(String(a.log_date))).slice(0, 10);
   if (logs.length) { line(t('logs'), 13, true); logs.forEach(l => { line(`${fdate(l.log_date)}${l.weather ? ' · ' + l.weather : ''}${l.crew ? ' · ' + l.crew : ''}`, 10, true); [l.work_done, l.issues && t('issues') + ': ' + l.issues, l.next_steps && t('nextSteps') + ': ' + l.next_steps].filter(Boolean).forEach(s => line(s, 10)); y += 4; }); y += 6; }
-  const ph = allPhotos(cur).filter(x => pkind === 'all' || x.kind === pkind).slice(0, 60).reverse();
+  const ph = allPhotos(cur).filter(x => x.media !== 'video' && (pkind === 'all' || x.kind === pkind)).slice(0, 60).reverse();
   if (ph.length) {
     if (y > 600) { doc.addPage(); y = M; }
     line(t('photosTab'), 13, true); y += 4;
@@ -1417,7 +1418,7 @@ function taxView() {
   const projOpts = [['', t('general')], ...B.map(b => [b.project.id, b.project.title || t('project')])];
   return `<div class="secthead"><h1>${t('taxesT')}</h1><div class="yrsels"><label class="yrsel">${t('year')} <select id="taxyear">${years.map(y => `<option${y === taxYear ? ' selected' : ''}>${y}</option>`).join('')}</select></label><label class="yrsel">${t('month')} <select id="taxmonth"><option value="0">${t('allYear')}</option>${[1,2,3,4,5,6,7,8,9,10,11,12].map(m => `<option value="${m}"${m === taxMonth ? ' selected' : ''}>${monthName(m)}</option>`).join('')}</select></label></div></div>
   <p class="periodline">${t('showing')}: <b>${taxMonth ? monthName(taxMonth) + ' ' + taxYear : t('allYear') + ' ' + taxYear}</b> · ${t('dlNote')}</p><p class="sub">${t('taxesS')}</p>
-  <div class="acts taxacts" style="margin:12px 0 18px"><button class="primary cam" data-scan="general">${camIco}${t('scanReceipt')}</button><button class="btn2" data-addgen>${t('addGeneral')}</button><button class="btn2" data-csv>${t('csv')}</button><button class="btn2" data-zip>${t('zip')}</button><button class="btn2" data-taxpdf>${t('taxPdf')}</button></div>
+  <div class="acts taxacts" style="margin:12px 0 18px"><button class="primary cam" data-scan="general">${camIco}${t('scanReceipt')}</button><button class="btn2" data-addgen>${t('addGeneral')}</button><button class="btn2" data-csv>${t('csv')}</button><button class="btn2" data-zip>${t('zip')}</button><button class="btn2" data-taxpdf>${t('taxPdf')}</button><button class="btn2" data-qbo>${t('qbo')}</button></div>
   <div class="kpis">${kpi(taxMonth ? t('totalMonth') : t('totalExp'), tot)}${kpi(t('salesTaxPaid'), stx)}<div class="kpi"><small>${t('withReceipt')}</small><b>${R.length ? Math.round(withR / R.length * 100) : 0}%</b><em>${R.length - withR} ${t('missingRc')}</em></div></div>
   <div class="cols"><div class="card"><h2>${t('byTaxCat')}</h2>${byCat.map(x => `<div class="mat"><div><b>${t('tc_' + x.k)}</b><small>Schedule C · ${x.l}</small></div><span class="n">${money(x.v)}</span></div>`).join('') || `<p class="sub">${t('none')}</p>`}<p class="hint">${t('taxNote')}</p></div>
   <div class="card"><h2>${t('byProject')}</h2>${Object.entries(byProj).sort((a, b) => b[1] - a[1]).map(([k, v]) => `<div class="mat"><div><b>${esc(pname(k))}</b></div><span class="n">${money(v)}</span></div>`).join('') || `<p class="sub">${t('none')}</p>`}
@@ -1883,7 +1884,7 @@ function allCard() {
   const tm = byTime(cur.team_msgs || []).pop();
   const sec = (title, n, tab, body) => `<section><div class="top2"><h3>${title}${n !== '' ? ` <small>${n}</small>` : ''}</h3><button class="lnk" data-ctab="${tab}">${t('seeAll')} →</button></div>${body}</section>`;
   return `<div class="card allc"><h2>${t('allT')}</h2><div class="allg">
-  ${sec(t('photosTab'), phs.length, 'photos', ph.length ? `<div class="thumbs">${ph.map(x => `<button class="th" data-pv="${esc(x.id)}" aria-label="${t('open')}"><img src="${esc(API.photoUrl(x.path))}" alt="${esc(x.caption || '')}" loading="lazy"></button>`).join('')}</div>` : `<p class="sub">${t('noPhotos')}</p>`)}
+  ${sec(t('photosTab'), phs.length, 'photos', ph.length ? `<div class="thumbs">${ph.map(x => x.media === 'video' ? `<button class="th vth" data-vv="${esc(x.path)}" aria-label="${t('playVideo')}"><video src="${esc(API.photoUrl(x.path))}#t=0.1" preload="metadata" muted playsinline></video><span class="play" aria-hidden="true"></span></button>` : `<button class="th" data-pv="${esc(x.id)}" aria-label="${t('open')}"><img src="${esc(API.photoUrl(x.path))}" alt="${esc(x.caption || '')}" loading="lazy"></button>`).join('')}</div>` : `<p class="sub">${t('noPhotos')}</p>`)}
   ${sec(t('docs'), docs.length, 'docs', docs.length ? docs.slice(0, 4).map(x => `<div class="mini"><span>${t('doc_' + x.kind)}</span><span class="pill">${x.sign_status ? t('es_' + x.sign_status) : t('ds_' + x.status)}</span></div>`).join('') : `<p class="sub">${t('none')}</p>`)}
   ${sec(t('rcT'), '', 'money', `<p class="sub">${t('rcOf').replace('{a}', rc.length).replace('{b}', cur.expenses.length)}</p>${rc.slice(0, 4).map(e => `<div class="mini"><span>${esc(e.vendor || e.description || '·')} · ${money(e.amount)}</span><button class="lnk" data-rcv="${esc(e.receipt)}">${t('viewReceipt')}</button></div>`).join('')}`)}
   ${sec(t('lastLog'), '', 'logs', lg ? `<p class="mini2"><b>${fdate(lg.log_date)}${lg.by_name ? ' · ' + esc(lg.by_name) : ''}${+lg.hours ? ' · ' + hfmt(lg.hours) : ''}</b><span>${esc((lg.work_done || '').slice(0, 160))}</span>${lg.issues ? `<span class="neg">${esc(lg.issues.slice(0, 120))}</span>` : ''}</p>` : `<p class="sub">${t('none')}</p>`)}
@@ -2171,6 +2172,78 @@ pxSug:'Based on {n} finished {s} job(s), for this contract:',pxSugAll:'Based on 
 auT:'Change history',auS:'Who changed what on this project, and when.',auS2:'Who changed what and when, across all projects. Only admins see it.',au_insert:'added',au_update:'changed',au_delete:'deleted',auSystem:'System',auDeleted:'Deleted',history:'History',hv_history:'History',
 auProject:'Project',auExpense:'Expense',auPayment:'Payment',auInvoice:'Invoice',auBudget:'Budget',auTargets:'Estimate',auChange:'Change order',auDoc:'Document',auHours:'Hours',auItem:'Estimate line',auMilestone:'Scheduled payment',auTeam:'Team',auSettings:'Settings',
 f_approval:'Approval',f_approval_note:'Reason',f_est_mat:'Estimated materials',f_est_hours:'Estimated hours',f_est_sub:'Estimated subcontracts',f_labor_rate:'Cost per hour',f_hours:'Hours',f_work_date:'Date',f_clock_in:'Clock in',f_clock_out:'Clock out',f_contract_amount:'Contract',f_review_status:'Review',f_assigned_to:'Assigned to',f_crew:'Crew',f_role:'Role',f_active:'Active',f_tax_cat:'Tax category',f_receipt:'Receipt',f_est_cost:'Your cost'
+});
+
+/* ---------- v10: sin señal, video desde la obra, exportar a QuickBooks ---------- */
+let netSt = { n: 0, offline: false };
+function paintNet() {
+  const el = $('#netst'); if (!el) return; const { n, offline } = netSt;
+  el.hidden = !offline && !n; el.className = 'netst' + (offline ? ' off' : '');
+  el.textContent = offline ? t('netOff') + (n ? ' · ' + t('netWait').replace('{n}', n) : '') : n ? t('netUp').replace('{n}', n) : '';
+}
+addEventListener('cplus-outbox', e => { netSt = e.detail; paintNet(); });
+addEventListener('cplus-synced', async e => {
+  const { done, failed } = e.detail;
+  if (done && me) { try { const id = cur && cur.project.id; await loadAll(); if (id) cur = B.find(b => b.project.id === id) || cur; render(); } catch (_) {} S.toast(t('syncDone').replace('{n}', done)); }
+  if (failed) setTimeout(() => S.toast(t('syncFail').replace('{n}', failed)), 1500);
+});
+
+const VMAX = 50;
+const vidIco = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="m16 10 5-3v10l-5-3z"/></svg>';
+const pend = x => x.__pending ? `<span class="pend">${t('pendUp')}</span>` : '';
+const vcell = x => `<button class="pcell vcell" data-vv="${esc(x.path)}" aria-label="${t('playVideo')}"><video src="${esc(API.photoUrl(x.path))}#t=0.1" preload="metadata" muted playsinline></video><span class="play" aria-hidden="true"></span><span class="pk pk-${x.kind}">${t('pk_' + x.kind)}</span>${pend(x)}${x.caption ? `<small>${esc(x.caption)}</small>` : ''}</button>`;
+function videoBox(url) {
+  const d = document.createElement('div'); d.className = 'lb vlb'; d.setAttribute('role', 'dialog'); d.setAttribute('aria-modal', 'true'); d.setAttribute('aria-label', t('playVideo'));
+  d.innerHTML = `<video src="${esc(url)}" controls autoplay playsinline></video><button class="ghost" aria-label="${t('close')}">✕</button>`;
+  const back = document.activeElement, close = () => { d.remove(); removeEventListener('keydown', key); back && back.focus && back.focus(); };
+  const key = ev => { if (ev.key === 'Escape') close(); };
+  d.addEventListener('click', ev => { if (ev.target === d || ev.target.closest('button')) close(); }); addEventListener('keydown', key);
+  document.body.appendChild(d); d.querySelector('button').focus();
+}
+app.addEventListener('click', e => { const n = e.target.closest && e.target.closest('[data-vv]'); if (n) { e.preventDefault(); videoBox(API.photoUrl(n.dataset.vv)); } });
+app.addEventListener('change', async e => {
+  if (e.target.id !== 'vdfile') return; const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  const mb = f.size / 1048576; if (mb > VMAX) return S.toast(t('vidBig').replace('{m}', Math.round(mb)).replace('{x}', VMAX));
+  const m = $('#phmsg'); if (m) m.textContent = t('vidUp').replace('{m}', mb.toFixed(1));
+  const tags = ($('#ph-tags').value || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+  const at = $('#ph-geo').checked ? await geo() : {}, ext = ((f.name.split('.').pop() || 'mp4').toLowerCase().replace(/[^a-z0-9]/g, '') || 'mp4').slice(0, 5);
+  try {
+    const path = await API.upload('photos', `${cur.project.id}/${S.uid()}.${ext}`, f);
+    const row = await API.insert('photos', { project_id: cur.project.id, path, media: 'video', kind: $('#ph-kind').value, tags, caption: $('#ph-cap').value.trim(), shared: $('#ph-share').checked, by_name: myName(), ...at });
+    cur.photos.push(row); render(); S.toast(t(row.__pending ? 'vidQueued' : 'vidOk'));
+  } catch (x) { fail(x); render(); }
+});
+
+/* QuickBooks Online: bank-transaction CSV (Date, Description, Amount) for expenses and payments, invoice import CSV for invoices */
+async function qboExport() {
+  const mm = String(taxMonth).padStart(2, '0'), a = taxMonth ? `${taxYear}-${mm}-01` : `${taxYear}-01-01`, z = taxMonth ? `${taxYear}-${mm}-31` : `${taxYear}-12-31`;
+  const inP = d => d && String(d).slice(0, 10) >= a && String(d).slice(0, 10) <= z;
+  const md = d => { const [y, m, dd] = String(d).slice(0, 10).split('-'); return `${m}/${dd}/${y}`; };
+  const one = s => String(s || '').replace(/[\r\n]+/g, ' ').trim();
+  const pname = id => id ? (B.find(b => b.project.id === id)?.project.title || '') : t('generalShort');
+  const exp = TR().filter(e => +e.amount > 0).map(e => [md(e.spent_on), one([e.vendor, e.description, t('tc_' + (e.tax_cat || 'materials')), pname(e.project_id)].filter(Boolean).join(' · ')), (-(+e.amount)).toFixed(2)]);
+  const pays = B.flatMap(b => b.payments.filter(p => inP(p.paid_on) && +p.amount > 0).map(p => [md(p.paid_on), one([t('qboPayment'), b.project.title, p.note].filter(Boolean).join(' · ')), (+p.amount).toFixed(2)]));
+  const invs = B.flatMap(b => (b.invoices || []).filter(i => (i.status === 'sent' || i.status === 'paid') && inP(i.issued_on) && +i.amount > 0).map(i => [i.number, one(i.bill_to || b.project.source_company || b.project.client_name), md(i.issued_on), md(i.due_on || i.issued_on), t('qboItem'), one(i.note || b.project.title), (+i.amount).toFixed(2), one(b.project.title)]));
+  const csv = rows => rows.map(r => r.map(csvCell).join(',')).join('\r\n') + '\r\n';
+  if (!window.JSZip) await new Promise((ok, no) => { const s = document.createElement('script'); s.src = 'vendor/jszip.min.js'; s.onload = ok; s.onerror = no; document.head.appendChild(s); });
+  const zip = new JSZip(), tag = taxTag();
+  zip.file(`gastos-quickbooks-${tag}.csv`, csv([['Date', 'Description', 'Amount'], ...exp]));
+  zip.file(`pagos-recibidos-quickbooks-${tag}.csv`, csv([['Date', 'Description', 'Amount'], ...pays]));
+  zip.file(`facturas-quickbooks-${tag}.csv`, csv([['Invoice No', 'Customer', 'Invoice Date', 'Due Date', 'Item(Product/Service)', 'Item Description', 'Item Amount', 'Memo'], ...invs]));
+  zip.file('LEEME-README.txt', t('qboReadme').replace('{p}', tag).replace('{e}', exp.length).replace('{d}', pays.length).replace('{i}', invs.length));
+  saveBlob(await zip.generateAsync({ type: 'blob' }), `cplus-quickbooks-${tag}.zip`);
+  S.toast(t('qboDone').replace('{e}', exp.length).replace('{d}', pays.length).replace('{i}', invs.length));
+}
+app.addEventListener('click', async e => { const n = e.target.closest && e.target.closest('[data-qbo]'); if (!n || n.disabled) return; n.disabled = true; try { await qboExport(); } catch (x) { fail(x); } finally { n.disabled = false; } });
+
+S.addText({netOff:'Sin señal',netWait:'{n} por subir',netUp:'Subiendo {n}...',syncDone:'Listo: se subieron {n} cosas que estaban guardadas en el celular.',syncFail:'{n} cosa(s) no se pudieron subir. Revisa que sigan bien y vuelve a intentarlo.',pendUp:'Por subir',
+takeVideo:'Grabar video',playVideo:'Ver video',vidUp:'Subiendo video ({m} MB)...',vidOk:'Video guardado en el proyecto',vidQueued:'Sin señal: el video se sube solo cuando vuelva la señal',vidBig:'El video pesa {m} MB y el máximo es {x} MB. Graba un clip más corto (menos de 45 segundos) o en 720p.',
+qbo:'Exportar a QuickBooks',qboItem:'Servicios de construcción',qboPayment:'Pago recibido',qboDone:'Listo para QuickBooks: {e} gastos, {d} pagos y {i} facturas.',
+qboReadme:'C Plus · Exportación para QuickBooks Online · {p}\r\n\r\n1) gastos-quickbooks: {e} gastos. En QuickBooks: Transacciones > Banca > Subir transacciones > elige este archivo y la cuenta con la que se pagaron (tarjeta o banco). Columnas: Date, Description, Amount (los gastos van en negativo).\r\n2) pagos-recibidos-quickbooks: {d} pagos recibidos, mismo formato, en la cuenta de banco donde se depositaron.\r\n3) facturas-quickbooks: {i} facturas. En QuickBooks: Ajustes > Importar datos > Facturas. Marca "Agregar clientes nuevos" y "Agregar productos y servicios nuevos". QuickBooks no deja importar facturas si tiene el impuesto de ventas (sales tax) configurado.\r\n\r\nSi ya conectaste el banco o la tarjeta a QuickBooks, no subas los archivos 1 y 2: los movimientos ya están ahí y saldrían dobles. Úsalos para revisar.\r\n\r\n---\r\nC Plus · QuickBooks Online export · {p}\r\n1) Expenses: Transactions > Banking > Upload transactions, pick the account they were paid from.\r\n2) Payments received: same, into the deposit account.\r\n3) Invoices: Settings > Import data > Invoices (not possible if sales tax is set up).\r\nIf your bank or card is already connected to QuickBooks, do not upload files 1 and 2 or the transactions will be doubled.\r\n'
+}, {netOff:'No signal',netWait:'{n} waiting to upload',netUp:'Uploading {n}...',syncDone:'Done: {n} items saved on the phone were uploaded.',syncFail:'{n} item(s) could not be uploaded. Check them and try again.',pendUp:'Waiting to upload',
+takeVideo:'Record video',playVideo:'Play video',vidUp:'Uploading video ({m} MB)...',vidOk:'Video saved to the project',vidQueued:'No signal: the video uploads by itself when the signal returns',vidBig:'The video is {m} MB and the limit is {x} MB. Record a shorter clip (under 45 seconds) or in 720p.',
+qbo:'Export to QuickBooks',qboItem:'Construction services',qboPayment:'Payment received',qboDone:'Ready for QuickBooks: {e} expenses, {d} payments and {i} invoices.',
+qboReadme:'C Plus · QuickBooks Online export · {p}\r\n\r\n1) gastos-quickbooks: {e} expenses. In QuickBooks: Transactions > Banking > Upload transactions > pick this file and the account they were paid from. Columns: Date, Description, Amount (expenses are negative).\r\n2) pagos-recibidos-quickbooks: {d} payments received, same format, into the deposit account.\r\n3) facturas-quickbooks: {i} invoices. In QuickBooks: Settings > Import data > Invoices. Check "Add new customers" and "Add new products and services". QuickBooks does not allow importing invoices when sales tax is set up.\r\n\r\nIf your bank or card is already connected to QuickBooks, do not upload files 1 and 2: those transactions are already there and would be doubled. Use them to review.\r\n'
 });
 
 /* ---------- start ---------- */

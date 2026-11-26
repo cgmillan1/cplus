@@ -1,0 +1,1 @@
+-- v10 (applied via Supabase MCP 2026-11-25): photos.media ('photo'|'video'); client_project returns photos.media
