@@ -1542,7 +1542,7 @@ app.addEventListener('change', async e => {
   if (n.id === 'phfile') {
     const files = [...n.files]; if (!files.length) return;
     const tags = ($('#ph-tags').value || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
-    try { await uploadPhotos(files, { kind: $('#ph-kind').value, tags, caption: $('#ph-cap').value.trim(), shared: $('#ph-share').checked, geo: $('#ph-geo').checked }); S.toast(`${files.length} ${t('photosUp')}`); render(); } catch (x) { fail(x); render(); }
+    try { const rows = await uploadPhotos(files, { kind: $('#ph-kind').value, tags, caption: $('#ph-cap').value.trim(), shared: $('#ph-share').checked, geo: $('#ph-geo').checked }); S.toast(rows.some(r => r.__pending) ? t('photosQueued').replace('{n}', files.length) : `${files.length} ${t('photosUp')}`); render(); } catch (x) { fail(x); render(); }
     return;
   }
   if (n.id === 'lg-files') { const c = $('#lgc'); if (c) c.textContent = n.files.length ? n.files.length + ' ' + t('photosSel') : ''; return; }
@@ -2184,7 +2184,7 @@ function paintNet() {
 addEventListener('cplus-outbox', e => { netSt = e.detail; paintNet(); });
 addEventListener('cplus-synced', async e => {
   const { done, failed } = e.detail;
-  if (done && me) { try { const id = cur && cur.project.id; await loadAll(); if (id) cur = B.find(b => b.project.id === id) || cur; render(); } catch (_) {} S.toast(t('syncDone').replace('{n}', done)); }
+  if (done && me) { try { const id = cur && cur.project.id, tab = ctab; await loadAll(); ctab = tab; if (id) cur = B.find(b => b.project.id === id) || cur; render(); } catch (_) {} S.toast(t('syncDone').replace('{n}', done)); }
   if (failed) setTimeout(() => S.toast(t('syncFail').replace('{n}', failed)), 1500);
 });
 
@@ -2236,11 +2236,11 @@ async function qboExport() {
 }
 app.addEventListener('click', async e => { const n = e.target.closest && e.target.closest('[data-qbo]'); if (!n || n.disabled) return; n.disabled = true; try { await qboExport(); } catch (x) { fail(x); } finally { n.disabled = false; } });
 
-S.addText({netOff:'Sin señal',netWait:'{n} por subir',netUp:'Subiendo {n}...',syncDone:'Listo: se subieron {n} cosas que estaban guardadas en el celular.',syncFail:'{n} cosa(s) no se pudieron subir. Revisa que sigan bien y vuelve a intentarlo.',pendUp:'Por subir',
+S.addText({netOff:'Sin señal',netWait:'{n} por subir',netUp:'Subiendo {n}...',syncDone:'Listo: se subieron {n} cosas que estaban guardadas en el celular.',syncFail:'{n} cosa(s) no se pudieron subir. Revisa que sigan bien y vuelve a intentarlo.',pendUp:'Por subir',photosQueued:'Sin señal: {n} foto(s) guardadas en el celular, se suben solas cuando vuelva la señal',
 takeVideo:'Grabar video',playVideo:'Ver video',vidUp:'Subiendo video ({m} MB)...',vidOk:'Video guardado en el proyecto',vidQueued:'Sin señal: el video se sube solo cuando vuelva la señal',vidBig:'El video pesa {m} MB y el máximo es {x} MB. Graba un clip más corto (menos de 45 segundos) o en 720p.',
 qbo:'Exportar a QuickBooks',qboItem:'Servicios de construcción',qboPayment:'Pago recibido',qboDone:'Listo para QuickBooks: {e} gastos, {d} pagos y {i} facturas.',
 qboReadme:'C Plus · Exportación para QuickBooks Online · {p}\r\n\r\n1) gastos-quickbooks: {e} gastos. En QuickBooks: Transacciones > Banca > Subir transacciones > elige este archivo y la cuenta con la que se pagaron (tarjeta o banco). Columnas: Date, Description, Amount (los gastos van en negativo).\r\n2) pagos-recibidos-quickbooks: {d} pagos recibidos, mismo formato, en la cuenta de banco donde se depositaron.\r\n3) facturas-quickbooks: {i} facturas. En QuickBooks: Ajustes > Importar datos > Facturas. Marca "Agregar clientes nuevos" y "Agregar productos y servicios nuevos". QuickBooks no deja importar facturas si tiene el impuesto de ventas (sales tax) configurado.\r\n\r\nSi ya conectaste el banco o la tarjeta a QuickBooks, no subas los archivos 1 y 2: los movimientos ya están ahí y saldrían dobles. Úsalos para revisar.\r\n\r\n---\r\nC Plus · QuickBooks Online export · {p}\r\n1) Expenses: Transactions > Banking > Upload transactions, pick the account they were paid from.\r\n2) Payments received: same, into the deposit account.\r\n3) Invoices: Settings > Import data > Invoices (not possible if sales tax is set up).\r\nIf your bank or card is already connected to QuickBooks, do not upload files 1 and 2 or the transactions will be doubled.\r\n'
-}, {netOff:'No signal',netWait:'{n} waiting to upload',netUp:'Uploading {n}...',syncDone:'Done: {n} items saved on the phone were uploaded.',syncFail:'{n} item(s) could not be uploaded. Check them and try again.',pendUp:'Waiting to upload',
+}, {netOff:'No signal',netWait:'{n} waiting to upload',netUp:'Uploading {n}...',syncDone:'Done: {n} items saved on the phone were uploaded.',syncFail:'{n} item(s) could not be uploaded. Check them and try again.',pendUp:'Waiting to upload',photosQueued:'No signal: {n} photo(s) saved on the phone, they upload when the signal returns',
 takeVideo:'Record video',playVideo:'Play video',vidUp:'Uploading video ({m} MB)...',vidOk:'Video saved to the project',vidQueued:'No signal: the video uploads by itself when the signal returns',vidBig:'The video is {m} MB and the limit is {x} MB. Record a shorter clip (under 45 seconds) or in 720p.',
 qbo:'Export to QuickBooks',qboItem:'Construction services',qboPayment:'Payment received',qboDone:'Ready for QuickBooks: {e} expenses, {d} payments and {i} invoices.',
 qboReadme:'C Plus · QuickBooks Online export · {p}\r\n\r\n1) gastos-quickbooks: {e} expenses. In QuickBooks: Transactions > Banking > Upload transactions > pick this file and the account they were paid from. Columns: Date, Description, Amount (expenses are negative).\r\n2) pagos-recibidos-quickbooks: {d} payments received, same format, into the deposit account.\r\n3) facturas-quickbooks: {i} invoices. In QuickBooks: Settings > Import data > Invoices. Check "Add new customers" and "Add new products and services". QuickBooks does not allow importing invoices when sales tax is set up.\r\n\r\nIf your bank or card is already connected to QuickBooks, do not upload files 1 and 2: those transactions are already there and would be doubled. Use them to review.\r\n'
