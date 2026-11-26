@@ -32,7 +32,7 @@ header.top{position:sticky;top:0;z-index:20;background:#110f0d;color:#ecebe8;bor
 .ring{position:relative;width:190px;height:190px}
 .ring svg{width:100%;height:100%;transform:rotate(-90deg)}
 .ring div{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
-.ring b{font:700 46px "Barlow Semi Condensed";line-height:1}
+.ring b{font:700 46px "Barlow Semi Condensed",Barlow,sans-serif;line-height:1}
 .ring small{color:#a4a29d;font-size:14px}
 .tabs{position:sticky;top:62px;z-index:10;background:var(--bg);border-bottom:1px solid var(--line)}
 .tabs .wrap{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
@@ -45,7 +45,7 @@ main{padding:22px 0 60px}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
 .kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
 .kpi small{color:var(--mute);font-size:14px}
-.kpi b{display:block;font:700 28px "Barlow Semi Condensed";white-space:nowrap}
+.kpi b{display:block;font:700 28px "Barlow Semi Condensed",Barlow,sans-serif;white-space:nowrap}
 table{width:100%;border-collapse:collapse;font-size:15px}
 th{text-align:start;color:var(--mute);font-weight:600;font-size:14px;border-bottom:1px solid var(--line);padding:8px 6px}
 td{border-bottom:1px solid var(--line);padding:10px 6px;vertical-align:top}
@@ -110,7 +110,7 @@ footer button{background:none;border:0;color:var(--mute);text-decoration:underli
 
 #splash .wm{width:min(330px,78vw);margin-top:18px;opacity:0;animation:up .8s 1.9s forwards}
 
-#splash h2{font:700 clamp(24px,5vw,38px)/1.15 "Barlow Semi Condensed";margin:26px 0 8px;opacity:0;animation:up .8s 2.8s forwards}
+#splash h2{font:700 clamp(24px,5vw,38px)/1.15 "Barlow Semi Condensed",Barlow,sans-serif;margin:26px 0 8px;opacity:0;animation:up .8s 2.8s forwards}
 #splash p{font-size:clamp(17px,3vw,22px);color:#f2a94e;margin:0;opacity:0;animation:up .8s 3.6s forwards}
 #splash .enter{margin-top:28px;opacity:0;animation:up .6s 4.4s forwards}
 #splash .skip{position:absolute;top:14px;right:14px;background:none;border:1px solid #3a3a3f;color:#a4a29d;border-radius:999px;padding:8px 16px;min-height:40px}
@@ -148,7 +148,7 @@ footer button{background:none;border:0;color:var(--mute);text-decoration:underli
 .r-item{grid-template-columns:minmax(0,1fr) 140px 70px 110px 44px!important}
 .r-exp{grid-template-columns:150px minmax(0,1fr) 150px 130px 110px 44px}
 .r-mat2{grid-template-columns:44px minmax(0,1fr) 70px 90px 150px 44px}
-.lock{min-height:100vh;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 30%,#24201d 0,#0a0a0b 70%);color:#ecebe8;padding:24px;text-align:center}
+.lock{min-height:100vh;min-height:100dvh;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 30%,#24201d 0,#0a0a0b 70%);color:#ecebe8;padding:24px;text-align:center}
 .lock .box{width:min(380px,100%)}
 .lock .mk{width:110px;height:110px}
 .lock h1{font-size:30px;margin:14px 0 6px}
@@ -186,7 +186,7 @@ footer button{background:none;border:0;color:var(--mute);text-decoration:underli
 .lb button{position:absolute;top:14px;right:14px}
 .co{border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:12px}
 .co .top2{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline}
-.co b.amt{font:700 22px "Barlow Semi Condensed";white-space:nowrap}
+.co b.amt{font:700 22px "Barlow Semi Condensed",Barlow,sans-serif;white-space:nowrap}
 .pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:13px;font-weight:700;background:var(--line);color:var(--ink)}
 .pill.pending,.pill.next{background:#f6dcc7;color:#7a3a12}.pill.approved,.pill.paid{background:#d5eedd;color:#1f5e38}.pill.declined{background:#f6d4cf;color:#8a2a1c}
 .co .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center}
@@ -351,8 +351,8 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
 .pcell small{position:absolute;left:0;right:0;bottom:0;padding:16px 8px 6px;font-size:13px;color:#fff;background:linear-gradient(transparent,#000a);text-align:start;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pcell .lock2{position:absolute;right:6px;top:6px;font-size:13px}
 .pvw{position:fixed;inset:0;z-index:130;background:rgba(10,9,8,.86);display:grid;place-items:center;padding:16px}
-.pvbox{display:grid;grid-template-columns:minmax(0,1fr) 320px;width:min(1180px,100%);max-height:calc(100vh - 32px);background:var(--card);border-radius:16px;overflow:hidden}
-.pvimg{background:#000;display:grid;place-items:center;min-height:0}.pvimg img{max-width:100%;max-height:calc(100vh - 32px);object-fit:contain;display:block}
+.pvbox{display:grid;grid-template-columns:minmax(0,1fr) 320px;width:min(1180px,100%);max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);background:var(--card);border-radius:16px;overflow:hidden}
+.pvimg{background:#000;display:grid;place-items:center;min-height:0}.pvimg img{max-width:100%;max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);object-fit:contain;display:block}
 .pvside{position:relative;padding:18px;overflow:auto;display:flex;flex-direction:column;gap:10px}
 .pvside label{font-weight:600}.pvside .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
 .pvx{position:absolute!important;top:10px;right:10px;color:var(--ink)!important;border-color:var(--line)!important;min-height:40px!important;padding:6px 12px!important}
@@ -386,7 +386,7 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
 .chips{display:flex;gap:6px;flex-wrap:wrap}.chip2{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:6px 12px;min-height:40px;font-weight:600;cursor:pointer}
 .chip2 input{width:20px;height:20px;accent-color:var(--cu)}
 /* escanear factura */
-.scbox{position:relative;width:min(560px,100%);max-height:calc(100vh - 32px);overflow:auto;background:var(--card);border-radius:16px;padding:22px}
+.scbox{position:relative;width:min(560px,100%);max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);overflow:auto;background:var(--card);border-radius:16px;padding:22px}
 .scbox h2{font-size:26px;margin:0 40px 6px 0}.scbox label{display:block;font-weight:600;margin-top:10px}
 .scprev{display:block;max-height:280px;margin:14px auto;border-radius:10px}
 .scbusy{display:flex;gap:12px;align-items:center;justify-content:center;font-weight:600;padding:12px 0}
@@ -484,7 +484,7 @@ label.drop{display:inline-flex!important;align-items:center;gap:8px;cursor:point
 .mg.pos,.lvl-green b{color:var(--ok)}.mg.warn{color:#a8640f}.mg.neg{color:#b23a26}
 .rvamt{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
 .rvamt>div{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
-.rvamt small{display:block;color:var(--mute);font-size:13px}.rvamt b{display:block;font:700 22px "Barlow Semi Condensed";white-space:nowrap}
+.rvamt small{display:block;color:var(--mute);font-size:13px}.rvamt b{display:block;font:700 22px "Barlow Semi Condensed",Barlow,sans-serif;white-space:nowrap}
 .rvamt em{display:block;font-style:normal;font-size:13px;font-weight:700}
 .rvamt.lvl-red>div:last-child{border-color:#b23a26}.rvamt.lvl-red>div:last-child b,.rvamt.lvl-red em{color:#b23a26}
 .rvamt.lvl-amber>div:last-child{border-color:#d08a2a}.rvamt.lvl-amber>div:last-child b,.rvamt.lvl-amber em{color:#a8640f}
@@ -558,7 +558,7 @@ td.neg,.neg{color:#b23a26}
 .pill.inv-late{background:#fbeceb;color:#b23a26}
 .co.inv .acts{align-items:center}
 #invf .chips{display:flex;flex-wrap:wrap;gap:8px}#invf .chips .btn2{min-height:38px;font-size:14px}
-.agtot{font:700 30px "Barlow Semi Condensed";margin:8px 0 4px}.agtot small{font-size:15px;font-weight:600;color:var(--mute);margin-inline-start:6px;font-family:system-ui,sans-serif}
+.agtot{font:700 30px "Barlow Semi Condensed",Barlow,sans-serif;margin:8px 0 4px}.agtot small{font-size:15px;font-weight:600;color:var(--mute);margin-inline-start:6px;font-family:system-ui,sans-serif}
 .aging{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;align-items:end;height:150px;margin:10px 0 8px}
 .agb{display:grid;grid-template-rows:auto 1fr auto;height:100%;text-align:center;gap:4px}
 .agv{font-size:13px;font-weight:700}.agl{font-size:12px;color:var(--mute);font-weight:600}

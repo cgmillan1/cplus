@@ -109,13 +109,71 @@ en: {
 
 const M = n => S.money(n);
 const lt = i => (+i.qty || 0) * (+i.price || 0);
-let LOGO = null;
-async function logo() {
-  if (LOGO !== null) return LOGO;
-  try { const b = await (await fetch('icon-180.png')).blob(); LOGO = await new Promise(r => { const f = new FileReader(); f.onload = () => r(f.result); f.readAsDataURL(b); }); }
-  catch (_) { LOGO = ''; }
-  return LOGO;
+/* ---- brand kit shared by every PDF the app makes (also used by admin.js) ----
+   Barlow + Barlow Semi Condensed (SIL OFL, vendor/fonts), the C Plus logo, copper on near-black. */
+const BR = { dk: [17, 15, 13], dk2: [34, 30, 26], cu: [236, 156, 59], cuT: [168, 92, 8], ink: [28, 25, 23], mute: [107, 98, 90], line: [231, 224, 214], soft: [248, 244, 238], white: [255, 255, 255] };
+let KIT = null;
+const b64 = async url => { const r = await fetch(url); if (!r.ok) throw new Error(url); const buf = new Uint8Array(await r.arrayBuffer()); let s = ''; for (let i = 0; i < buf.length; i += 0x8000) s += String.fromCharCode.apply(null, buf.subarray(i, i + 0x8000)); return btoa(s); };
+async function kitReady() {
+  if (KIT) return KIT;
+  const [r, b, h, logo] = await Promise.all(['vendor/fonts/barlow-400.ttf', 'vendor/fonts/barlow-600.ttf', 'vendor/fonts/barlowsc-700.ttf', 'vendor/fonts/cplus-logo-pdf.png'].map(u => b64(u).catch(() => '')));
+  KIT = { r, b, h, logo: logo ? 'data:image/png;base64,' + logo : '' };
+  return KIT;
 }
+/* a jsPDF with the brand fonts; 'helvetica' calls map to Barlow so older drawing code keeps working */
+function makeDoc() {
+  const d = new window.jspdf.jsPDF({ unit: 'pt', format: 'letter' }), k = KIT || {};
+  d.brand = !!(k.r && k.b && k.h);
+  if (d.brand) {
+    try {
+      d.addFileToVFS('Barlow-R.ttf', k.r); d.addFont('Barlow-R.ttf', 'Barlow', 'normal');
+      d.addFileToVFS('Barlow-B.ttf', k.b); d.addFont('Barlow-B.ttf', 'Barlow', 'bold');
+      d.addFileToVFS('BarlowSC.ttf', k.h); d.addFont('BarlowSC.ttf', 'BarlowSC', 'bold');
+      const sf = d.setFont.bind(d);
+      d.setFont = (name, style, w) => sf(name === 'helvetica' ? 'Barlow' : name, style === 'italic' ? 'normal' : style === 'bolditalic' ? 'bold' : style, w);
+      d.setFont('helvetica', 'normal');
+    } catch (_) { d.brand = false; }
+  }
+  d.heading = () => d.brand ? d.setFont('BarlowSC', 'bold') : d.setFont('helvetica', 'bold');
+  return d;
+}
+/* dark band with logo and wordmark, copper stripe; then kicker, title and subtitle. Returns the y to continue at. */
+function kitHeader(d, o) {
+  const W = 612, X = o.mx || 48;
+  d.setFillColor(...BR.dk); d.rect(0, 0, W, 96, 'F');
+  d.setFillColor(...BR.dk2); d.triangle(W - 230, 0, W, 0, W, 96, 'F');
+  d.setFillColor(...BR.cu); d.rect(0, 96, W, 3.5, 'F');
+  let x = X;
+  if (KIT && KIT.logo) { d.addImage(KIT.logo, 'PNG', X, 26, 64, 44); x = X + 74; }
+  d.heading(); d.setFontSize(24); d.setTextColor(...BR.white); d.text('C', x, 52);
+  const cw = d.getTextWidth('C'); d.setTextColor(...BR.cu); d.text('+', x + cw, 52); d.setTextColor(...BR.white); d.text('PLUS', x + cw + d.getTextWidth('+'), 52);
+  d.setFont('helvetica', 'normal'); d.setFontSize(7.5); d.setTextColor(185, 175, 162); if (d.setCharSpace) d.setCharSpace(1.6);
+  d.text(o.tagline || 'CONSTRUCCIÓN Y REMODELACIÓN', x + 1, 66); if (d.setCharSpace) d.setCharSpace(0);
+  const right = (o.right || []).filter(Boolean);
+  d.setFontSize(8.5); right.forEach((l, i) => { d.setFont('helvetica', i ? 'normal' : 'bold'); d.setTextColor(...(i ? [205, 198, 189] : BR.white)); d.text(String(l), W - X, 34 + i * 12.5, { align: 'right' }); });
+  let y = 136;
+  if (o.kicker) { d.setFont('helvetica', 'bold'); d.setFontSize(8.5); d.setTextColor(...BR.cuT); if (d.setCharSpace) d.setCharSpace(1.8); d.text(String(o.kicker).toUpperCase(), X, y); if (d.setCharSpace) d.setCharSpace(0); y += 24; }
+  if (o.title) { d.heading(); d.setFontSize(o.titleSize || 25); d.setTextColor(...BR.ink); const ls = d.splitTextToSize(String(o.title), W - 2 * X); ls.forEach(l => { d.text(l, X, y); y += (o.titleSize || 25) * 1.02; }); y -= 4; }
+  if (o.sub) { d.setFont('helvetica', 'normal'); d.setFontSize(10.5); d.setTextColor(...BR.mute); y += 12; d.text(String(o.sub), X, y); }
+  return y + 22;
+}
+/* thin copper rule, company line and page numbers on every page */
+function kitFooter(d, left, o = {}) {
+  const n = d.getNumberOfPages(), W = 612, H = 792, X = o.mx || 48, es = o.lang !== 'en';
+  for (let i = 1; i <= n; i++) {
+    d.setPage(i);
+    d.setFillColor(...BR.cu); d.rect(X, H - 44, 26, 2, 'F'); d.setDrawColor(...BR.line); d.setLineWidth(0.5); d.line(X + 30, H - 43, W - X, H - 43);
+    d.setFont('helvetica', 'normal'); d.setFontSize(7.8); d.setTextColor(...BR.mute);
+    if (left) d.text(String(left), X, H - 30);
+    d.text(`${es ? 'Página' : 'Page'} ${i} ${es ? 'de' : 'of'} ${n}`, W - X, H - 30, { align: 'right' });
+    if (o.note) d.text(String(o.note), X, H - 19);
+  }
+}
+/* a section heading: copper tick + condensed title */
+function kitH2(d, t, x, y, w) { d.setFillColor(...BR.cu); d.rect(x, y - 9, 12, 3, 'F'); d.heading(); d.setFontSize(14); d.setTextColor(...BR.ink); d.text(String(t), x + 18, y - 3); d.setDrawColor(...BR.line); d.setLineWidth(0.5); d.line(x, y + 5, x + w, y + 5); }
+/* the big total: dark box, copper amount */
+function kitTotal(d, label, value, xr, y, w = 240) { d.setFillColor(...BR.dk); d.roundedRect(xr - w, y, w, 36, 4, 4, 'F'); d.setFont('helvetica', 'bold'); d.setFontSize(9); d.setTextColor(205, 198, 189); if (d.setCharSpace) d.setCharSpace(1.2); d.text(String(label).toUpperCase(), xr - w + 14, y + 22); if (d.setCharSpace) d.setCharSpace(0); d.heading(); d.setFontSize(17); d.setTextColor(...BR.cu); d.text(String(value), xr - 14, y + 23.5, { align: 'right' }); }
+S.pdfKit = { ready: kitReady, doc: makeDoc, header: kitHeader, footer: kitFooter, h2: kitH2, total: kitTotal, C: BR };
 
 /* ---- snapshots ---- */
 function snapshot(b, contact, lang) {
@@ -156,11 +214,11 @@ function adjustments(orig, cur) {
 
 /* ---- drawing ---- */
 const PW = 612, PH = 792, MX = 54, CW = PW - MX * 2;
-const INK = [23, 23, 26], MUTE = [98, 96, 92], CU = [162, 76, 28], LINE = [214, 209, 201];
+const INK = BR.ink, MUTE = BR.mute, CU = BR.cuT, LINE = BR.line;
 function Doc(title, sub, snap) {
-  const d = new window.jspdf.jsPDF({ unit: 'pt', format: 'letter' });
+  const d = makeDoc();
   /* the built-in PDF fonts only cover Western characters: swap the ones people type that they lack */
-  const cl = v => String(v ?? '').replace(/²/g, '2').replace(/³/g, '3').replace(/[\u2018\u2019]/g, "'").replace(/[\u201C\u201D]/g, '"').replace(/[\u2013\u2014]/g, '-').replace(/\u2026/g, '...').replace(/\u2192/g, '->').replace(/[^\x00-\xFF\u20AC]/g, '');
+  const cl = v => String(v ?? '').replace(/[²³]/g, c => d.brand ? c : c === '²' ? '2' : '3').replace(/[\u2018\u2019]/g, "'").replace(/[\u201C\u201D]/g, '"').replace(/[\u2013\u2014]/g, '-').replace(/\u2026/g, '...').replace(/\u2192/g, '->').replace(/[^\x00-\xFF\u20AC]/g, '');
   const _tx = d.text.bind(d), _sp = d.splitTextToSize.bind(d);
   d.text = (s, ...a) => _tx(Array.isArray(s) ? s.map(cl) : cl(s), ...a);
   d.splitTextToSize = (s, ...a) => _sp(cl(s), ...a);
@@ -170,19 +228,13 @@ function Doc(title, sub, snap) {
     d, T,
     get y() { return y; }, set y(v) { y = v; },
     head() {
-      d.setFillColor(13, 13, 15); d.rect(0, 0, PW, 92, 'F');
-      if (LOGO) d.addImage(LOGO, 'PNG', MX, 20, 52, 52);
-      d.setTextColor(255, 255, 255); d.setFont('helvetica', 'bold'); d.setFontSize(18); d.text('C PLUS LLC', MX + 66, 42);
-      d.setFont('helvetica', 'normal'); d.setFontSize(9.5); d.setTextColor(236, 146, 89); d.text(snap.lang === 'es' ? 'REMODELACIÓN' : 'REMODELING', MX + 66, 57);
-      const k = snap.contact, right = [k.legal_name || k.company, k.address, [k.phone, k.email].filter(Boolean).join(' · '), k.license_no ? `${T.license}: ${k.license_no}` : ''].filter(Boolean);
-      d.setTextColor(210, 208, 203); d.setFontSize(8.5); right.forEach((l, i) => d.text(l, PW - MX, 30 + i * 12, { align: 'right' }));
-      y = 124;
-      d.setTextColor(...INK); d.setFont('helvetica', 'bold'); d.setFontSize(20); d.text(title, MX, y); y += 18;
-      if (sub) { d.setFont('helvetica', 'normal'); d.setFontSize(10); d.setTextColor(...MUTE); d.text(sub, MX, y); y += 8; }
-      y += 10;
+      const k = snap.contact;
+      y = kitHeader(d, { mx: MX, tagline: snap.lang === 'es' ? 'CONSTRUCCIÓN Y REMODELACIÓN' : 'CONSTRUCTION & REMODELING', kicker: title, title: sub || title,
+        right: [k.legal_name || k.company, k.address, [k.phone, k.email].filter(Boolean).join(' · '), k.license_no ? `${T.license}: ${k.license_no}` : ''] });
     },
-    need(h) { if (y + h > PH - 60) { d.addPage(); y = 60; } },
-    h2(t) { api.need(40); y += 8; d.setFont('helvetica', 'bold'); d.setFontSize(12.5); d.setTextColor(...CU); d.text(t, MX, y); y += 6; d.setDrawColor(...LINE); d.setLineWidth(0.6); d.line(MX, y, PW - MX, y); y += 14; d.setTextColor(...INK); },
+    need(h) { if (y + h > PH - 60) { api.page(); } },
+    page() { d.addPage(); d.setFillColor(...BR.dk); d.rect(0, 0, PW, 10, 'F'); d.setFillColor(...BR.cu); d.rect(0, 10, PW, 2, 'F'); y = 60; },
+    h2(t) { api.need(44); y += 14; kitH2(d, t, MX, y, CW); y += 22; d.setTextColor(...INK); },
     p(t, o = {}) {
       d.setFont('helvetica', o.bold ? 'bold' : 'normal'); d.setFontSize(o.size || 10); d.setTextColor(...(o.color || INK));
       const lines = d.splitTextToSize(String(t), o.w || CW - (o.indent || 0)), lh = (o.size || 10) * 1.38;
@@ -196,13 +248,15 @@ function Doc(title, sub, snap) {
     },
     table(cols, rows, foot) {
       const x = [MX]; cols.forEach((c, i) => x.push(x[i] + c.w));
-      const header = () => { d.setFillColor(243, 241, 238); d.rect(MX, y - 11, CW, 17, 'F'); d.setFont('helvetica', 'bold'); d.setFontSize(9); d.setTextColor(...MUTE); cols.forEach((c, i) => d.text(c.t, c.r ? x[i + 1] - 4 : x[i] + 4, y, { align: c.r ? 'right' : 'left' })); y += 16; };
+      const header = () => { d.setFillColor(...BR.dk); d.rect(MX, y - 12, CW, 19, 'F'); d.setFont('helvetica', 'bold'); d.setFontSize(8.5); d.setTextColor(...BR.cu); cols.forEach((c, i) => d.text(c.t, c.r ? x[i + 1] - 4 : x[i] + 4, y, { align: c.r ? 'right' : 'left' })); y += 21; };
       api.need(40); header();
       d.setFontSize(9.5);
+      let zi = 0;
       for (const r of rows) {
         const cells = r.map((v, i) => d.splitTextToSize(String(v ?? ''), cols[i].w - 8));
         const h = Math.max(...cells.map(c => c.length)) * 12.5 + 5;
-        if (y + h > PH - 60) { d.addPage(); y = 60; header(); d.setFontSize(9.5); }
+        if (y + h > PH - 60) { api.page(); header(); d.setFontSize(9.5); }
+        if (zi++ % 2) { d.setFillColor(...BR.soft); d.rect(MX, y - 12, CW, h + 1, 'F'); }
         d.setFont('helvetica', 'normal'); d.setTextColor(...INK);
         cells.forEach((c, i) => c.forEach((l, j) => d.text(l, cols[i].r ? x[i + 1] - 4 : x[i] + 4, y + j * 12.5, { align: cols[i].r ? 'right' : 'left' })));
         y += h - 5; d.setDrawColor(...LINE); d.setLineWidth(0.4); d.line(MX, y - 3, PW - MX, y - 3); y += 9;
@@ -213,9 +267,9 @@ function Doc(title, sub, snap) {
     totals(rows) {
       y += 2;
       for (const [k, v, strong] of rows) {
-        api.need(18); d.setFont('helvetica', strong ? 'bold' : 'normal'); d.setFontSize(strong ? 11.5 : 10); d.setTextColor(...INK);
-        if (strong) { d.setDrawColor(...INK); d.setLineWidth(1); d.line(PW - MX - 230, y - 11, PW - MX, y - 11); }
-        d.text(k, PW - MX - 230, y); d.text(v, PW - MX, y, { align: 'right' }); y += strong ? 18 : 15;
+        if (strong) { api.need(48); y += 2; kitTotal(d, k, v, PW - MX, y - 12, 250); y += 40; continue; }
+        api.need(18); d.setFont('helvetica', 'normal'); d.setFontSize(10); d.setTextColor(...MUTE);
+        d.text(k, PW - MX - 250, y); d.setTextColor(...INK); d.setFont('helvetica', 'bold'); d.text(v, PW - MX, y, { align: 'right' }); y += 15;
       }
       y += 6;
     },
@@ -233,13 +287,7 @@ function Doc(title, sub, snap) {
       y += 60;
     },
     finish(file, footerNote) {
-      const n = d.getNumberOfPages();
-      for (let i = 1; i <= n; i++) {
-        d.setPage(i); d.setFont('helvetica', 'normal'); d.setFontSize(8); d.setTextColor(...MUTE);
-        d.text(`${snap.contact.legal_name || snap.contact.company}${snap.contact.license_no ? ' · ' + T.license + ' ' + snap.contact.license_no : ''}`, MX, PH - 30);
-        d.text(`${T.page} ${i} ${T.of} ${n}`, PW - MX, PH - 30, { align: 'right' });
-        if (footerNote) d.text(footerNote, MX, PH - 18);
-      }
+      kitFooter(d, `${snap.contact.legal_name || snap.contact.company}${snap.contact.license_no ? ' · ' + T.license + ' ' + snap.contact.license_no : ''}`, { mx: MX, lang: snap.lang, note: footerNote });
       return { doc: d, file };
     }
   };
@@ -266,14 +314,14 @@ function estimateBody(D, snap) {
 
 /* ---- the three documents ---- */
 async function estimatePdf(snap) {
-  await logo(); const D = Doc(TX[snap.lang].estimate, snap.project.title, snap), T = D.T;
+  await kitReady(); const D = Doc(TX[snap.lang].estimate, snap.project.title, snap), T = D.T;
   D.head(); partyBlock(D, snap); if (snap.project.details) { D.h2(T.project); D.p(snap.project.details); } estimateBody(D, snap);
   D.p(T.estNote, { size: 9, color: MUTE }); D.p(T.validity, { size: 9, color: MUTE });
   D.sign(false);
   return D.finish(fileName(snap.lang === 'es' ? 'estimado' : 'estimate', snap));
 }
 async function contractPdf(snap) {
-  await logo(); const D = Doc(TX[snap.lang].contract, snap.project.title, snap), T = D.T, C = CLAUSES[snap.lang], s = T.sections;
+  await kitReady(); const D = Doc(TX[snap.lang].contract, snap.project.title, snap), T = D.T, C = CLAUSES[snap.lang], s = T.sections;
   D.head();
   let n = 0; const sec = t => D.h2(`${++n}. ${t}`);
   sec(s.parties); partyBlock(D, snap);
@@ -296,7 +344,7 @@ async function contractPdf(snap) {
   return D.finish(fileName(snap.lang === 'es' ? 'contrato' : 'contract', snap));
 }
 async function completionPdf(snap) {
-  await logo(); const D = Doc(TX[snap.lang].completion, snap.project.title, snap), T = D.T;
+  await kitReady(); const D = Doc(TX[snap.lang].completion, snap.project.title, snap), T = D.T;
   D.head(); partyBlock(D, snap);
   const ref = snap.contract_ref;
   D.h2(T.contractRef);

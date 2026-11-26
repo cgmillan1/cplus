@@ -64,7 +64,7 @@ function homeContractor() {
     <div class="bar"><i style="width:${c.pct}%"></i></div><small class="sub">${c.pct}% ${t('done')}</small>
     <dl>${b.project.address ? `<dt>${t('projAddress')}</dt><dd>${esc(b.project.address)}</dd>` : ''}${nx ? `<dt>${t('nextStep')}</dt><dd>${esc(nx.title)}</dd>` : ''}</dl></button>`; }).join('') : `<div class="card"><p class="sub">${t('noAssigned')}</p></div>`}</div>
   ${(() => { const mt = B.flatMap(b => b.tasks.filter(x => !x.done && x.assigned_to === me.user_id).map(x => ({ ...x, pt: b.project.title, pid: b.project.id }))); return mt.length ? `<div class="card" style="margin-top:18px"><h2>${t('myTasks')}</h2>${mt.map(x => `<button class="alrow" data-open="${x.pid}"><span><b>${esc(x.title)}</b><small>${esc(x.pt)}${x.due_date ? ' · ' + fdate(x.due_date) : ''}</small></span></button>`).join('')}</div>` : ''; })()}
-  <div class="cols" style="margin-top:18px"><div class="card week"><h2>${t('thisWeek')}</h2>${up.length ? `<ul>${up.map(s => `<li><time style="${s.late ? 'color:#d0503a' : ''}">${fdate(s.due_date)}</time><div><b>${esc(s.title)}</b><small>${esc(s.pt)}</small></div></li>`).join('')}</ul>` : `<p class="sub">${t('noUpcoming')}</p>`}</div></div>
+  <div class="cols" style="margin-top:18px"><div class="card week"><h2>${t('thisWeek')}</h2>${up.length ? `<ul>${up.map(s => `<li><time class="${s.late ? 'neg' : ''}">${fdate(s.due_date)}</time><div><b>${esc(s.title)}</b><small>${esc(s.pt)}</small></div></li>`).join('')}</ul>` : `<p class="sub">${t('noUpcoming')}</p>`}</div></div>
   <div class="card"><h2>${t('feedT')}</h2>${feedHtml(events(B, 20))}</div>
   </div></main>`;
 }
@@ -156,7 +156,7 @@ function home() {
     <div class="bar"><i style="width:${c.pct}%"></i></div><small class="sub">${c.pct}% ${t('done')}</small>
     <dl><dt>${t('contract')}</dt><dd>${money(c.tot)}</dd><dt>${t('collected')}</dt><dd>${money(c.paid)}</dd><dt>${t('spent')}</dt><dd>${money(c.spent)} ${t('of')} ${money(c.bud)}</dd><dt>${t('profit')}</dt><dd style="color:${c.profit < 0 ? '#b23a26' : 'var(--ok)'}">${money(c.profit)}</dd>${showShare() ? `<dt>${t('share')} ${pct()}%</dt><dd><b>${money(shareOf(c).s)}</b></dd><dt>${t('shareEarned')}</dt><dd>${money(shareOf(c).earned)}</dd>` : ''}</dl></button>`; }).join('')}</div>
   ${B.length ? '' : `<div class="card" style="text-align:center"><p class="sub">${t('none')}</p><button class="btn2" data-sample>${t('sampleProject')}</button></div>`}
-  <div class="cols" style="margin-top:18px"><div class="card week"><h2>${t('thisWeek')}</h2>${up.length ? `<ul>${up.map(s => `<li><time style="${s.late ? 'color:#d0503a' : ''}">${fdate(s.due_date)}</time><div><b>${esc(s.title)}</b><small>${esc(s.pt)}</small></div></li>`).join('')}</ul>` : `<p class="sub">${t('noUpcoming')}</p>`}</div>
+  <div class="cols" style="margin-top:18px"><div class="card week"><h2>${t('thisWeek')}</h2>${up.length ? `<ul>${up.map(s => `<li><time class="${s.late ? 'neg' : ''}">${fdate(s.due_date)}</time><div><b>${esc(s.title)}</b><small>${esc(s.pt)}</small></div></li>`).join('')}</ul>` : `<p class="sub">${t('noUpcoming')}</p>`}</div>
 </div>
   ${B.length ? `<p style="text-align:center"><button class="btn2" data-sample>${t('sampleProject')}</button></p>` : ''}
   </div></main>`;
@@ -236,7 +236,7 @@ function payForm() {
 }
 function catBars(c) {
   return cur.budget.map(b => { const s = c.byCat(b.id), ov = s > b.amount, pc = b.amount ? Math.min(100, s / b.amount * 100) : 0;
-    return `<div class="cat"><div class="top2"><b>${esc(b.category)}</b><span>${money(s)} ${t('of')} ${money(b.amount)}</span></div><div class="bar"><i class="${ov ? 'over' : ''}" style="width:${ov ? 100 : pc}%"></i></div>${ov ? `<small style="color:#d0503a;font-weight:600">${t('over')}: ${money(s - b.amount)}</small>` : ''}</div>`; }).join('') || `<p class="sub">${t('none')}</p>`;
+    return `<div class="cat"><div class="top2"><b>${esc(b.category)}</b><span>${money(s)} ${t('of')} ${money(b.amount)}</span></div><div class="bar"><i class="${ov ? 'over' : ''}" style="width:${ov ? 100 : pc}%"></i></div>${ov ? `<small class="neg" style="font-weight:600">${t('over')}: ${money(s - b.amount)}</small>` : ''}</div>`; }).join('') || `<p class="sub">${t('none')}</p>`;
 }
 function cInfo() {
   const p = cur.project, maps = p.address ? 'https://maps.google.com/?q=' + encodeURIComponent(p.address) : '';
@@ -880,37 +880,35 @@ function cInvoices() {
     ${i.status === 'draft' ? `<button class="ico x" data-invdel="${i.id}" aria-label="${t('delete')}">✕</button>` : i.status !== 'void' && i.status !== 'paid' ? `<button class="btn2 danger" data-invvoid="${i.id}">${t('invVoid')}</button>` : ''}</div></div>`).join('') || (invForm ? '' : `<p class="sub">${t('invNone')}</p>`)}</div>`;
 }
 async function invoicePdf(i, save = true) {
-  const jsPDF = window.jspdf && window.jspdf.jsPDF; if (!jsPDF) return;
+  const jsPDF = window.jspdf && window.jspdf.jsPDF; if (!jsPDF) return; const K = S.pdfKit; await K.ready();
   const b = B.find(x => x.project.id === i.project_id), p = b.project, T2 = invTotals(b), es = S.L !== 'en';
   const L = es ? { inv: 'FACTURA', no: 'Número', iss: 'Fecha', due: 'Vence', to: 'Facturar a', from: 'De', proj: 'Proyecto', ref: 'Orden / referencia', desc: 'Concepto', amt: 'Monto', contract: 'Total del contrato', prev: 'Facturado antes', this: 'Esta factura', left: 'Queda por facturar', pay: 'Pagar a nombre de', thanks: 'Gracias por su preferencia.', total: 'TOTAL A PAGAR', terms: 'Términos' }
     : { inv: 'INVOICE', no: 'Number', iss: 'Date', due: 'Due', to: 'Bill to', from: 'From', proj: 'Project', ref: 'PO / reference', desc: 'Description', amt: 'Amount', contract: 'Contract total', prev: 'Previously invoiced', this: 'This invoice', left: 'Left to invoice', pay: 'Make payment to', thanks: 'Thank you for your business.', total: 'TOTAL DUE', terms: 'Terms' };
   const cl = v => String(v ?? '').normalize('NFC').replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/[–—]/g, '-').replace(/²/g, '2');
-  const d = new jsPDF({ unit: 'pt', format: 'letter' }), PW = 612, MX = 48; let y;
+  const d = K.doc(), PW = 612, MX = 48; let y;
   const m = v => money(v);
-  d.setFillColor(17, 15, 13); d.rect(0, 0, PW, 96, 'F');
-  d.setTextColor(255, 255, 255); d.setFont('helvetica', 'bold'); d.setFontSize(20); d.text(cl(settings.legal_name || settings.company || 'C Plus LLC'), MX, 48);
-  d.setFont('helvetica', 'normal'); d.setFontSize(9); d.text(cl([settings.address, settings.phone, settings.email].filter(Boolean).join('  ·  ')), MX, 66);
-  if (settings.license_no) d.text(cl('DOPL ' + settings.license_no), MX, 79);
-  d.setTextColor(236, 156, 59); d.setFont('helvetica', 'bold'); d.setFontSize(22); d.text(L.inv, PW - MX, 50, { align: 'right' });
-  d.setTextColor(255, 255, 255); d.setFontSize(11); d.text(cl(i.number), PW - MX, 70, { align: 'right' });
-  y = 132; d.setTextColor(23, 23, 26);
-  const pair = (x, k, v) => { d.setFont('helvetica', 'bold'); d.setFontSize(8); d.setTextColor(110, 106, 100); d.text(k.toUpperCase(), x, y); d.setFont('helvetica', 'normal'); d.setFontSize(11); d.setTextColor(23, 23, 26); d.text(d.splitTextToSize(cl(v || '-'), 240), x, y + 15); };
+  K.header(d, { mx: MX, tagline: es ? 'CONSTRUCCIÓN Y REMODELACIÓN' : 'CONSTRUCTION & REMODELING', right: [cl(settings.legal_name || settings.company || 'C Plus LLC'), cl(settings.address), cl([settings.phone, settings.email].filter(Boolean).join(' · ')), settings.license_no ? cl('DOPL ' + settings.license_no) : ''] });
+  d.heading(); d.setFontSize(30); d.setTextColor(...K.C.ink); d.text(L.inv, MX, 160);
+  d.setFillColor(...K.C.soft); d.roundedRect(PW - MX - 170, 132, 170, 38, 4, 4, 'F'); d.setFont('helvetica', 'bold'); d.setFontSize(7.5); d.setTextColor(...K.C.cuT); d.text(L.no.toUpperCase(), PW - MX - 158, 147);
+  d.heading(); d.setFontSize(15); d.setTextColor(...K.C.ink); d.text(cl(i.number), PW - MX - 158, 163);
+  y = 204; d.setTextColor(23, 23, 26);
+  const pair = (x, k, v) => { d.setFont('helvetica', 'bold'); d.setFontSize(8); d.setTextColor(...K.C.cuT); d.text(k.toUpperCase(), x, y); d.setFont('helvetica', 'normal'); d.setFontSize(11); d.setTextColor(23, 23, 26); d.text(d.splitTextToSize(cl(v || '-'), 240), x, y + 15); };
   pair(MX, L.to, [i.bill_to, i.bill_email].filter(Boolean).join('\n')); pair(330, L.iss, fdate(i.issued_on)); pair(450, L.due, fdate(i.due_on));
   y += 52; pair(MX, L.proj, [p.title, p.address].filter(Boolean).join('\n')); pair(330, L.ref, p.source_ref || '-');
-  y += 62; d.setDrawColor(226, 222, 216); d.setFillColor(243, 241, 238); d.rect(MX, y, PW - 2 * MX, 24, 'F');
-  d.setFont('helvetica', 'bold'); d.setFontSize(9); d.setTextColor(80, 76, 70); d.text(L.desc.toUpperCase(), MX + 10, y + 16); d.text(L.amt.toUpperCase(), PW - MX - 10, y + 16, { align: 'right' });
+  y += 62; d.setDrawColor(226, 222, 216); d.setFillColor(...K.C.dk); d.rect(MX, y, PW - 2 * MX, 24, 'F');
+  d.setFont('helvetica', 'bold'); d.setFontSize(9); d.setTextColor(...K.C.cu); d.text(L.desc.toUpperCase(), MX + 10, y + 16); d.text(L.amt.toUpperCase(), PW - MX - 10, y + 16, { align: 'right' });
   y += 44; d.setFont('helvetica', 'normal'); d.setFontSize(11); d.setTextColor(23, 23, 26);
   const desc = d.splitTextToSize(cl(i.note || p.title), 360); d.text(desc, MX + 10, y); d.text(m(i.amount), PW - MX - 10, y, { align: 'right' });
   y += 16 * desc.length + 14; d.line(MX, y, PW - MX, y); y += 26;
   const prev = invOf(b).filter(x => x.status !== 'void' && x.id !== i.id && String(x.issued_on) <= String(i.issued_on)).reduce((a, x) => a + (+x.amount || 0), 0);
   const rows = [[L.contract, m(T2.c.tot)], [L.prev, m(prev)], [L.this, m(i.amount)], [L.left, m(Math.max(0, T2.c.tot - prev - +i.amount))]];
   d.setFontSize(10); rows.forEach(([k, v]) => { d.setTextColor(110, 106, 100); d.text(k, PW - MX - 220, y); d.setTextColor(23, 23, 26); d.text(v, PW - MX - 10, y, { align: 'right' }); y += 17; });
-  y += 8; d.setFillColor(17, 15, 13); d.rect(PW - MX - 230, y - 4, 230, 34, 'F'); d.setTextColor(255, 255, 255); d.setFont('helvetica', 'bold'); d.setFontSize(12);
-  d.text(L.total, PW - MX - 220, y + 17); d.text(m(i.amount), PW - MX - 10, y + 17, { align: 'right' });
+  y += 8; K.total(d, L.total, m(i.amount), PW - MX, y - 4, 250);
   y += 70; d.setTextColor(23, 23, 26); d.setFont('helvetica', 'normal'); d.setFontSize(10);
   const days = Math.round((Date.parse(i.due_on) - Date.parse(i.issued_on)) / 864e5);
   d.text(cl(`${L.terms}: ${days > 0 ? 'Net ' + days : (es ? 'Al recibir' : 'Due on receipt')}. ${L.pay} ${settings.legal_name || settings.company || 'C Plus LLC'}.`), MX, y); y += 16;
   d.setTextColor(110, 106, 100); d.text(L.thanks, MX, y);
+  K.footer(d, cl(`${settings.legal_name || settings.company || 'C Plus LLC'}${settings.license_no ? ' · DOPL ' + settings.license_no : ''}`), { mx: MX, lang: es ? 'es' : 'en' });
   const file = `${i.number}-${(p.title || 'proyecto').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/gi, '-').toLowerCase()}.pdf`;
   if (save) d.save(file);
   return { doc: d, file };
@@ -1110,7 +1108,7 @@ function events(bs, max = 60) {
 function feedHtml(evs, showProj = true) {
   if (!evs.length) return `<p class="sub">${t('noFeed')}</p>`;
   return `<ol class="feed">${evs.map(e => { const pr = B.find(b => b.project.id === e.pid)?.project;
-    return `<li><time>${fdate(e.at)}</time><div><p>${e.who ? `<b>${esc(e.who)}</b> ` : ''}${esc(e.txt)}</p>${showProj && pr ? `<button class="plink" data-open="${pr.id}">${esc(pr.title || t('project'))}</button>` : ''}${e.body ? `<p class="fbody">${esc(String(e.body).slice(0, 220))}</p>` : ''}${e.pics && e.pics.length ? `<div class="fpics">${e.pics.map(x => `<button class="ph" data-photo="${esc(API.photoUrl(x))}"><img src="${esc(API.photoUrl(x))}" alt="" loading="lazy"></button>`).join('')}</div>` : ''}</div></li>`; }).join('')}</ol>`;
+    return `<li><time>${fdate(e.at)}</time><div><p>${e.who ? `<b>${esc(e.who)}</b> ` : ''}${esc(e.txt)}</p>${showProj && pr ? `<button class="plink" data-open="${pr.id}">${esc(pr.title || t('project'))}</button>` : ''}${e.body ? `<p class="fbody">${esc(String(e.body).slice(0, 220))}</p>` : ''}${e.pics && e.pics.length ? `<div class="fpics">${e.pics.map(x => `<button class="ph" data-photo="${esc(API.photoUrl(x))}" aria-label="${t('photo')}"><img src="${esc(API.photoUrl(x))}" alt="" loading="lazy"></button>`).join('')}</div>` : ''}</div></li>`; }).join('')}</ol>`;
 }
 
 /* ---------- revisión del proyecto recibido ---------- */
@@ -1328,35 +1326,40 @@ function annotate(x) {
 /* reporte PDF con fotos, checklists y bitácora */
 async function photoReport() {
   const jsPDF = window.jspdf && window.jspdf.jsPDF; if (!jsPDF) return;
-  S.toast(t('reportMaking'));
-  const p = cur.project, doc = new jsPDF({ unit: 'pt', format: 'letter' }), W = 612, M = 40;
+  S.toast(t('reportMaking')); const K = S.pdfKit; await K.ready();
+  const p = cur.project, doc = K.doc(), W = 612, M = 44;
   let y = M;
+  const newPage = () => { doc.addPage(); doc.setFillColor(...K.C.dk); doc.rect(0, 0, W, 10, 'F'); doc.setFillColor(...K.C.cu); doc.rect(0, 10, W, 2, 'F'); y = 54; };
   const toData = path => new Promise(ok => { const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => { const k = Math.min(1, 900 / Math.max(im.width, im.height)), c = document.createElement('canvas'); c.width = im.width * k; c.height = im.height * k; c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); ok({ d: c.toDataURL('image/jpeg', .8), w: c.width, h: c.height }); }; im.onerror = () => ok(null); im.src = API.photoUrl(path); });
-  const line = (txt, size = 10, bold = false, col = [30, 30, 30]) => { doc.setFont('helvetica', bold ? 'bold' : 'normal'); doc.setFontSize(size); doc.setTextColor(...col); doc.splitTextToSize(String(txt), W - 2 * M).forEach(l => { if (y > 750) { doc.addPage(); y = M; } doc.text(l, M, y); y += size * 1.35; }); };
-  doc.setFillColor(17, 15, 13); doc.rect(0, 0, W, 70, 'F'); doc.setTextColor(236, 156, 59); doc.setFont('helvetica', 'bold'); doc.setFontSize(20); doc.text(settings.company || 'C Plus LLC', M, 42);
-  doc.setFontSize(10); doc.setTextColor(230, 230, 230); doc.text(`${t('photoReport').replace(' (PDF)', '')} · ${fdate(S.today())}`, W - M, 42, { align: 'right' }); y = 100;
-  line(p.title || t('project'), 16, true); line([p.client_name, p.address, p.source_company ? `${t('srcCompany')}: ${p.source_company}${p.source_ref ? ' #' + p.source_ref : ''}` : ''].filter(Boolean).join(' · '), 10, false, [90, 90, 90]); y += 8;
+  const line = (txt, size = 10, bold = false, col = [30, 30, 30]) => { doc.setFont('helvetica', bold ? 'bold' : 'normal'); doc.setFontSize(size); doc.setTextColor(...col); doc.splitTextToSize(String(txt), W - 2 * M).forEach(l => { if (y > 730) newPage(); doc.text(l, M, y); y += size * 1.35; }); };
+  const h2 = txt => { if (y > 690) newPage(); y += 10; K.h2(doc, txt, M, y, W - 2 * M); y += 24; };
+  const es = S.L !== 'en';
+  y = K.header(doc, { mx: M, tagline: es ? 'CONSTRUCCIÓN Y REMODELACIÓN' : 'CONSTRUCTION & REMODELING', kicker: `${t('photoReport').replace(' (PDF)', '')} · ${fdate(S.today())}`, title: p.title || t('project'),
+    sub: [p.client_name, p.address, p.source_company ? `${t('srcCompany')}: ${p.source_company}${p.source_ref ? ' #' + p.source_ref : ''}` : ''].filter(Boolean).join(' · '),
+    right: [settings.legal_name || settings.company || 'C Plus LLC', settings.phone, settings.email] });
   if (cur.checklists.length) {
-    line(t('checklists'), 13, true);
+    h2(t('checklists'));
     sorted('checklists').forEach(cl => { const its = cur.checklist_items.filter(i => i.checklist_id === cl.id).sort((a, b) => (a.sort || 0) - (b.sort || 0)); line(`${cl.title} (${its.filter(i => i.done).length}/${its.length})`, 11, true); its.forEach(i => line(`${i.done ? '[x]' : '[ ]'} ${i.body}${i.done_by ? ' · ' + i.done_by : ''}`, 10)); y += 4; });
     y += 6;
   }
   const logs = cur.daily_logs.slice().sort((a, b) => String(b.log_date).localeCompare(String(a.log_date))).slice(0, 10);
-  if (logs.length) { line(t('logs'), 13, true); logs.forEach(l => { line(`${fdate(l.log_date)}${l.weather ? ' · ' + l.weather : ''}${l.crew ? ' · ' + l.crew : ''}`, 10, true); [l.work_done, l.issues && t('issues') + ': ' + l.issues, l.next_steps && t('nextSteps') + ': ' + l.next_steps].filter(Boolean).forEach(s => line(s, 10)); y += 4; }); y += 6; }
+  if (logs.length) { h2(t('logs')); logs.forEach(l => { line(`${fdate(l.log_date)}${l.weather ? ' · ' + l.weather : ''}${l.crew ? ' · ' + l.crew : ''}`, 10, true); [l.work_done, l.issues && t('issues') + ': ' + l.issues, l.next_steps && t('nextSteps') + ': ' + l.next_steps].filter(Boolean).forEach(s => line(s, 10)); y += 4; }); y += 6; }
   const ph = allPhotos(cur).filter(x => x.media !== 'video' && (pkind === 'all' || x.kind === pkind)).slice(0, 60).reverse();
   if (ph.length) {
-    if (y > 600) { doc.addPage(); y = M; }
-    line(t('photosTab'), 13, true); y += 4;
+    if (y > 560) newPage();
+    h2(t('photosTab'));
     const cw = (W - 2 * M - 16) / 2, ch = cw * .75;
     for (let i = 0; i < ph.length; i++) {
-      const col = i % 2; if (col === 0 && y + ch + 40 > 770) { doc.addPage(); y = M; }
+      const col = i % 2; if (col === 0 && y + ch + 40 > 740) newPage();
       const im = await toData(ph[i].path), x0 = M + col * (cw + 16);
-      if (im) { const k = Math.min(cw / im.w, ch / im.h); doc.addImage(im.d, 'JPEG', x0 + (cw - im.w * k) / 2, y, im.w * k, im.h * k); }
-      doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(124, 70, 4); doc.text(`${t('pk_' + ph[i].kind)} · ${fdate(ph[i].taken_at)}`, x0, y + ch + 12);
+      doc.setFillColor(...K.C.soft); doc.roundedRect(x0, y, cw, ch, 4, 4, 'F');
+      if (im) { const k = Math.min(cw / im.w, ch / im.h); doc.addImage(im.d, 'JPEG', x0 + (cw - im.w * k) / 2, y + (ch - im.h * k) / 2, im.w * k, im.h * k); }
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(...K.C.cuT); doc.text(`${t('pk_' + ph[i].kind)} · ${fdate(ph[i].taken_at)}`, x0, y + ch + 12);
       doc.setFont('helvetica', 'normal'); doc.setTextColor(40, 40, 40); doc.text(doc.splitTextToSize(String(ph[i].caption || ''), cw).slice(0, 2), x0, y + ch + 24);
       if (col === 1 || i === ph.length - 1) y += ch + 44;
     }
   }
+  K.footer(doc, settings.legal_name || settings.company || 'C Plus LLC', { mx: M, lang: es ? 'es' : 'en' });
   doc.save(`${(p.title || 'proyecto').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\w\- ]/g, '').trim().replace(/\s+/g, '-')}-reporte.pdf`); S.toast(t('reportDone'));
 }
 
@@ -1371,7 +1374,7 @@ function cChecks() {
     return `<div class="card cl"><div class="top2">${staff() ? fld('checklists', cl, 'title', 'text', 'cltitle') : `<h2>${esc(cl.title)}</h2>`}<b class="clc">${dn}/${its.length}</b></div><div class="meter"><i style="width:${its.length ? dn / its.length * 100 : 0}%"></i></div>
     ${its.map(i => `<div class="clitem${i.done ? ' done' : ''}"><button class="clbox" data-clk="${i.id}" aria-pressed="${i.done}" aria-label="${esc(i.body)}">${i.done ? '✓' : ''}</button>
       <div class="cltext">${staff() ? fld('checklist_items', i, 'body', 'text') : `<span>${esc(i.body)}</span>`}<small>${i.needs_photo ? `${camIco} ${t('needsPhoto')}` : ''}${i.done_by ? ` · ${esc(i.done_by)} · ${fdate(i.done_at)}` : ''}</small></div>
-      ${i.photo ? `<button class="ph clph" data-photo="${esc(API.photoUrl(i.photo))}"><img src="${esc(API.photoUrl(i.photo))}" alt="" loading="lazy"></button>` : ''}
+      ${i.photo ? `<button class="ph clph" data-photo="${esc(API.photoUrl(i.photo))}" aria-label="${t('photo')}"><img src="${esc(API.photoUrl(i.photo))}" alt="" loading="lazy"></button>` : ''}
       ${staff() ? `<button class="ico camt${i.needs_photo ? ' on' : ''}" data-clphoto="${i.id}" title="${t('needsPhoto')}" aria-pressed="${!!i.needs_photo}">${camIco}</button>${del('checklist_items', i.id)}` : ''}</div>`).join('')}
     ${staff() ? `<div class="acts"><button class="add" data-clitem="${cl.id}">${t('addItem2')}</button><button class="btn2" data-cltpl="${cl.id}">${t('saveTemplate')}</button>${del('checklists', cl.id)}</div>` : ''}</div>`; }).join('')}
   ${cur.checklists.length ? '' : `<div class="card"><p class="sub">${t('noChecklists')}</p></div>`}
@@ -1452,16 +1455,18 @@ async function taxZip() {
   }
   saveBlob(await zip.generateAsync({ type: 'blob' }), `cplus-recibos-${taxTag()}.zip`);
 }
-function taxPdf() {
-  const jsPDF = window.jspdf && window.jspdf.jsPDF; if (!jsPDF || !taxRows) return; const RF = TR();
-  const doc = new jsPDF({ unit: 'pt', format: 'letter' }), M = 40; let y = 50;
-  const ln = (a, b = '', bold = false) => { if (y > 750) { doc.addPage(); y = 50; } doc.setFont('helvetica', bold ? 'bold' : 'normal'); doc.text(String(a), M, y); if (b !== '') doc.text(String(b), 572, y, { align: 'right' }); y += 16; };
-  doc.setFontSize(16); ln(`${settings.company || 'C Plus LLC'} · ${t('taxesT')} ${taxMonth ? monthName(taxMonth) + ' ' : ''}${taxYear}`, '', true); doc.setFontSize(10); y += 6;
+async function taxPdf() {
+  const jsPDF = window.jspdf && window.jspdf.jsPDF; if (!jsPDF || !taxRows) return; const RF = TR(); const K = S.pdfKit; await K.ready();
+  const doc = K.doc(), M = 48, es = S.L !== 'en'; let y = 50, zi = 0;
+  const ln = (a, b = '', bold = false) => { if (y > 730) { doc.addPage(); doc.setFillColor(...K.C.dk); doc.rect(0, 0, 612, 10, 'F'); doc.setFillColor(...K.C.cu); doc.rect(0, 10, 612, 2, 'F'); y = 54; } if (!bold && zi++ % 2) { doc.setFillColor(...K.C.soft); doc.rect(M - 4, y - 11, 612 - 2 * M + 8, 16, 'F'); } doc.setFont('helvetica', bold ? 'bold' : 'normal'); doc.setTextColor(...K.C.ink); doc.text(String(a), M, y); if (b !== '') doc.text(String(b), 612 - M, y, { align: 'right' }); y += 16; };
+  const h2 = txt => { y += 12; K.h2(doc, txt, M, y, 612 - 2 * M); y += 24; zi = 0; doc.setFontSize(10); };
+  y = K.header(doc, { mx: M, tagline: es ? 'CONSTRUCCIÓN Y REMODELACIÓN' : 'CONSTRUCTION & REMODELING', kicker: t('taxesT'), title: `${taxMonth ? monthName(taxMonth) + ' ' : ''}${taxYear}`, right: [settings.legal_name || settings.company || 'C Plus LLC', settings.phone, settings.email] }); doc.setFontSize(10);
   const sum = xs => xs.reduce((a, x) => a + (+x.amount || 0), 0);
-  ln(t('totalExp'), money(sum(RF)), true); ln(t('salesTaxPaid'), money(RF.reduce((a, x) => a + (+x.sales_tax || 0), 0))); y += 8;
-  ln(t('byTaxCat'), '', true); TAXCATS.forEach(([k, l]) => { const v = sum(RF.filter(x => (x.tax_cat || 'materials') === k)); if (v) ln(`${t('tc_' + k)} (Schedule C ${l})`, money(v)); }); y += 8;
-  ln(t('allExp'), '', true); RF.slice().sort((a, b) => String(a.spent_on).localeCompare(String(b.spent_on))).forEach(e => ln(`${e.spent_on || ''}  ${(e.vendor || '').slice(0, 28)}  ${(e.description || '').slice(0, 40)}`, money(e.amount)));
-  y += 10; doc.setFontSize(8); doc.text(doc.splitTextToSize(t('taxNote'), 532), M, y);
+  K.total(doc, t('totalExp'), money(sum(RF)), 612 - M, y - 14, 260); y += 40; doc.setFontSize(10); ln(t('salesTaxPaid'), money(RF.reduce((a, x) => a + (+x.sales_tax || 0), 0)), true);
+  h2(t('byTaxCat')); TAXCATS.forEach(([k, l]) => { const v = sum(RF.filter(x => (x.tax_cat || 'materials') === k)); if (v) ln(`${t('tc_' + k)} (Schedule C ${l})`, money(v)); });
+  h2(t('allExp')); RF.slice().sort((a, b) => String(a.spent_on).localeCompare(String(b.spent_on))).forEach(e => ln(`${e.spent_on || ''}  ${(e.vendor || '').slice(0, 28)}  ${(e.description || '').slice(0, 40)}`, money(e.amount)));
+  y += 10; doc.setFontSize(8); doc.setTextColor(...K.C.mute); doc.text(doc.splitTextToSize(t('taxNote'), 612 - 2 * M), M, y);
+  K.footer(doc, settings.legal_name || settings.company || 'C Plus LLC', { mx: M, lang: es ? 'es' : 'en' });
   doc.save(`cplus-taxes-${taxTag()}.pdf`);
 }
 
@@ -2048,7 +2053,7 @@ function costHistory() {
 function priceCard() {
   const H = costHistory();
   return `<div class="card"><h2>${t('pxT')}</h2><p class="sub">${t('pxS')}</p>
-  ${H.length ? `<div class="mscroll"><table class="mtab pxtab"><thead><tr><th>${t('service')}</th><th>${t('pxJobs')}</th><th>${t('pxMargin')}</th><th>${t('pxMat')}</th><th>${t('pxHours')}</th><th>${t('pxSub')}</th><th>${t('pxOver')}</th></tr></thead><tbody>
+  ${H.length ? `<div class="mscroll" tabindex="0" role="region" aria-label="${t('pxT')}"><table class="mtab pxtab"><thead><tr><th>${t('service')}</th><th>${t('pxJobs')}</th><th>${t('pxMargin')}</th><th>${t('pxMat')}</th><th>${t('pxHours')}</th><th>${t('pxSub')}</th><th>${t('pxOver')}</th></tr></thead><tbody>
   ${H.map(r => `<tr><td><b>${t('svc_' + r.k)}</b><small>${money(r.rev / r.n)} ${t('pxAvg')}</small></td><td>${r.n}</td><td class="${r.marg < 10 ? 'neg' : ''}">${Math.round(r.marg)}%</td><td>${Math.round(r.matP * 100)}%</td><td>${hfmt(r.hPer1k)}</td><td>${Math.round(r.subP * 100)}%</td><td class="${r.over > 5 ? 'neg' : ''}">${r.over == null ? '·' : (r.over > 0 ? '+' : '') + Math.round(r.over) + '%'}</td></tr>`).join('')}</tbody></table></div><p class="hint">${t('pxHint')}</p>` : `<p class="sub">${t('pxNone')}</p>`}</div>`;
 }
 function histSuggest(j) {
