@@ -67,7 +67,7 @@ function first() {
 }
 let noEmail = '';
 function noAccess() { return `<div class="lock"><div class="box">${S.MARK('l')}<h1>${t('noAccessT')}</h1><p>${t('noAccessS')}</p>${noEmail ? `<p><b>${esc(noEmail)}</b></p>` : ''}<button class="btn2" data-logout>${t('logout')}</button></div></div>`; }
-const topbar = () => S.header(`<span id="netst" class="netst" hidden aria-live="polite"></span><span id="savedot" class="savedot" aria-live="polite"></span><button class="ghost gear${view === 'home' && hview === 'settings' ? ' on' : ''}" data-hv="settings" aria-label="${t('settingsNav')}" title="${t('settingsNav')}"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span class="gt">${t('settingsNav')}</span></button>`, `<span class="role">${esc(me ? (me.name || '') + ' · ' + t('role_' + me.role) : t('contractor'))}</span>`, 'nolang-m');
+const topbar = () => S.header(`${staff() ? topTools() : ''}<span id="netst" class="netst" hidden aria-live="polite"></span><span id="savedot" class="savedot" aria-live="polite"></span><button class="ghost gear${view === 'home' && hview === 'settings' ? ' on' : ''}" data-hv="settings" aria-label="${t('settingsNav')}" title="${t('settingsNav')}"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span class="gt">${t('settingsNav')}</span></button>`, `<span class="role">${esc(me ? (me.name || '') + ' · ' + t('role_' + me.role) : t('contractor'))}</span>`, 'nolang-m');
 
 function homeContractor() {
   const today = S.today(), lim = new Date(Date.now() + 14 * 864e5).toISOString().slice(0, 10);
@@ -1033,6 +1033,7 @@ function dashView() {
   <div class="cgrid">
   <div class="card ckc cf"><h2>${t('cfT')}</h2><p class="sub">${t('cfS')}</p>${cashFlow()}</div>
   ${profitCard(d)}
+  ${typeCard(d)}
   ${attn ? `<div class="ckatt" id="apx">${attn}</div>` : ''}
   ${teamToday()}
   ${activityCard()}
@@ -2318,6 +2319,7 @@ function sideFoot() {
 /* the sliding highlight: the leading edge moves first, the trailing edge catches up */
 const PILLS = {};
 let PILLWIRED = false;
+const calm = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 function pillsResync() { for (const k in PILLS) delete PILLS[k]; slidePill('main .hnav', 'hnav'); slidePill('.filters.dper', 'dper'); }
 function slidePill(sel, key) {
   if (!PILLWIRED) { PILLWIRED = true; addEventListener('resize', () => requestAnimationFrame(pillsResync)); document.fonts?.ready.then(pillsResync); }
@@ -2330,11 +2332,21 @@ function slidePill(sel, key) {
     const set = x => `translate(${x.l}px,${x.t}px)`;
     Object.assign(p.style, { width: r.w + 'px', height: r.h + 'px', transform: set(r) });
     const prev = PILLS[key]; PILLS[key] = r;
-    if (!prev || (prev.l === r.l && prev.t === r.t && prev.w === r.w) || matchMedia('(prefers-reduced-motion: reduce)').matches || !p.animate) return;
-    const u = { l: Math.min(prev.l, r.l), t: Math.min(prev.t, r.t) };
-    u.w = Math.max(prev.l + prev.w, r.l + r.w) - u.l; u.h = Math.max(prev.t + prev.h, r.t + r.h) - u.t;
-    const f = x => ({ width: x.w + 'px', height: x.h + 'px', transform: set(x) });
-    p.animate([f(prev), { ...f(u), offset: 0.42 }, f(r)], { duration: 460, easing: 'cubic-bezier(.3,.7,.2,1)' });
+    if (!prev || (prev.l === r.l && prev.t === r.t && prev.w === r.w) || calm() || !p.animate) return;
+    // caterpillar: the leading edge arrives first, the trailing edge catches up
+    const vert = Math.abs(r.t - prev.t) > Math.abs(r.l - prev.l), LEAD = 360, TRAIL = 550, N = 18;
+    const e3o = k => 1 - Math.pow(1 - k, 3), e3io = k => k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2, lp = (a, b, k) => a + (b - a) * k;
+    const A = vert ? [prev.t, prev.t + prev.h, prev.l, prev.l + prev.w] : [prev.l, prev.l + prev.w, prev.t, prev.t + prev.h];
+    const Z = vert ? [r.t, r.t + r.h, r.l, r.l + r.w] : [r.l, r.l + r.w, r.t, r.t + r.h];
+    const fwd = Z[0] > A[0], frames = [];
+    for (let i = 0; i <= N; i++) {
+      const ms = i / N * TRAIL, kl = e3o(Math.min(1, ms / LEAD)), kt = e3io(ms / TRAIL);
+      const s0 = lp(A[0], Z[0], fwd ? kt : kl), s1 = lp(A[1], Z[1], fwd ? kl : kt), c0 = lp(A[2], Z[2], kt), c1 = lp(A[3], Z[3], kt);
+      const x = vert ? { l: c0, t: s0, w: c1 - c0, h: s1 - s0 } : { l: s0, t: c0, w: s1 - s0, h: c1 - c0 };
+      frames.push({ width: x.w + 'px', height: x.h + 'px', transform: set(x) });
+    }
+    p.getAnimations().forEach(a => a.cancel());
+    p.animate(frames, { duration: TRAIL, easing: 'linear' });
   });
 }
 
@@ -2440,12 +2452,143 @@ function activityCard() {
 let ckCounted = false;
 function v11After() {
   slidePill('main .hnav', 'hnav'); slidePill('.filters.dper', 'dper');
-  if (ckCounted || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  enterCards();
+  if (ckCounted || calm()) return;
   const els = document.querySelectorAll('.cpkrow [data-count]'); if (!els.length) return; ckCounted = true;
   els.forEach(el => { const end = +el.dataset.count, t0 = performance.now(), dur = 900;
     const step = now => { const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3); el.textContent = m0(Math.round(end * e)); if (k < 1) requestAnimationFrame(step); else el.textContent = m0(end); };
     requestAnimationFrame(step); });
 }
+
+/* ---------- v12: screen build-in, work-type revenue, quick search and create ---------- */
+S.addText({
+  tyT: 'Ingresos por tipo de trabajo', tyS: 'Valor de los proyectos aprobados y cuánto deja cada tipo.', tyOther: 'Otros', tyProfit: 'deja', tyNone: 'Todavía no hay proyectos aprobados.',
+  cmSearch: 'Buscar', cmPh: 'Busca un proyecto, cliente o factura', cmNew: 'Nuevo', cmNewProj: 'Estimado o proyecto nuevo', cmNewExp: 'Gasto (escanear recibo)', cmNewInv: 'Factura',
+  cmCreate: 'Crear', cmProjects: 'Proyectos', cmClients: 'Clientes', cmInvoices: 'Facturas', cmGo: 'Ir a', cmNone: 'No encontré nada con eso.', cmPickInv: '¿Para qué proyecto es la factura?',
+  cmHint: '↑ ↓ para moverte · Enter para abrir · Esc para cerrar', cmProj1: 'proyecto', cmProjN: 'proyectos', cmClose: 'Cerrar'
+}, {
+  tyT: 'Revenue by type of work', tyS: 'Value of approved projects and what each type leaves.', tyOther: 'Other', tyProfit: 'leaves', tyNone: 'No approved projects yet.',
+  cmSearch: 'Search', cmPh: 'Search a project, client or invoice', cmNew: 'New', cmNewProj: 'Estimate or new project', cmNewExp: 'Expense (scan receipt)', cmNewInv: 'Invoice',
+  cmCreate: 'Create', cmProjects: 'Projects', cmClients: 'Clients', cmInvoices: 'Invoices', cmGo: 'Go to', cmNone: 'Nothing found for that.', cmPickInv: 'Which project is the invoice for?',
+  cmHint: '↑ ↓ to move · Enter to open · Esc to close', cmProj1: 'project', cmProjN: 'projects', cmClose: 'Close'
+});
+
+/* cards build in one after another when the section changes */
+let ENTERKEY = null;
+function enterCards() {
+  const key = [view, hview, cur && cur.project && cur.project.id, ctab].join('|');
+  if (key === ENTERKEY) return; ENTERKEY = key;
+  if (calm() || !document.body.animate) return;
+  const wrap = document.querySelector('main .wrap'); if (!wrap) return;
+  const out = [];
+  [...wrap.children].forEach(c => {
+    if (c.matches('.hnav, .cbar, script, style')) return;
+    if (c.matches('.cgrid, .cpkrow, .reps')) out.push(...c.children); else out.push(c);
+  });
+  const H = innerHeight;
+  out.filter(el => { const r = el.getBoundingClientRect(); return r.height && r.top < H; }).slice(0, 14)
+    .forEach((el, i) => el.animate([{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }],
+      { duration: 280, delay: i * 40, easing: 'cubic-bezier(.2,.7,.2,1)', fill: 'backwards' }));
+}
+
+/* revenue by type of work: one bar split by type, a row per type */
+function typeCard(d) {
+  const rows = (d.byType || []).filter(r => r.tot > 0);
+  if (!rows.length) return `<div class="card ckc ty"><h2>${t('tyT')}</h2><p class="sub">${t('tyNone')}</p></div>`;
+  let list = rows.slice(0, 5);
+  if (rows.length > 5) { const rest = rows.slice(5), o = { k: '_other', n: 0, tot: 0, profit: 0 }; rest.forEach(r => { o.n += r.n; o.tot += r.tot; o.profit += r.profit; }); o.pct = o.tot ? o.profit / o.tot * 100 : 0; list = [...list, o]; }
+  const all = list.reduce((a, r) => a + r.tot, 0), name = r => r.k === '_other' ? t('tyOther') : t('svc_' + r.k);
+  const best = list.filter(r => r.k !== '_other').reduce((a, r) => !a || r.pct > a.pct ? r : a, null);
+  return `<div class="card ckc ty"><h2>${t('tyT')}</h2><p class="sub">${t('tyS')}</p>
+  <div class="tybar" role="img" aria-label="${esc(list.map(r => `${name(r)} ${Math.round(r.tot / all * 100)}%`).join(', '))}">${list.map((r, i) => `<i class="ty${r.k === '_other' ? 'x' : i + 1}" style="flex-grow:${r.tot}" title="${esc(name(r))} · ${m0(r.tot)}"></i>`).join('')}</div>
+  <ul class="tyl">${list.map((r, i) => `<li><i class="ty${r.k === '_other' ? 'x' : i + 1}" aria-hidden="true"></i><span><b>${esc(name(r))}</b><small>${r.n} ${t(r.n === 1 ? 'cmProj1' : 'cmProjN')} · ${Math.round(r.tot / all * 100)}%</small></span><span class="tyv"><b>${m0(r.tot)}</b><small class="${r.profit < 0 ? 'neg' : r === best ? 'pos' : ''}">${t('tyProfit')} ${m0(r.profit)} · ${Math.round(r.pct)}%</small></span></li>`).join('')}</ul></div>`;
+}
+
+/* top bar: search and + New */
+const SRCH = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>';
+const isMac = () => /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
+function topTools() {
+  return `<button class="ghost tsrch" data-cmdk aria-label="${t('cmSearch')} (${isMac() ? '⌘' : 'Ctrl'}+K)" title="${t('cmSearch')} (${isMac() ? '⌘' : 'Ctrl'}+K)">${SRCH}<span class="gt">${t('cmSearch')}</span><kbd>${isMac() ? '⌘' : 'Ctrl'} K</kbd></button>
+  ${menu(`<span aria-hidden="true">+</span><span class="gt"> ${t('cmNew')}</span>`, `<button data-qn="proj">${t('cmNewProj')}</button><button data-qn="exp">${t('cmNewExp')}</button><button data-qn="inv">${t('cmNewInv')}</button>`, 'r tnew')}`;
+}
+
+/* run an existing app action by clicking a hidden button, so every handler stays in one place */
+function act(ds) { const b = document.createElement('button'); b.hidden = true; Object.assign(b.dataset, ds); app.appendChild(b); b.click(); b.remove(); }
+const later = f => setTimeout(f, 30);
+function quickNew(k) {
+  if (k === 'proj') { act({ hv: 'projects' }); later(() => act({ newp: '' })); }
+  else if (k === 'exp') act({ scan: 'general' });
+  else if (k === 'inv') cmdkOpen('inv');
+}
+function newInvoiceFor(id) { act({ open: id, ctabgo: 'invoices' }); later(() => { invForm = true; render(); $('#iv-amt')?.focus(); }); }
+
+/* command palette */
+let CM = null;
+const cmNorm = x => String(x || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+function cmItems(mode, qq) {
+  const w = cmNorm(qq).split(/\s+/).filter(Boolean), hit = (...f) => { const s = cmNorm(f.join(' ')); return w.every(x => s.includes(x)); };
+  const G = [];
+  const proj = b => ({ l: b.project.title || t('project'), s: [b.project.client_name, b.project.address].filter(Boolean).join(' · '), run: () => mode === 'inv' ? newInvoiceFor(b.project.id) : act({ open: b.project.id }) });
+  if (mode === 'inv') {
+    const xs = B.filter(b => rvOf(b.project) === 'approved' && (!w.length || hit(b.project.title, b.project.client_name, b.project.address)));
+    xs.sort((a, b) => (stOf(a.project) === 'done') - (stOf(b.project) === 'done'));
+    G.push([t('cmPickInv'), xs.slice(0, 12).map(proj)]); return G;
+  }
+  if (!w.length) {
+    G.push([t('cmCreate'), [['proj', t('cmNewProj')], ['exp', t('cmNewExp')], ['inv', t('cmNewInv')]].map(([k, l]) => ({ l: '+ ' + l, run: () => quickNew(k), keep: k === 'inv' }))]);
+    G.push([t('cmProjects'), B.filter(b => rvOf(b.project) === 'approved' && stOf(b.project) !== 'done').slice(0, 6).map(proj)]);
+    return G;
+  }
+  G.push([t('cmProjects'), B.filter(b => hit(b.project.title, b.project.client_name, b.project.address, b.project.source_company, b.project.source_ref)).slice(0, 6).map(proj)]);
+  const cl = {}; B.forEach(b => { const n = (b.project.client_name || '').trim(); if (n && hit(n)) (cl[n] = cl[n] || []).push(b); });
+  G.push([t('cmClients'), Object.entries(cl).slice(0, 4).map(([n, bs]) => ({ l: n, s: `${bs.length} ${t(bs.length === 1 ? 'cmProj1' : 'cmProjN')}`, run: () => bs.length === 1 ? act({ open: bs[0].project.id }) : (q = n, act({ hv: 'projects' })) }))]);
+  G.push([t('cmInvoices'), B.flatMap(b => invOf(b).map(i => ({ i, b }))).filter(({ i, b }) => hit(i.number, i.bill_to, b.project.title, b.project.client_name, i.amount)).slice(0, 5)
+    .map(({ i, b }) => ({ l: `${i.number || t('invoice')} · ${m0(+i.amount || 0)}`, s: `${b.project.title || ''} · ${t('inv_' + (invState(i) === 'late' ? 'sent' : invState(i)))}${invState(i) === 'late' ? ' · ' + t('inv_late').replace('{n}', invDays(i)) : ''}`, run: () => act({ open: b.project.id, ctabgo: 'invoices' }) }))]);
+  const secs = [...(isAdmin() ? [['dash', t('hv_dash')]] : []), ['projects', t('hv_projects')], ['crew', t('hv_crew')], ['inbox', t('hv_inbox')], ['review', t('hv_review')], ['feed', t('hv_feed')], ['taxes', t('hv_taxes')], ['settings', t('settingsNav')]];
+  G.push([t('cmGo'), secs.filter(([, l]) => hit(l)).map(([k, l]) => ({ l, run: () => act({ hv: k }) }))]);
+  return G.filter(g => g[1].length);
+}
+function cmdkOpen(mode = 'find') {
+  if (!staff() || !(view === 'home' || view === 'project')) return;
+  if (CM) { CM.mode = mode; CM.input.value = ''; return CM.draw(); }
+  const back = document.activeElement, el = document.createElement('div');
+  el.className = 'cmdk'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', t('cmSearch'));
+  el.innerHTML = `<div class="cmbox"><div class="cmin">${SRCH}<input type="text" role="combobox" aria-expanded="true" aria-controls="cmlist" aria-autocomplete="list" autocomplete="off" spellcheck="false"><button class="cmx" aria-label="${t('cmClose')}">Esc</button></div><div class="cmlist" id="cmlist" role="listbox"></div><p class="cmft">${t('cmHint')}</p></div>`;
+  document.body.appendChild(el);
+  const input = el.querySelector('input'), list = el.querySelector('.cmlist');
+  CM = { el, input, mode, act: 0, flat: [] };
+  CM.draw = () => {
+    input.placeholder = CM.mode === 'inv' ? t('cmPickInv') : t('cmPh');
+    const G = cmItems(CM.mode, input.value); CM.flat = G.flatMap(g => g[1]); CM.act = Math.min(CM.act, Math.max(0, CM.flat.length - 1));
+    let n = 0;
+    list.innerHTML = CM.flat.length ? G.map(([h, xs]) => `<div class="cmg" role="group" aria-label="${esc(h)}"><div class="cmgh" aria-hidden="true">${esc(h)}</div>${xs.map(x => { const i = n++; return `<div class="cmo${i === CM.act ? ' on' : ''}" role="option" id="cmo-${i}" data-i="${i}" aria-selected="${i === CM.act}"><b>${esc(x.l)}</b>${x.s ? `<small>${esc(x.s)}</small>` : ''}</div>`; }).join('')}</div>`).join('') : `<p class="cmnone">${t('cmNone')}</p>`;
+    input.setAttribute('aria-activedescendant', CM.flat.length ? 'cmo-' + CM.act : '');
+  };
+  const mark = i => { CM.act = i; list.querySelectorAll('.cmo').forEach(o => { const on = +o.dataset.i === i; o.classList.toggle('on', on); o.setAttribute('aria-selected', on); if (on) o.scrollIntoView({ block: 'nearest' }); }); input.setAttribute('aria-activedescendant', 'cmo-' + i); };
+  const close = () => { if (!CM) return; removeEventListener('keydown', key, true); el.remove(); CM = null; if (back && back.isConnected) back.focus({ preventScroll: true }); };
+  const run = i => { const x = CM.flat[i]; if (!x) return; if (x.keep) return x.run(); close(); x.run(); };
+  const key = e => {
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); if (CM.mode === 'inv' && !input.value) { CM.mode = 'find'; return CM.draw(); } return close(); }
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); if (CM.flat.length) mark((CM.act + (e.key === 'ArrowDown' ? 1 : -1) + CM.flat.length) % CM.flat.length); }
+    else if (e.key === 'Enter') { e.preventDefault(); run(CM.act); }
+    else if (e.key === 'Tab') { e.preventDefault(); input.focus(); }
+  };
+  addEventListener('keydown', key, true);
+  input.addEventListener('input', () => { CM.act = 0; CM.draw(); });
+  list.addEventListener('mousemove', e => { const o = e.target.closest('.cmo'); if (o && +o.dataset.i !== CM.act) mark(+o.dataset.i); });
+  list.addEventListener('click', e => { const o = e.target.closest('.cmo'); if (o) run(+o.dataset.i); });
+  el.addEventListener('mousedown', e => { if (e.target === el) close(); });
+  el.querySelector('.cmx').addEventListener('click', close);
+  CM.close = close; CM.draw(); input.focus();
+}
+addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 'k') { if (staff() && (view === 'home' || view === 'project')) { e.preventDefault(); cmdkOpen(); } return; }
+  if (e.key === '/' && !CM && !e.target.closest('input, textarea, select, [contenteditable="true"]') && staff() && (view === 'home' || view === 'project')) { e.preventDefault(); cmdkOpen(); }
+});
+app.addEventListener('click', e => {
+  const c = e.target.closest('[data-cmdk]'); if (c) { e.preventDefault(); return cmdkOpen(); }
+  const n = e.target.closest('[data-qn]'); if (n) { e.preventDefault(); const m = n.closest('details.menu'); if (m) m.open = false; quickNew(n.dataset.qn); }
+});
 
 /* ---------- start ---------- */
 (async function boot() {
