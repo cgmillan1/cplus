@@ -401,6 +401,7 @@ function render() {
   const hon = document.querySelector('.hnav button.on'); if (hon && hon.parentNode.scrollWidth > hon.parentNode.clientWidth) hon.parentNode.scrollLeft = hon.offsetLeft - 8;
   paintNet();
   v8After();
+  v11After();
 }
 
 /* ---------- data ---------- */
@@ -1026,11 +1027,15 @@ function dashView() {
   d.projs.filter(x => !x.done && x.j.st === 'over').slice(0, 4).forEach(x => att.push(`<button class="alrow" data-open="${x.b.project.id}" data-ctabgo="cost"><span><b>${esc(x.b.project.title)} · ${t('jc_over').toLowerCase()}</b><small class="neg">${t('jcProfitF')} ${money(x.j.fProfit)} · ${t('jcProfitE').toLowerCase()} ${money(x.j.estProfit)}</small></span><span aria-hidden="true">→</span></button>`));
   if (d.noRc) att.push(`<button class="alrow" data-hv="taxes"><span><b>${d.noRc} ${t('dNoRc')}</b><small>${t('dNoRcS')}</small></span><span aria-hidden="true">→</span></button>`);
   const tbl = `<details class="dtable"><summary>${t('dTable')}</summary><table><thead><tr><th>${t('month')}</th><th>${t('dCollected')}</th><th>${t('dSpent')}</th><th>${t('dNet')}</th></tr></thead><tbody>${d.months.map(m => `<tr><td>${mshort(m.m)} ${m.y}</td><td>${money(m.rev)}</td><td>${money(m.exp)}</td><td class="${m.rev - m.exp < 0 ? 'neg' : ''}">${money(m.rev - m.exp)}</td></tr>`).join('')}</tbody></table></details>`;
-  return `<div class="secthead"><h1>${t('dashT')}</h1></div><p class="sub">${t('dashS')}</p>
-  <div class="filters dper" role="group" aria-label="${t('dPeriod')}">${per.map(([k, l]) => `<button data-dper="${k}" class="${dper === k ? 'on' : ''}" aria-pressed="${dper === k}">${l}</button>`).join('')}</div>
-  <section class="card sum"><div class="sts">${stat(t('dNet'), d.net, d.net < 0 ? 'neg' : 'pos', t('dNetS'))}${stat(t('dOwed'), d.owed, '', t('dOwedS'))}</div><div class="lns">${line(t('dCollected'), d.rev)}${line(t('dSpent'), d.spent, '', `${d.nExp} ${t('dExpN')}`)}${line(t('dWon'), d.won.reduce((a, b) => a + S.calc(b).tot, 0), '', `${d.won.length} ${t(d.won.length === 1 ? 'dProj1' : 'dProjN')}`)}${line(t('dActive'), String(d.active.length))}</div></section>
-  <div class="dgrid">${approvalsCard()}
-  ${att.length ? `<div class="card alerts"><h2>${t('dAttention')}</h2>${att.join('')}</div>` : ''}
+  const attn = approvalsCard() + (att.length ? `<div class="card alerts"><h2>${t('dAttention')}</h2>${att.join('')}</div>` : '');
+  return `<div class="ckhead">${greet()}<div class="filters dper" role="group" aria-label="${t('dPeriod')}">${per.map(([k, l]) => `<button data-dper="${k}" class="${dper === k ? 'on' : ''}" aria-pressed="${dper === k}">${l}</button>`).join('')}</div></div>
+  ${kpiCards(d)}
+  <div class="cgrid">
+  <div class="card ckc cf"><h2>${t('cfT')}</h2><p class="sub">${t('cfS')}</p>${cashFlow()}</div>
+  ${profitCard(d)}
+  ${attn ? `<div class="ckatt" id="apx">${attn}</div>` : ''}
+  ${teamToday()}
+  ${activityCard()}
   </div><h2 class="reph">${t('uiReports')}</h2><p class="sub">${t('uiReportsS')}</p><div class="reps">
   ${rep('wk', weekCard())}
   ${rep('es', esignCard())}
@@ -1053,7 +1058,7 @@ function dashView() {
 
 function hnav() {
   const nr = B.filter(b => rvOf(b.project) === 'review').length;
-  return `<div class="hnav" role="tablist">${[...(isAdmin() ? [['dash', t('hv_dash')]] : []), ['projects', t('hv_projects')], ['crew', t('hv_crew'), B.filter(b => rvOf(b.project) === 'approved' && stOf(b.project) !== 'done' && jc(b).st === 'over').length], ['inbox', t('hv_inbox'), allUnread()], ['review', t('hv_review'), nr], ['feed', t('hv_feed')], ['taxes', t('hv_taxes')], ...(isAdmin() ? [['history', t('hv_history')]] : [])].map(([k, l, n]) => `<button role="tab" data-hv="${k}" aria-selected="${hview === k}" class="${hview === k ? 'on' : ''}">${l}${n ? ` <span class="badge">${n}</span>` : ''}</button>`).join('')}</div>`;
+  return `<div class="hnav" role="tablist">${[...(isAdmin() ? [['dash', t('hv_dash')]] : []), ['projects', t('hv_projects')], ['crew', t('hv_crew'), B.filter(b => rvOf(b.project) === 'approved' && stOf(b.project) !== 'done' && jc(b).st === 'over').length], ['inbox', t('hv_inbox'), allUnread()], ['review', t('hv_review'), nr], ['feed', t('hv_feed')], ['taxes', t('hv_taxes')], ...(isAdmin() ? [['history', t('hv_history')]] : [])].map(([k, l, n]) => `<button role="tab" data-hv="${k}" aria-selected="${hview === k}" class="${hview === k ? 'on' : ''}">${hvIco(k)}<span class="hvl">${l}</span>${n ? ` <span class="badge">${n}</span>` : ''}</button>`).join('')}${sideFoot()}</div>`;
 }
 function homeTools() {
   return `<div class="htools"><label class="search"><span class="sr">${t('search')}</span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input id="hq" type="search" value="${esc(q)}" placeholder="${t('search')}" autocomplete="off"></label>
@@ -2270,6 +2275,177 @@ takeVideo:'Record video',playVideo:'Play video',vidUp:'Uploading video ({m} MB).
 qbo:'Export to QuickBooks',qboItem:'Construction services',qboPayment:'Payment received',qboDone:'Ready for QuickBooks: {e} expenses, {d} payments and {i} invoices.',
 qboReadme:'C Plus · QuickBooks Online export · {p}\r\n\r\n1) gastos-quickbooks: {e} expenses. In QuickBooks: Transactions > Banking > Upload transactions > pick this file and the account they were paid from. Columns: Date, Description, Amount (expenses are negative).\r\n2) pagos-recibidos-quickbooks: {d} payments received, same format, into the deposit account.\r\n3) facturas-quickbooks: {i} invoices. In QuickBooks: Settings > Import data > Invoices. Check "Add new customers" and "Add new products and services". QuickBooks does not allow importing invoices when sales tax is set up.\r\n\r\nIf your bank or card is already connected to QuickBooks, do not upload files 1 and 2: those transactions are already there and would be doubled. Use them to review.\r\n'
 });
+
+/* ---------- v11: owner cockpit (desktop sidebar with sliding highlight, smart greeting, KPI cards, cash flow forecast) ---------- */
+S.addText({ckpGood:'Buenos días',ckpAfter:'Buenas tardes',ckpEve:'Buenas noches',ckpIn:'Esta semana entran {a} de {w}.',ckpInLate:'Tienes {a} en facturas vencidas.',ckpApx1:'1 gasto espera tu aprobación.',ckpApxN:'{n} gastos esperan tu aprobación.',ckpOver1:'{p} va sobre el estimado.',ckpOverN:'{n} proyectos van sobre el estimado.',ckpCalm:'Todo en orden por hoy.',
+  kCollected:'Cobrado',kVsPrev:'vs {a} el periodo anterior',kNew:'sin cobros el periodo anterior',kProfit:'Ganancia real',kMargin:'Margen {p}% · cobrado menos gastado',kOwed:'Por cobrar',kOpenInv1:'1 factura abierta',kOpenInvN:'{n} facturas abiertas',kLate:'{n} vencida(s)',kApx:'Gastos por aprobar',kApxNone:'Nada por aprobar',kApxOver:'Más de {a}',kReview:'Revisar ahora',
+  cfT:'Flujo de caja: hoy y lo que viene',cfS:'Lo que entró menos lo que salió en los últimos 60 días, y lo que viene con las facturas enviadas y lo que falta gastar según el estimado.',cfNow:'Neto 60 días',cfIn:'Entra (30 días)',cfOut:'Sale (30 días, estimado)',cfEnd:'Proyectado',cfLeg1:'Neto acumulado',cfLeg2:'Proyección',cfLeg3:'Factura por cobrar',cfToday:'Hoy',cfNone:'Todavía no hay pagos ni gastos para dibujar el flujo.',cfLateLbl:'vencida',
+  ppT:'Ganancia por proyecto',ppS:'Proyectada al terminar · toca para abrir',
+  tmT:'Equipo hoy',tmOn:'En la obra',tmAway:'A {d} m',tmOut:'Salió {t}',tmNone:'Sin entrada hoy',tmSince:'desde {t}',tmCount:'{a} de {b} en obra',
+  acT:'Actividad reciente',
+  sbWeek:'Por cobrar esta semana',sbWeekS1:'1 pago · vence {d}',sbWeekSN:'{n} pagos · el próximo {d}',sbLate1:'1 pago vencido',sbLateN:'{n} pagos vencidos',sbOwed:'Por cobrar',sbOwedS:'de proyectos aprobados',sbAdmin:'Admin',sbMgr:'Project manager'},
+ {ckpGood:'Good morning',ckpAfter:'Good afternoon',ckpEve:'Good evening',ckpIn:'{a} comes in this week from {w}.',ckpInLate:'You have {a} in late invoices.',ckpApx1:'1 expense is waiting for your approval.',ckpApxN:'{n} expenses are waiting for your approval.',ckpOver1:'{p} is over the estimate.',ckpOverN:'{n} projects are over the estimate.',ckpCalm:'All good for today.',
+  kCollected:'Collected',kVsPrev:'vs {a} the period before',kNew:'nothing collected the period before',kProfit:'Real profit',kMargin:'{p}% margin · collected minus spent',kOwed:'To collect',kOpenInv1:'1 open invoice',kOpenInvN:'{n} open invoices',kLate:'{n} late',kApx:'Expenses to approve',kApxNone:'Nothing to approve',kApxOver:'Over {a}',kReview:'Review now',
+  cfT:'Cash flow: today and what is coming',cfS:'What came in minus what went out over the last 60 days, and what is coming from sent invoices and the cost still to spend on the estimate.',cfNow:'Net 60 days',cfIn:'In (30 days)',cfOut:'Out (30 days, estimated)',cfEnd:'Projected',cfLeg1:'Running net',cfLeg2:'Projection',cfLeg3:'Invoice to collect',cfToday:'Today',cfNone:'There are no payments or expenses yet to draw the cash flow.',cfLateLbl:'late',
+  ppT:'Profit by project',ppS:'Projected at completion · tap to open',
+  tmT:'Crew today',tmOn:'On site',tmAway:'{d} m away',tmOut:'Left {t}',tmNone:'No check-in today',tmSince:'since {t}',tmCount:'{a} of {b} on site',
+  acT:'Recent activity',
+  sbWeek:'To collect this week',sbWeekS1:'1 payment · due {d}',sbWeekSN:'{n} payments · next {d}',sbLate1:'1 late payment',sbLateN:'{n} late payments',sbOwed:'To collect',sbOwedS:'from approved projects',sbAdmin:'Admin',sbMgr:'Project manager'});
+
+const HVI = { dash: '<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>', projects: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+  crew: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"/><circle cx="17.5" cy="9" r="2.5"/>', inbox: '<path d="M4 5h16v11H8l-4 4z"/>',
+  review: '<path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/>', feed: '<path d="M4 6h16M4 12h16M4 18h10"/>',
+  taxes: '<path d="M6 2h9l4 4v16H6z"/><path d="M14 2v5h5"/><path d="M9 13h6M9 17h4"/>', history: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>' };
+const hvIco = k => HVI[k] ? `<svg class="hvi" viewBox="0 0 24 24" aria-hidden="true">${HVI[k]}</svg>` : '';
+const firstName = () => (myName() || '').split(' ')[0];
+const wday = d => new Date(d + 'T12:00:00').toLocaleDateString(LOC(), { weekday: 'long' });
+const addDays = (n, from = S.today()) => { const d = new Date(from + 'T12:00:00'); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
+const openInv = () => B.flatMap(b => invOf(b).filter(i => i.status === 'sent').map(i => ({ i, b })));
+function weekIn() {
+  const end = addDays(7), xs = openInv().filter(x => x.i.due_on && x.i.due_on <= end).sort((a, b) => String(a.i.due_on).localeCompare(String(b.i.due_on)));
+  return { xs, sum: xs.reduce((a, x) => a + (+x.i.amount || 0), 0) };
+}
+function sideFoot() {
+  const w = weekIn(), owed = B.filter(b => rvOf(b.project) === 'approved').reduce((a, b) => a + Math.max(0, S.calc(b).bal), 0);
+  const nx = w.xs.find(x => x.i.due_on >= S.today()) || w.xs[0];
+  const lateAll = w.xs.every(x => x.i.due_on < S.today());
+  const card = w.xs.length ? `<small>${t('sbWeek')}</small><b class="${lateAll ? 'neg' : 'pos'}">${m0(w.sum)}</b><small>${lateAll ? (w.xs.length === 1 ? t('sbLate1') : t('sbLateN').replace('{n}', w.xs.length)) : (w.xs.length === 1 ? t('sbWeekS1') : t('sbWeekSN').replace('{n}', w.xs.length)).replace('{d}', wday(nx.i.due_on))}</small>`
+    : `<small>${t('sbOwed')}</small><b>${m0(owed)}</b><small>${t('sbOwedS')}</small>`;
+  const nm = myName() || '·', ini = nm.split(' ').map(x => x[0]).join('').slice(0, 2).toUpperCase();
+  return `<div class="hfoot"><div class="hcash">${card}</div><div class="hme"><span class="hav">${esc(ini)}</span><span><b>${esc(nm)}</b><small>${t(isAdmin() ? 'sbAdmin' : 'sbMgr')}</small></span></div></div>`;
+}
+
+/* the sliding highlight: the leading edge moves first, the trailing edge catches up */
+const PILLS = {};
+let PILLWIRED = false;
+function pillsResync() { for (const k in PILLS) delete PILLS[k]; slidePill('main .hnav', 'hnav'); slidePill('.filters.dper', 'dper'); }
+function slidePill(sel, key) {
+  if (!PILLWIRED) { PILLWIRED = true; addEventListener('resize', () => requestAnimationFrame(pillsResync)); document.fonts?.ready.then(pillsResync); }
+  document.querySelectorAll(sel).forEach(box => {
+    const on = box.querySelector('button.on'); let p = box.querySelector(':scope > .spill');
+    if (!on) { if (p) p.remove(); return; }
+    if (!p) { p = document.createElement('i'); p.className = 'spill'; p.setAttribute('aria-hidden', 'true'); box.prepend(p); }
+    box.classList.add('haspill');
+    const r = { l: on.offsetLeft, t: on.offsetTop, w: on.offsetWidth, h: on.offsetHeight };
+    const set = x => `translate(${x.l}px,${x.t}px)`;
+    Object.assign(p.style, { width: r.w + 'px', height: r.h + 'px', transform: set(r) });
+    const prev = PILLS[key]; PILLS[key] = r;
+    if (!prev || (prev.l === r.l && prev.t === r.t && prev.w === r.w) || matchMedia('(prefers-reduced-motion: reduce)').matches || !p.animate) return;
+    const u = { l: Math.min(prev.l, r.l), t: Math.min(prev.t, r.t) };
+    u.w = Math.max(prev.l + prev.w, r.l + r.w) - u.l; u.h = Math.max(prev.t + prev.h, r.t + r.h) - u.t;
+    const f = x => ({ width: x.w + 'px', height: x.h + 'px', transform: set(x) });
+    p.animate([f(prev), { ...f(u), offset: 0.42 }, f(r)], { duration: 460, easing: 'cubic-bezier(.3,.7,.2,1)' });
+  });
+}
+
+/* greeting with the day's news */
+function greet() {
+  const money = m0;
+  const h = new Date().getHours(), hi = t(h < 12 ? 'ckpGood' : h < 19 ? 'ckpAfter' : 'ckpEve');
+  const w = weekIn(), late = w.xs.filter(x => x.i.due_on < S.today()), soon = w.xs.filter(x => x.i.due_on >= S.today());
+  const bits = [];
+  if (soon.length) { const who = [...new Set(soon.map(x => x.i.bill_to || x.b.project.client_name || x.b.project.title))].slice(0, 2).join(', ');
+    bits.push(t('ckpIn').replace('{a}', `<b class="pos">${money(soon.reduce((a, x) => a + (+x.i.amount || 0), 0))}</b>`).replace('{w}', esc(who))); }
+  if (late.length) bits.push(t('ckpInLate').replace('{a}', `<b class="neg">${money(late.reduce((a, x) => a + (+x.i.amount || 0), 0))}</b>`));
+  const ap = pendingExp().length; if (ap && isAdmin()) bits.push(`<b>${ap === 1 ? t('ckpApx1') : t('ckpApxN').replace('{n}', ap)}</b>`);
+  const ov = B.filter(b => rvOf(b.project) === 'approved' && stOf(b.project) !== 'done' && jc(b).st === 'over');
+  if (ov.length) bits.push(ov.length === 1 ? t('ckpOver1').replace('{p}', esc(ov[0].project.title)) : t('ckpOverN').replace('{n}', ov.length));
+  const dt = new Date().toLocaleDateString(LOC(), { weekday: 'long', day: 'numeric', month: 'long' });
+  return `<div class="greet"><small>${esc(dt.charAt(0).toUpperCase() + dt.slice(1))}</small><h1>${hi}${firstName() ? ', ' + esc(firstName()) : ''}</h1><p>${bits.join(' ') || t('ckpCalm')}</p></div>`;
+}
+
+/* KPI cards */
+function prevRange(p) {
+  const n = new Date(), y = n.getFullYear(), m = n.getMonth(), d = n.getDate();
+  if (p === 'month') { const a = new Date(Date.UTC(y, m - 1, 1)), b = new Date(Date.UTC(y, m - 1, Math.min(d, new Date(y, m, 0).getDate()))); return [ymd(a), ymd(b)]; }
+  if (p === 'q') return [ymd(new Date(Date.UTC(y, m - 5, 1))), ymd(new Date(Date.UTC(y, m - 2, 0)))];
+  if (p === '12m') return [ymd(new Date(Date.UTC(y, m - 23, 1))), ymd(new Date(Date.UTC(y, m - 11, 0)))];
+  return [`${y - 1}-01-01`, `${y - 1}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`];
+}
+const spark = (vals, cls) => { if (vals.length < 2) return ''; const mn = Math.min(...vals), mx = Math.max(...vals), rg = mx - mn || 1;
+  return `<svg class="spark ${cls}" viewBox="0 0 200 36" preserveAspectRatio="none" aria-hidden="true"><path d="${vals.map((v, i) => `${i ? 'L' : 'M'}${(i / (vals.length - 1) * 200).toFixed(1)} ${(32 - (v - mn) / rg * 28).toFixed(1)}`).join(' ')}"/></svg>`; };
+function kpiCards(d) {
+  const pays = B.flatMap(b => b.payments), PR = prevRange(dper), prev = pays.filter(p => inR(p.paid_on, PR)).reduce((a, p) => a + (+p.amount || 0), 0);
+  const chg = prev ? Math.round((d.rev - prev) / prev * 100) : null, last = d.months.slice(-6);
+  const oi = openInv(), late = oi.filter(x => invState(x.i) === 'late'), ap = pendingExp(), apSum = ap.reduce((a, x) => a + (+x.e.amount || 0), 0);
+  const marg = d.rev ? Math.round(d.net / d.rev * 100) : 0;
+  return `<section class="cpkrow" aria-label="${t('dPeriod')}">
+  <article class="cpk hero"><div class="cpkh"><span>${t('kCollected')}</span>${chg != null ? `<em>${chg >= 0 ? '▲' : '▼'} ${Math.abs(chg)}%</em>` : ''}</div><b data-count="${Math.round(d.rev)}">${m0(d.rev)}</b><small>${prev ? t('kVsPrev').replace('{a}', m0(prev)) : t('kNew')}</small>${spark(last.map(m => m.rev), 'dk')}</article>
+  <article class="cpk"><div class="cpkh"><span>${t('kProfit')}</span>${d.rev ? `<em class="${d.net < 0 ? 'neg' : 'pos'}">${marg}%</em>` : ''}</div><b class="${d.net < 0 ? 'neg' : ''}" data-count="${Math.round(d.net)}">${m0(d.net)}</b><small>${t('kMargin').replace('{p}', marg)}</small>${spark(last.map(m => m.rev - m.exp), 'ok')}</article>
+  <article class="cpk"><div class="cpkh"><span>${t('kOwed')}</span>${late.length ? `<em class="neg">${t('kLate').replace('{n}', late.length)}</em>` : ''}</div><b data-count="${Math.round(d.owed)}">${m0(d.owed)}</b><small>${oi.length === 1 ? t('kOpenInv1') : t('kOpenInvN').replace('{n}', oi.length)}</small></article>
+  <article class="cpk"><div class="cpkh"><span>${t('kApx')}</span>${ap.length ? `<em class="cu">${t('kApxOver').replace('{a}', m0(settings.approve_over ?? 500))}</em>` : ''}</div><b>${ap.length ? `${ap.length} · ${m0(apSum)}` : '0'}</b><small>${ap.length ? esc([...new Set(ap.map(x => x.e.vendor || x.e.description).filter(Boolean))].slice(0, 2).join(', ')) : t('kApxNone')}</small>${ap.length && isAdmin() ? `<a class="btn2 cklink" href="#apx">${t('kReview')} →</a>` : ''}</article></section>`;
+}
+
+/* cash flow: running net for 60 days, then a 30-day projection from sent invoices and the cost still to spend */
+function cashFlow() {
+  const today = S.today(), P = 60, F = 30, day = i => addDays(i - P);
+  const pays = B.flatMap(b => b.payments), exps = dashRows || [];
+  const net = Array(P + 1).fill(0);
+  pays.forEach(p => { const k = String(p.paid_on || '').slice(0, 10); for (let i = 0; i <= P; i++) if (k === day(i)) net[i] += +p.amount || 0; });
+  exps.forEach(e => { const k = String(e.spent_on || '').slice(0, 10); for (let i = 0; i <= P; i++) if (k === day(i)) net[i] -= +e.amount || 0; });
+  if (!pays.some(p => inR(p.paid_on, [day(0), today])) && !exps.some(e => inR(e.spent_on, [day(0), today]))) return `<p class="sub">${t('cfNone')}</p>`;
+  const cum = []; net.reduce((a, v, i) => (cum[i] = a + v), 0);
+  const inv = openInv().map(x => ({ ...x, at: Math.max(1, Math.min(F, Math.round((Date.parse(x.i.due_on < today ? addDays(3) : x.i.due_on) - Date.parse(today)) / 864e5))) })).filter(x => x.at <= F && Date.parse(x.i.due_on) <= Date.parse(addDays(F)));
+  const out = Array(F + 1).fill(0);
+  B.filter(b => rvOf(b.project) === 'approved' && stOf(b.project) !== 'done').forEach(b => { const j = jc(b); if (!j.has) return;
+    const left = Math.max(0, j.fCost - (j.matAct + j.subAct + j.labAct)); if (!left) return;
+    const end = b.project.end_date && b.project.end_date > today ? Math.round((Date.parse(b.project.end_date) - Date.parse(today)) / 864e5) : F;
+    const days = Math.max(1, end), per = left / days; for (let i = 1; i <= Math.min(F, days); i++) out[i] += per; });
+  const fc = [cum[P]]; for (let i = 1; i <= F; i++) fc[i] = fc[i - 1] - out[i] + inv.filter(x => x.at === i).reduce((a, x) => a + (+x.i.amount || 0), 0);
+  const all = [...cum, ...fc], mn = Math.min(0, ...all), mx = Math.max(0, ...all) || (mn ? 0 : 1), W = 720, H = 240, L = 46, T = 30, Bt = 26, iw = W - L - 8, ih = H - T - Bt;
+  const X = i => L + i / (P + F) * iw, Y = v => T + ih - (v - mn) / (mx - mn || 1) * ih;
+  const pth = (arr, o) => arr.map((v, i) => `${i ? 'L' : 'M'}${X(i + o).toFixed(1)} ${Y(v).toFixed(1)}`).join(' ');
+  let g = ''; for (let k = 0; k <= 3; k++) { const v = mn + (mx - mn) * k / 3; g += `<line class="gl" x1="${L}" x2="${W - 8}" y1="${Y(v)}" y2="${Y(v)}"/><text class="ax" x="${L - 6}" y="${Y(v) + 4}" text-anchor="end">${kfmt(v)}</text>`; }
+  if (mn < 0) g += `<line class="zero" x1="${L}" x2="${W - 8}" y1="${Y(0)}" y2="${Y(0)}"/>`;
+  g += `<path class="cfa" d="${pth(cum, 0)} L${X(P)} ${Y(mn)} L${X(0)} ${Y(mn)} Z"/><path class="cfl" d="${pth(cum, 0)}"/><path class="cff" d="${pth(fc, P)}"/>`;
+  g += `<line class="tdy" x1="${X(P)}" x2="${X(P)}" y1="${T - 6}" y2="${T + ih}"/><rect class="tdyb" x="${X(P) - 24}" y="2" width="48" height="20" rx="6"/><text class="tdyt" x="${X(P)}" y="16" text-anchor="middle">${t('cfToday')}</text>`;
+  inv.forEach(x => { const cx = X(P + x.at), cy = Y(fc[x.at]); g += `<circle class="cfd" cx="${cx}" cy="${cy}" r="6"><title>${esc((x.i.bill_to || x.b.project.title) + ' · ' + m0(x.i.amount))}</title></circle>`; });
+  inv.slice(0, 4).forEach(x => { g += `<text class="cfdl" x="${X(P + x.at)}" y="${Y(fc[x.at]) - 11}" text-anchor="middle">${esc(String(x.i.bill_to || x.b.project.client_name || x.b.project.title).split(' ')[0])} ${kfmt(+x.i.amount || 0)}</text>`; });
+  const ld = (i, o) => { const dd = new Date(addDays(i - P + o) + 'T12:00:00'); return dd.toLocaleDateString(LOC(), { day: 'numeric', month: 'short' }); };
+  [0, 30, 60, 75, 90].forEach(i => { g += `<text class="ax" x="${X(i)}" y="${H - 6}" text-anchor="${i === 0 ? 'start' : i === 90 ? 'end' : 'middle'}">${ld(i, 0)}</text>`; });
+  const inSum = inv.reduce((a, x) => a + (+x.i.amount || 0), 0), outSum = out.reduce((a, v) => a + v, 0);
+  return `<div class="cfchips"><span><small>${t('cfNow')}</small><b class="${cum[P] < 0 ? 'neg' : ''}">${m0(cum[P])}</b></span><span><small>${t('cfIn')}</small><b class="pos">+${m0(inSum)}</b></span><span><small>${t('cfOut')}</small><b class="cu">-${m0(outSum)}</b></span><span><small>${t('cfEnd')} ${ld(90, 0)}</small><b>${m0(fc[F])}</b></span></div>
+  <svg class="cflow" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(t('cfT'))}: ${m0(cum[P])} → ${m0(fc[F])}">${g}</svg>
+  <div class="legend cfleg"><span><i class="ln"></i>${t('cfLeg1')}</span><span><i class="ln dash"></i>${t('cfLeg2')}</span><span><i class="dot"></i>${t('cfLeg3')}</span></div>`;
+}
+
+function profitCard(d) {
+  const A = d.projs.filter(x => !x.done).slice(0, 6); if (!A.length) return '';
+  const mx = Math.max(1, ...A.map(x => Math.abs(x.profit)));
+  return `<div class="card ckc pp"><h2>${t('ppT')}</h2><p class="sub">${t('ppS')}</p>${A.map(x => { const bad = x.profit < 0 || x.j.st === 'over';
+    return `<button class="pprow" data-open="${x.b.project.id}"><span class="ppl"><b>${esc(x.b.project.title)}</b><em class="${bad ? 'neg' : 'pos'}">${m0(x.profit)} · ${Math.round(x.pct)}%</em></span><span class="ppt"><i class="${x.profit < 0 || x.j.st === 'over' ? 'bad' : ''}" style="width:${Math.max(3, Math.abs(x.profit) / mx * 100)}%"></i></span>${x.j.st === 'over' ? `<small class="neg">${t('jc_over')}</small>` : ''}</button>`; }).join('')}</div>`;
+}
+
+function teamToday() {
+  const today = S.today(), te = B.flatMap(b => (b.time_entries || []).filter(x => x.work_date === today && x.clock_in).map(x => ({ x, b })));
+  const people = team.filter(m => m.active && (m.role === 'contractor' || m.role === 'manager'));
+  if (!people.length) return '';
+  const tm = s => new Date(s).toLocaleTimeString(LOC(), { hour: 'numeric', minute: '2-digit' });
+  const rows = people.map(m => { const mine = te.filter(y => y.x.user_id === m.user_id).sort((a, b) => String(b.x.clock_in).localeCompare(String(a.x.clock_in)))[0];
+    const ini = (m.name || '·').split(' ').map(z => z[0]).join('').slice(0, 2).toUpperCase();
+    let st = `<em class="mut">${t('tmNone')}</em>`, sub = '', on = 0;
+    if (mine) { const open = !mine.x.clock_out; sub = esc(mine.b.project.title) + ' · ' + t('tmSince').replace('{t}', tm(mine.x.clock_in));
+      st = open ? (+mine.x.in_dist > 300 ? `<em class="cu">${t('tmAway').replace('{d}', Math.round(mine.x.in_dist))}</em>` : `<em class="pos">${t('tmOn')}</em>`) : `<em class="mut">${t('tmOut').replace('{t}', tm(mine.x.clock_out))}</em>`; on = open ? 2 : 1; }
+    return { on, h: `<div class="tmrow"><span class="hav ${mine ? '' : 'off'}">${esc(ini)}</span><span class="tmn"><b>${esc(m.name || '·')}</b><small>${sub || t(m.role === 'manager' ? 'sbMgr' : 'contractor')}</small></span>${st}</div>` }; }).sort((a, b) => b.on - a.on);
+  return `<div class="card ckc tm"><div class="top2"><h2>${t('tmT')}</h2><small class="sub">${t('tmCount').replace('{a}', rows.filter(r => r.on === 2).length).replace('{b}', rows.length)}</small></div>${rows.slice(0, 6).map(r => r.h).join('')}</div>`;
+}
+
+function activityCard() {
+  const ev = events(B, 6); if (!ev.length) return '';
+  return `<div class="card ckc ac"><h2>${t('acT')}</h2><ol class="acl">${ev.map(e => { const pr = B.find(b => b.project.id === e.pid)?.project;
+    return `<li><i aria-hidden="true"></i><span><b>${e.who ? esc(e.who) + ' · ' : ''}${esc(e.txt)}</b><small>${pr ? esc(pr.title) + ' · ' : ''}${fdate(e.at)}</small></span></li>`; }).join('')}</ol></div>`;
+}
+
+/* numbers count up once when the dashboard first shows */
+let ckCounted = false;
+function v11After() {
+  slidePill('main .hnav', 'hnav'); slidePill('.filters.dper', 'dper');
+  if (ckCounted || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const els = document.querySelectorAll('.cpkrow [data-count]'); if (!els.length) return; ckCounted = true;
+  els.forEach(el => { const end = +el.dataset.count, t0 = performance.now(), dur = 900;
+    const step = now => { const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3); el.textContent = m0(Math.round(end * e)); if (k < 1) requestAnimationFrame(step); else el.textContent = m0(end); };
+    requestAnimationFrame(step); });
+}
 
 /* ---------- start ---------- */
 (async function boot() {
