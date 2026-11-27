@@ -325,24 +325,29 @@ function cDocs() {
   const lang = docLang || S.L, miss = [['legal_name', 'legalName'], ['license_no', 'licenseNo'], ['address', 'bizAddress']].filter(([f]) => !String(settings[f] || '').trim()).map(([, k]) => t(k));
   const hasContract = cur.documents.some(x => x.kind === 'contract' && x.status !== 'void');
   const docs = cur.documents.slice().sort((x, y) => String(y.created_at).localeCompare(String(x.created_at)));
-  return `<div class="card"><h2>${t('docs')}</h2><p class="sub">${t('docsSub')}</p>
-  ${miss.length ? `<p class="hint" style="color:#b23a26;font-weight:600">${t('missingFor')}: ${miss.join(', ')}</p>` : ''}
-  <div class="linkbox" style="margin-top:10px"><label style="margin:0">${t('docLang')} <select id="doclang" style="min-height:44px;margin-inline-start:6px">${[['es', 'Español'], ['en', 'English']].map(([v, l]) => `<option value="${v}"${lang === v ? ' selected' : ''}>${l}</option>`).join('')}</select></label></div>
-  <div class="linkbox" style="margin-top:12px"><button class="btn2" data-doc="estimate">${t('dlEstimate')}</button><button class="primary" data-mkdoc="contract">${t('mkContract')}</button><button class="btn2" data-mkdoc="completion">${t('mkCompletion')}</button></div>
-  ${hasContract ? '' : `<p class="hint">${t('noContractYet')}</p>`}<p class="hint">${t('docsHint')}</p>
-  <div class="linkbox" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--line)"><label style="margin:0">${t('upKind')} <select id="upkind" style="min-height:44px;margin-inline-start:6px">${['contract', 'estimate', 'completion'].map(k => `<option value="${k}">${t('doc_' + k)}</option>`).join('')}</select></label><button class="btn2" data-updoc>${t('upDoc')}</button></div><p class="hint">${t('upDocHint')}</p></div>
-  <div class="card">${docs.map(x => `<div class="co"><div class="top2"><b>${t('doc_' + x.kind)}${x.snapshot && x.snapshot.items ? ' · ' + (x.lang || 'es').toUpperCase() : ' · ' + t('uploadedDoc')}</b><b class="amt">${money(x.total)}</b></div>
-    <small class="sub">${fdate(x.created_at)}</small>
-    <div class="acts">${sel('documents', x, 'status', ['draft', 'sent', 'signed', 'void'].map(s => [s, t('ds_' + s)]), 'stsel')}${x.file ? `<button class="primary" data-dlsigned="${x.id}">${t('dlSigned')}</button>` : ''}${x.snapshot && x.snapshot.items ? `<button class="btn2" data-dl="${x.id}">${x.file ? t('dlOriginal') : t('download')}</button>` : ''}<button class="btn2" data-upsigned="${x.id}">${t('upSigned')}</button>${x.status === 'draft' || (x.file && !(x.snapshot && x.snapshot.items)) ? del('documents', x.id) : ''}</div>
-    ${x.file ? `<small class="sub" style="color:var(--ok);font-weight:600">✓ ${t('signedFile')}</small>` : ''}${esBlock(x)}
-    ${x.status === 'signed' ? `<div class="grid2" style="margin-top:10px"><label>${t('signedBy')}${fld('documents', x, 'signed_by')}</label><label>${t('signedOn')}${fld('documents', x, 'signed_on', 'date')}</label></div>` : ''}</div>`).join('') || `<p class="sub">${t('none')}</p>`}</div>
-  <div class="card"><h2>${t('contractData')}</h2><p class="sub">${t('contractDataSub')}</p><div class="grid2" style="margin-top:12px">
+  const es = S.L === 'es';
+  const main = hasContract ? `<button class="primary" data-mkdoc="completion">${t('mkCompletion')}</button>` : `<button class="primary" data-mkdoc="contract">${t('mkContract')}</button>`;
+  const more = (hasContract ? `<button data-mkdoc="contract">${t('mkContract')}</button>` : `<button data-mkdoc="completion">${t('mkCompletion')}</button>`);
+  return `<div class="card"><div class="top2"><h2>${t('docs')}</h2><label class="dlang"><span class="sr">${t('docLang')}</span><select id="doclang" aria-label="${t('docLang')}">${[['es', 'Español'], ['en', 'English']].map(([v, l]) => `<option value="${v}"${lang === v ? ' selected' : ''}>${l}</option>`).join('')}</select></label></div>
+  <p class="sub">${t('docsHint')}</p>
+  ${miss.length ? `<a class="warnrow" href="#cdata"><b>${t('missingFor')}:</b> ${miss.join(', ')} <span aria-hidden="true">→</span></a>` : ''}
+  <div class="acts docacts">${main}<button class="btn2" data-doc="estimate">${t('dlEstimate')}</button>${menu((es ? 'Más' : 'More') + ' ▾', more, 'r')}</div>
+  ${hasContract ? '' : `<p class="hint">${t('noContractYet')}</p>`}
+  <details class="fold upf"${fo('upload')}><summary><span>${t('upDoc')}</span></summary><p class="hint">${t('upDocHint')}</p><div class="acts"><label class="dlang"><span class="sr">${t('upKind')}</span><select id="upkind" aria-label="${t('upKind')}">${['contract', 'estimate', 'completion'].map(k => `<option value="${k}">${t('doc_' + k)}</option>`).join('')}</select></label><button class="btn2" data-updoc>${t('upDoc')}</button></div></details></div>
+  ${docs.length ? `<div class="card"><h2>${es ? 'Documentos del proyecto' : 'Project documents'}</h2>${docs.map(x => `<div class="co doc"><div class="top2"><b>${t('doc_' + x.kind)}${x.snapshot && x.snapshot.items ? ' · ' + (x.lang || 'es').toUpperCase() : ' · ' + t('uploadedDoc')}</b><b class="amt">${m0(x.total)}</b></div>
+    <small class="sub">${fdate(x.created_at)}${x.file ? ` · <span style="color:var(--ok);font-weight:600">✓ ${t('signedFile')}</span>` : ''}</small>
+    <div class="acts">${sel('documents', x, 'status', ['draft', 'sent', 'signed', 'void'].map(s => [s, t('ds_' + s)]), 'stsel')}${x.file ? `<button class="primary" data-dlsigned="${x.id}">${t('dlSigned')}</button>` : x.snapshot && x.snapshot.items ? `<button class="btn2" data-dl="${x.id}">${t('download')}</button>` : ''}
+    ${menu('<span aria-hidden="true">⋯</span><span class="sr">' + (es ? 'Más opciones' : 'More options') + '</span>', `${x.file && x.snapshot && x.snapshot.items ? `<button data-dl="${x.id}">${t('dlOriginal')}</button>` : ''}<button data-upsigned="${x.id}">${t('upSigned')}</button>${x.status === 'draft' || (x.file && !(x.snapshot && x.snapshot.items)) ? `<button data-del="documents:${x.id}">${t('delete')}</button>` : ''}`, 'r')}</div>
+    ${esBlock(x)}
+    ${x.status === 'signed' ? `<div class="grid2" style="margin-top:10px"><label>${t('signedBy')}${fld('documents', x, 'signed_by')}</label><label>${t('signedOn')}${fld('documents', x, 'signed_on', 'date')}</label></div>` : ''}</div>`).join('')}</div>` : ''}
+  <details class="card fold" id="cdata" data-fold="cdata"${miss.length || OPENF.has('cdata') ? ' open' : ''}><summary><h2>${t('contractData')}</h2></summary><p class="sub">${t('contractDataSub')}</p><div class="grid2" style="margin-top:12px">
   <label>${t('legalName')}${fld('settings', settings, 'legal_name')}</label><label>${t('licenseNo')}${fld('settings', settings, 'license_no')}</label>
   <label>${t('bizAddress')}${fld('settings', settings, 'address')}</label><label>${t('phone')}${fld('settings', settings, 'phone', 'tel')}</label></div>
   <label>${t('warranty')}${ta('settings', settings, 'warranty')}</label><p class="hint">${t('warrantyHint')}</p>
   <label style="margin-top:12px">${t('extraTerms')}${ta('settings', settings, 'extra_terms', 4)}</label>
-  <p class="hint" style="margin-top:12px">${t('legalNote')}</p></div>`;
+  <p class="hint" style="margin-top:12px">${t('legalNote')}</p></details>`;
 }
+
 function cMsgs() {
   const myName = (me && me.name) || settings.contact_name || t('contractor');
   return `<div class="card"><h2>${t('messages')}</h2><div class="chat" id="chat">${cur.comments.slice().sort((a, b) => String(a.created_at).localeCompare(String(b.created_at))).map(m => `<div class="bub ${m.author === 'contractor' ? 'me' : ''}"><small>${esc(m.name || (m.author === 'client' ? t('client') : myName))} · ${fdate(m.created_at)}</small><p>${esc(m.body)}</p></div>`).join('') || `<p class="sub">${t('none')}</p>`}</div>

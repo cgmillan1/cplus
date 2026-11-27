@@ -789,3 +789,13 @@ details.rep>.card{border:0;margin:0;padding-top:0;background:none}
 details.rep>.card>h2:first-child,details.rep>.card>.top2:first-child>h2{display:none}
 details.rep>.card>.top2:first-child{justify-content:flex-end}
 .hnav button{font-size:15px}
+/* documents tab */
+.dlang select{min-height:40px;padding:6px 10px;border:1px solid var(--line);border-radius:10px;background:var(--card);font:inherit;font-size:15px}
+.warnrow{display:flex;gap:6px;flex-wrap:wrap;align-items:baseline;padding:10px 12px;margin:0 0 12px;border-radius:10px;background:light-dark(#fdecea,#2a1512);color:light-dark(#9b2c1f,#f0a08f);text-decoration:none;font-size:14px}
+.warnrow span{margin-inline-start:auto}
+.docacts{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:4px 0 6px}
+details.upf{margin-top:10px;border-top:1px solid var(--line);padding-top:4px}
+details.upf>summary span{font-weight:600}
+.co.doc .acts{align-items:center}
+.dlang select,.co.doc select.stsel{width:auto;max-width:100%}
+.card>.top2 .dlang{margin-inline-start:auto}
