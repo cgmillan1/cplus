@@ -5,6 +5,20 @@ const stOf = p => STATUSES.includes(p.status) ? p.status : (p.status === 'paused
 let pfilter = 'all', creating = false, leads = [], lastEmail = '', view = 'boot', B = [], cur = null, ctab = 'dash', settings = {}, busy = false, err = '', me = null, team = [], afilter = 'all', lastCreated = null, leadUrls = {};
 S.setLang(S.L);
 
+/* ---------- UI v2: compact summaries (no cents), folding reports, dropdown menus ---------- */
+S.addText({ uiContact: 'Contactar', uiMore: 'Más opciones', uiReports: 'Reportes', uiReportsS: 'Toca un reporte para abrirlo.' }, { uiContact: 'Contact', uiMore: 'More options', uiReports: 'Reports', uiReportsS: 'Tap a report to open it.' });
+const m0 = n => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(Math.round(+n || 0));
+const stat = (l, v, cls = '', e = '') => `<div class="st ${cls}"><small>${l}</small><b>${typeof v === 'number' ? m0(v) : v}</b>${e ? `<em>${e}</em>` : ''}</div>`;
+const line = (l, v, cls = '', e = '') => `<div class="ln ${cls}"><span>${l}${e ? ` <em>${e}</em>` : ''}</span><b>${typeof v === 'number' ? m0(v) : v}</b></div>`;
+const OPENF = new Set(), fo = k => ` data-fold="${k}"${OPENF.has(k) ? ' open' : ''}`;
+document.addEventListener('toggle', e => { const d = e.target; if (d && d.dataset && d.dataset.fold) d.open ? OPENF.add(d.dataset.fold) : OPENF.delete(d.dataset.fold); }, true);
+const repT = h => { const m = /<h2[^>]*>([\s\S]*?)<\/h2>/.exec(h || ''); return m ? m[1].replace(/<[^>]+>/g, '').trim() : ''; };
+const rep = (k, h) => h && h.trim() ? `<details class="rep"${fo('rep-' + k)}><summary><span>${repT(h)}</span></summary>${h}</details>` : '';
+const shareFold = (sh, k = 'share') => `<details class="fold"${fo(k)}><summary><span>${t('share')} ${pct()}%</span><b>${m0(sh.s)}</b></summary><div class="lns">${line(t('shareEarned'), sh.earned, 'pos')}${line(t('sharePending'), sh.pending)}${line(t('profitAfter'), sh.after, sh.after < 0 ? 'neg' : '')}</div></details>`;
+const menu = (label, items, cls = '') => items ? `<details class="menu ${cls}"><summary class="btn2">${label}</summary><div class="pop">${items}</div></details>` : '';
+document.addEventListener('toggle', e => { const d = e.target; if (!d.matches || !d.matches('details.menu') || !d.open) return; d.classList.remove('r'); const r = d.querySelector('.pop').getBoundingClientRect(); if (r.right > innerWidth - 8) d.classList.add('r'); }, true);
+document.addEventListener('click', e => { document.querySelectorAll('details.menu[open]').forEach(d => { if (!d.contains(e.target) || e.target.closest('.pop a, .pop button')) d.open = false; }); });
+
 /* ---------- roles ---------- */
 const role = () => me && me.role, staff = () => role() === 'admin' || role() === 'manager', isAdmin = () => role() === 'admin';
 const contractors = () => team.filter(m => m.role === 'contractor' && m.active);
@@ -145,8 +159,8 @@ function home() {
   ${B.length && contractors().length ? `<div class="filters" role="group" aria-label="${t('assignedTo')}">${[['all', t('everyone')], ...contractors().map(m => [m.user_id, m.name]), ['none', t('unassigned')]].map(([v, l]) => `<button data-af="${v}" class="${afilter === v ? 'on' : ''}" aria-pressed="${afilter === v}">${esc(l)} <span class="cnt">${AP.filter(b => v === 'all' || (v === 'none' ? !b.project.assigned_to : b.project.assigned_to === v)).length}</span></button>`).join('')}</div>` : ''}
   ${pushPrompt()}
   ${showInstall() ? `<div class="card" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><img src="icon-180.png" alt="" width="48" height="48" style="border-radius:11px"><div style="flex:1 1 220px"><b>${t('installT')}</b><p class="sub" style="margin:2px 0 0">${t('installS')}</p></div><button class="btn2" data-hideinstall>${t('hide')}</button></div>` : ''}
-  ${B.length ? `<div class="kpis">${kpi(t('contracts'), sum('tot'))}${kpi(t('collected'), sum('paid'))}${kpi(t('receivable'), sum('bal'))}${kpi(t('spent'), sum('spent'))}${kpi(t('profit'), sum('profit'), sum('profit') < 0 ? 'neg' : 'pos', t('profitSub'))}</div>
-  ${showShare() ? `<div class="kpis">${(() => { const sh = cs.map(shareOf), tot = k => sh.reduce((x, y) => x + y[k], 0); return kpi(`${t('share')} ${pct()}%`, tot('s'), '', t('shareOf')) + kpi(t('shareEarned'), tot('earned'), 'pos', t('shareEarnedSub')) + kpi(t('sharePending'), tot('pending')) + kpi(t('profitAfter'), tot('after'), tot('after') < 0 ? 'neg' : ''); })()}</div>` : ''}` : ''}
+  ${B.length ? `<section class="card sum"><div class="sts">${stat(t('receivable'), sum('bal'))}${stat(t('profit'), sum('profit'), sum('profit') < 0 ? 'neg' : 'pos')}</div><div class="lns">${line(t('contracts'), sum('tot'))}${line(t('collected'), sum('paid'))}${line(t('spent'), sum('spent'))}</div>
+  ${showShare() ? (() => { const sh = cs.map(shareOf), tot = k => sh.reduce((x, y) => x + y[k], 0); return shareFold({ s: tot('s'), earned: tot('earned'), pending: tot('pending'), after: tot('after') }, 'share-home'); })() : ''}</section>` : ''}
   ${(() => { const n = B.filter(b => rvOf(b.project) === 'review').length; return n ? `<button class="card rvbanner" data-hv="review"><b>${t(n === 1 ? 'nReview1' : 'nReview').replace('{n}', n)}</b><span>${t('reviewBtn')} →</span></button>` : ''; })()}
   ${approvalsCard()}
   ${budgetAlerts()}
@@ -194,8 +208,8 @@ function leadsCard() {
     <small class="sub">${fdate(l.created_at)}${l.service ? ' · ' + esc(l.service) : ''}${l.city ? ' · ' + esc(l.city) : ''} · ${l.lang === 'en' ? 'English' : 'Español'}</small>
     ${l.message ? `<p style="margin:6px 0 0;white-space:pre-wrap">${esc(l.message)}</p>` : ''}
     ${(l.photos || []).length ? `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">${l.photos.map((p, i) => leadUrls[p] ? `<a href="${esc(leadUrls[p])}" target="_blank" rel="noopener"><img src="${esc(leadUrls[p])}" alt="${t('photo')} ${i + 1}" width="88" height="88" style="object-fit:cover;border-radius:10px;display:block"></a>` : '').join('')}</div>` : ''}
-    <div class="acts">${l.phone ? `<a class="btn2" href="tel:${esc(tel)}">${esc(l.phone)}</a><a class="btn2" href="https://wa.me/${wa.length === 10 ? '1' + wa : wa}" target="_blank" rel="noopener">WhatsApp</a>` : ''}${l.email ? `<a class="btn2" href="mailto:${esc(l.email)}">${esc(l.email)}</a>` : ''}
-    <button class="primary" data-leadp="${l.id}">${t('leadToProject')}</button>${l.status === 'new' ? `<button class="btn2" data-leadst="${l.id}:contacted">${t('lead_contacted')}</button>` : ''}<button class="btn2" data-leadst="${l.id}:archived">${t('archive')}</button></div></div>`; }).join('')}</div>`;
+    <div class="acts">${menu(t('uiContact') + ' ▾', (l.phone ? `<a href="tel:${esc(tel)}">${esc(l.phone)}</a><a href="https://wa.me/${wa.length === 10 ? '1' + wa : wa}" target="_blank" rel="noopener">WhatsApp</a>` : '') + (l.email ? `<a href="mailto:${esc(l.email)}">${esc(l.email)}</a>` : ''))}
+    <button class="primary" data-leadp="${l.id}">${t('leadToProject')}</button>${menu('<span aria-hidden="true">⋯</span><span class="sr">' + t('uiMore') + '</span>', `${l.status === 'new' ? `<button data-leadst="${l.id}:contacted">${t('lead_contacted')}</button>` : ''}<button data-leadst="${l.id}:archived">${t('archive')}</button>`, 'r')}</div></div>`; }).join('')}</div>`;
 }
 function project() {
   const u = unseen(cur), p = cur.project;
@@ -251,8 +265,8 @@ function cInfo() {
 function cDash() {
   const c = S.calc(cur);
   const banner = stOf(cur.project) === 'estimate_accepted' && !cur.documents.some(x => x.kind === 'contract' && x.status !== 'void') ? `<div class="card" style="border-color:var(--cu);display:flex;gap:12px;align-items:center;flex-wrap:wrap"><b style="flex:1 1 260px">${t('contractBanner')}</b><button class="primary" data-ctab="docs">${t('goDocs')}</button></div>` : '';
-  return banner + approvalsCard(cur) + budgetHealth(c) + `<div class="kpis">${kpi(t('contract'), c.tot)}${kpi(t('collected'), c.paid)}${kpi(t('receivable'), c.bal)}${kpi(t('budget'), c.bud)}${kpi(t('spent'), c.spent, '', (c.bud ? Math.round(c.spent / c.bud * 100) : 0) + '% ' + t('of') + ' ' + t('budget').toLowerCase())}${kpi(t('left'), c.left, c.left < 0 ? 'neg' : '')}${kpi(t('profit'), c.profit, c.profit < 0 ? 'neg' : 'pos', t('profitSub'))}</div>
-  ${showShare() ? `<div class="kpis">${(() => { const sh = shareOf(c); return kpi(`${t('share')} ${pct()}%`, sh.s, '', t('shareOf')) + kpi(t('shareEarned'), sh.earned, 'pos', t('shareEarnedSub')) + kpi(t('sharePending'), sh.pending) + kpi(t('profitAfter'), sh.after, sh.after < 0 ? 'neg' : ''); })()}</div>` : ''}
+  return banner + approvalsCard(cur) + `<section class="card sum"><div class="sts">${stat(t('receivable'), c.bal)}${stat(t('profit'), c.profit, c.profit < 0 ? 'neg' : 'pos')}</div><div class="lns">${line(t('contract'), c.tot)}${line(t('collected'), c.paid)}</div>
+  ${showShare() ? shareFold(shareOf(c), 'share-p') : ''}</section>` + budgetHealth(c) + `
   ${jcMini(jc(cur))}
   <div class="qacts"><button class="primary cam" data-scan="${cur.project.id}">${camIco}${t('scanReceipt')}</button><button class="btn2" data-ctab="team">${t('msgBtn')}</button><button class="btn2" data-ctab="money">+ ${t('qaExpense')}</button><button class="btn2" data-ctab="pays">+ ${t('qaPay')}</button></div>
   <div class="cols"><div class="card"><h2>${t('byCat')}</h2>${catBars(c)}</div><div class="card"><h2>${t('recent')}</h2>${expSorted().slice(0, 6).map(e => `<div class="mat"><div><b>${esc(e.description)}</b> ${apxPill(e)}<small>${fdate(e.spent_on)} · ${esc(e.vendor)} · ${esc(catName(e.budget_id))}</small></div><span class="n">${money(e.amount)}</span></div>`).join('') || `<p class="sub">${t('none')}</p>`}</div></div>
@@ -1009,26 +1023,27 @@ function dashView() {
   const tbl = `<details class="dtable"><summary>${t('dTable')}</summary><table><thead><tr><th>${t('month')}</th><th>${t('dCollected')}</th><th>${t('dSpent')}</th><th>${t('dNet')}</th></tr></thead><tbody>${d.months.map(m => `<tr><td>${mshort(m.m)} ${m.y}</td><td>${money(m.rev)}</td><td>${money(m.exp)}</td><td class="${m.rev - m.exp < 0 ? 'neg' : ''}">${money(m.rev - m.exp)}</td></tr>`).join('')}</tbody></table></details>`;
   return `<div class="secthead"><h1>${t('dashT')}</h1></div><p class="sub">${t('dashS')}</p>
   <div class="filters dper" role="group" aria-label="${t('dPeriod')}">${per.map(([k, l]) => `<button data-dper="${k}" class="${dper === k ? 'on' : ''}" aria-pressed="${dper === k}">${l}</button>`).join('')}</div>
-  <div class="kpis dkpis">${tile(t('dCollected'), d.rev, '', t('dCollectedS'))}${tile(t('dSpent'), d.spent, '', `${d.nExp} ${t('dExpN')}`)}${tile(t('dNet'), d.net, d.net < 0 ? 'neg' : 'pos', t('dNetS'))}${tile(t('dOwed'), d.owed, '', t('dOwedS'))}${tile(t('dWon'), d.won.reduce((a, b) => a + S.calc(b).tot, 0), '', `${d.won.length} ${t(d.won.length === 1 ? 'dProj1' : 'dProjN')}`)}${tile(t('dActive'), String(d.active.length), '', t('dActiveS'))}</div>
+  <section class="card sum"><div class="sts">${stat(t('dNet'), d.net, d.net < 0 ? 'neg' : 'pos', t('dNetS'))}${stat(t('dOwed'), d.owed, '', t('dOwedS'))}</div><div class="lns">${line(t('dCollected'), d.rev)}${line(t('dSpent'), d.spent, '', `${d.nExp} ${t('dExpN')}`)}${line(t('dWon'), d.won.reduce((a, b) => a + S.calc(b).tot, 0), '', `${d.won.length} ${t(d.won.length === 1 ? 'dProj1' : 'dProjN')}`)}${line(t('dActive'), String(d.active.length))}</div></section>
   <div class="dgrid">${approvalsCard()}
   ${att.length ? `<div class="card alerts"><h2>${t('dAttention')}</h2>${att.join('')}</div>` : ''}
-  ${weekCard()}
-  ${esignCard()}
-  ${(() => { const A = d.projs.filter(x => !x.done), W = A.filter(x => x.j.has), E = W.reduce((a, x) => a + x.j.estProfit, 0), F = W.reduce((a, x) => a + x.j.fProfit, 0), n = st => W.filter(x => x.j.st === st).length, no = A.length - W.length;
+  </div><h2 class="reph">${t('uiReports')}</h2><p class="sub">${t('uiReportsS')}</p><div class="reps">
+  ${rep('wk', weekCard())}
+  ${rep('es', esignCard())}
+  ${rep('jc', (() => { const A = d.projs.filter(x => !x.done), W = A.filter(x => x.j.has), E = W.reduce((a, x) => a + x.j.estProfit, 0), F = W.reduce((a, x) => a + x.j.fProfit, 0), n = st => W.filter(x => x.j.st === st).length, no = A.length - W.length;
     return A.length ? `<div class="card jcsum"><div class="top2"><h2>${t('dJcT')}</h2><button class="lnk" data-hv="crew">${t('hv_crew')} →</button></div><p class="sub">${t('dJcS')}</p>
     ${W.length ? `<div class="kpis dkpis">${tile(t('dJcE'), E)}${tile(t('dJcF'), F, F < E - 0.5 ? 'neg' : 'pos', (F - E >= 0 ? '+' : '') + money(F - E))}${tile(t('jc_over'), String(n('over')), n('over') ? 'neg' : '', t('dProjN'))}${tile(t('jc_watch'), String(n('watch')), '', t('dProjN'))}</div>` : ''}
-    ${no ? `<p class="hint">${t('dJcNoEst').replace('{n}', no)}</p>` : ''}</div>` : ''; })()}
-  <div class="card"><div class="top2"><h2>${t('dCashT')}</h2><span class="legend"><span><i class="sw b1"></i>${t('dCollected')}</span><span><i class="sw b2"></i>${t('dSpent')}</span></span></div><p class="sub">${t('dCashS')}</p>
-  <div class="chartwrap">${cashChart(d.months)}<div class="ctip" hidden></div></div>${tbl}</div>
-  <div class="cols"><div class="card"><h2>${t('dByCat')}</h2><p class="sub">${t('dByCatS')}</p>${d.byCat.length ? hbars(d.byCat.slice(0, 7).map(x => [x.l, x.v])) : `<p class="sub">${t('none')}</p>`}</div>
-  ${agingCard()}</div>
-  <div class="cols"><div class="card"><h2>${t('dByType')}</h2><p class="sub">${t('dByTypeS')}</p>${mtable(d.byType, r => t('svc_' + r.k), t('service'))}</div>
-  <div class="card"><h2>${t('dByCo')}</h2><p class="sub">${t('dByCoS2')}</p>${mtable(d.byCo, r => r.k, t('dBuilder'))}</div></div>
-  ${priceCard()}
-  <div class="card"><h2>${t('dProjT')}</h2><p class="sub">${t('dProjS')}</p>
+    ${no ? `<p class="hint">${t('dJcNoEst').replace('{n}', no)}</p>` : ''}</div>` : ''; })())}
+  ${rep('cash', `<div class="card"><div class="top2"><h2>${t('dCashT')}</h2><span class="legend"><span><i class="sw b1"></i>${t('dCollected')}</span><span><i class="sw b2"></i>${t('dSpent')}</span></span></div><p class="sub">${t('dCashS')}</p>
+  <div class="chartwrap">${cashChart(d.months)}<div class="ctip" hidden></div></div>${tbl}</div>`)}
+  ${rep('cat', `<div class="card"><h2>${t('dByCat')}</h2><p class="sub">${t('dByCatS')}</p>${d.byCat.length ? hbars(d.byCat.slice(0, 7).map(x => [x.l, x.v])) : `<p class="sub">${t('none')}</p>`}</div>`)}
+  ${rep('aging', agingCard())}
+  ${rep('type', `<div class="card"><h2>${t('dByType')}</h2><p class="sub">${t('dByTypeS')}</p>${mtable(d.byType, r => t('svc_' + r.k), t('service'))}</div>`)}
+  ${rep('co', `<div class="card"><h2>${t('dByCo')}</h2><p class="sub">${t('dByCoS2')}</p>${mtable(d.byCo, r => r.k, t('dBuilder'))}</div>`)}
+  ${rep('price', priceCard())}
+  ${rep('proj', `<div class="card"><h2>${t('dProjT')}</h2><p class="sub">${t('dProjS')}</p>
   ${d.projs.map(x => `<button class="dproj" data-open="${x.b.project.id}"><div class="dp1"><b>${esc(x.b.project.title)}</b><span class="pill ${x.done ? '' : 'st-' + stOf(x.b.project)}">${t('st_' + stOf(x.b.project))}</span>${x.j.has ? jpill(x.j) : ''}</div>
     <div class="dp2"><span>${t('contract')} <b>${money(x.c.tot)}</b></span><span>${t('dSpent')} <b>${money(x.c.spent)}</b></span><span>${t('dProfitEst')} <b class="${x.profit < 0 ? 'neg' : 'pos'}">${money(x.profit)} · ${Math.round(x.pct)}%</b></span></div>
-    <div class="meter ${x.used > 100 ? 'over' : x.used >= 90 ? 'warn' : ''}"><i style="width:${Math.min(100, x.used)}%"></i></div><small class="sub">${Math.round(x.used)}% ${t(x.j.has ? 'dOfEst' : 'dOfBudget')}${x.j.has && x.j.estH ? ` · ${hfmt(x.j.hrs)} / ${hfmt(x.j.estH)}` : ''}${x.c.bal > 0 ? ` · ${t('dOwedShort')} ${money(x.c.bal)}` : ''}</small></button>`).join('') || `<p class="sub">${t('none')}</p>`}</div></div>`;
+    <div class="meter ${x.used > 100 ? 'over' : x.used >= 90 ? 'warn' : ''}"><i style="width:${Math.min(100, x.used)}%"></i></div><small class="sub">${Math.round(x.used)}% ${t(x.j.has ? 'dOfEst' : 'dOfBudget')}${x.j.has && x.j.estH ? ` · ${hfmt(x.j.hrs)} / ${hfmt(x.j.estH)}` : ''}${x.c.bal > 0 ? ` · ${t('dOwedShort')} ${money(x.c.bal)}` : ''}</small></button>`).join('') || `<p class="sub">${t('none')}</p>`}</div>`)}</div>`;
 }
 
 function hnav() {
