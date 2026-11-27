@@ -175,6 +175,9 @@
     /* client side: no login, only the private token */
     async clientProject(tok) { return ok(await sb.rpc('client_project', { tok })); },
     async clientComment(tok, who, msg) { ok(await sb.rpc('client_comment', { tok, who, msg })); },
-    async clientDecide(tok, co, approve, who) { ok(await sb.rpc('client_decide', { tok, co, approve, who })); }
+    async clientDecide(tok, co, approve, who) { ok(await sb.rpc('client_decide', { tok, co, approve, who })); },
+    /* usage insights: which buttons and screens are used (no personal data) and the Suggestions box */
+    track(rows) { if (sb && rows && rows.length) sb.from('events').insert(rows).then(() => {}, () => {}); },
+    async feedback(row) { ok(await sb.from('feedback').insert(row)); }
   };
 })();
